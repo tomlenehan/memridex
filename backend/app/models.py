@@ -103,6 +103,14 @@ class Image(SQLModel, table=True):
     date: datetime = Field(default_factory=datetime.utcnow)
 
 
+# Model for Categories
+class Category(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    description: str | None = None
+    date: datetime = Field(default_factory=datetime.utcnow)
+
+
 # Model for Stock Story Prompts
 class StockStoryPrompt(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
