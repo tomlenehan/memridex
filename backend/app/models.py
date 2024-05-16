@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -91,6 +92,30 @@ class ItemsPublic(SQLModel):
     data: list[ItemPublic]
     count: int
 
+
+# Model for Images
+class Image(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    link: str
+    description: str | None = None
+    date: datetime = Field(default_factory=datetime.utcnow)
+
+
+# Model for Stock Story Prompts
+class StockStoryPrompt(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    prompt: str
+    category: str | None = None
+    image_id: int | None = Field(default=None, foreign_key="image.id")
+
+
+# Model for User Story Prompts
+class UserStoryPrompt(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    prompt: str
+    user_id: int = Field(foreign_key="user.id")
+    user: User | None = Relationship(back_populates="user_story_prompts")
+    image_id: int | None = Field(default=None, foreign_key="image.id")
 
 # Generic message
 class Message(SQLModel):
