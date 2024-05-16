@@ -1,5 +1,6 @@
 from datetime import datetime
-from sqlmodel import Field, Relationship, SQLModel
+from typing import List, Optional
+from sqlmodel import Field, Relationship, SQLModel, create_engine, Session
 
 
 # Shared properties
@@ -46,6 +47,7 @@ class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str
     items: list["Item"] = Relationship(back_populates="owner")
+    user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="user")
 
 
 # Properties to return via API, id is always required
@@ -114,8 +116,9 @@ class UserStoryPrompt(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     prompt: str
     user_id: int = Field(foreign_key="user.id")
-    user: User | None = Relationship(back_populates="user_story_prompts")
+    user: Optional[User] = Relationship(back_populates="user_story_prompts")
     image_id: int | None = Field(default=None, foreign_key="image.id")
+
 
 # Generic message
 class Message(SQLModel):
