@@ -4,30 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="remove .env">
-      <change afterPath="$PROJECT_DIR$/.idea/memribox.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/routes/signup.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.copier/.copier-answers.yml.jinja" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.copier/update_dotenv.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/DISCUSSION_TEMPLATE/questions.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/FUNDING.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/config.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/privileged.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/dependabot.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/deploy-production.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/deploy-staging.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/issue-manager.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/latest-changes.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/smokeshow.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/test.yml" beforeDir="false" />
+    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="added open signup/page">
+      <change afterPath="$PROJECT_DIR$/frontend/src/assets/images/memribox-logo.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/assets/images/memribox-text-logo.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/routes/login.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/routes/login.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/routes/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/routes/users.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/crud.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/crud.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/client/services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/client/services.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/hooks/useAuth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/hooks/useAuth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/routeTree.gen.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/routeTree.gen.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Common/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Common/Sidebar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Common/UserMenu.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Common/UserMenu.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/routes/login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/routes/login.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/routes/signup.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/routes/signup.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,7 +65,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "last_opened_file_path": "/Users/tomlenehan/Dev/memribox/frontend/src/routes",
+    "last_opened_file_path": "/Users/tomlenehan/Dev/memribox/frontend/src/assets/images",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -99,6 +83,7 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/frontend/src/assets/images" />
       <recent name="$PROJECT_DIR$/frontend/src/routes" />
       <recent name="$PROJECT_DIR$/frontend" />
       <recent name="$PROJECT_DIR$" />
@@ -158,6 +143,7 @@
       <workItem from="1714630745740" duration="2694000" />
       <workItem from="1715047863024" duration="6906000" />
       <workItem from="1715651019591" duration="44402000" />
+      <workItem from="1715812580176" duration="7517000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <option name="closed" value="true" />

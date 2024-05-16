@@ -16,13 +16,14 @@ import {
 import {Link as RouterLink, createFileRoute, redirect} from "@tanstack/react-router";
 import {type SubmitHandler, useForm} from "react-hook-form";
 
-import Logo from "../assets/images/fastapi-logo.svg";
+import Logo from "../assets/images/memribox-text-logo.png";
 import useAuth, {isLoggedIn} from "../hooks/useAuth";
 import {emailPattern} from "../utils";
 
 interface SignupFormData {
     email: string;
     password: string;
+    full_name: string;
 }
 
 export const Route = createFileRoute("/signup")({
@@ -47,6 +48,7 @@ function Signup() {
         defaultValues: {
             email: "",
             password: "",
+            full_name: "",
         },
     });
 
@@ -91,6 +93,18 @@ function Signup() {
                 />
                 {errors.email && (
                     <FormErrorMessage>{errors.email.message}</FormErrorMessage>
+                )}
+            </FormControl>
+            <FormControl id="full_name" isInvalid={!!errors.full_name}>
+                <Input
+                    id="full_name"
+                    {...register("full_name", {required: "Full name is required"})}
+                    placeholder="Full Name"
+                    type="text"
+                    required
+                />
+                {errors.full_name && (
+                    <FormErrorMessage>{errors.full_name.message}</FormErrorMessage>
                 )}
             </FormControl>
             <FormControl id="password" isInvalid={!!error}>
