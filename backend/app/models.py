@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from sqlmodel import Field, Relationship, SQLModel, create_engine, Session
+from sqlmodel import Field, Relationship, SQLModel
 
 
 # Shared properties
@@ -46,7 +46,7 @@ class UpdatePassword(SQLModel):
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str
-    items: list["Item"] = Relationship(back_populates="owner")
+    items: List["Item"] = Relationship(back_populates="owner")
     user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="user")
 
 
@@ -56,7 +56,7 @@ class UserPublic(UserBase):
 
 
 class UsersPublic(SQLModel):
-    data: list[UserPublic]
+    data: List[UserPublic]
     count: int
 
 
@@ -91,7 +91,7 @@ class ItemPublic(ItemBase):
 
 
 class ItemsPublic(SQLModel):
-    data: list[ItemPublic]
+    data: List[ItemPublic]
     count: int
 
 
@@ -101,6 +101,8 @@ class Image(SQLModel, table=True):
     link: str
     description: str | None = None
     date: datetime = Field(default_factory=datetime.utcnow)
+    stock_story_prompts: List["StockStoryPrompt"] = Relationship(back_populates="image")
+    user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="image")
 
 
 # Model for Categories
@@ -108,15 +110,39 @@ class Category(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
     description: str | None = None
-    date: datetime = Field(default_factory=datetime.utcnow)
+    stock_story_prompts: List["StockStoryPrompt"] = Relationship(back_populates="category")
+    user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="category")
 
+
+# Properties to receive on category creation
+class CategoryCreate(SQLModel):
+    name: str
+    description: Optional[str] = None
+
+
+# Properties to receive on category update
+class CategoryUpdate(SQLModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+# Properties to return via API, id is always required
+class CategoryPublic(CategoryCreate):
+    id: int
+
+
+class CategoriesPublic(SQLModel):
+    data: List[CategoryPublic]
+    count: int
 
 # Model for Stock Story Prompts
 class StockStoryPrompt(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     prompt: str
-    category: str | None = None
+    category_id: int | None = Field(default=None, foreign_key="category.id")
+    category: Optional[Category] = Relationship(back_populates="stock_story_prompts")
     image_id: int | None = Field(default=None, foreign_key="image.id")
+    image: Optional[Image] = Relationship(back_populates="stock_story_prompts")
 
 
 # Model for User Story Prompts
@@ -124,8 +150,36 @@ class UserStoryPrompt(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     prompt: str
     user_id: int = Field(foreign_key="user.id")
-    user: Optional[User] = Relationship(back_populates="user_story_prompts")
+    user: User | None = Relationship(back_populates="user_story_prompts")
+    category_id: int | None = Field(default=None, foreign_key="category.id")
+    category: Optional[Category] = Relationship(back_populates="user_story_prompts")
     image_id: int | None = Field(default=None, foreign_key="image.id")
+    image: Optional[Image] = Relationship(back_populates="user_story_prompts")
+
+
+# Properties to receive on user story prompt creation
+class UserStoryPromptCreate(SQLModel):
+    prompt: str
+    category_id: Optional[int] = None
+    image_id: Optional[int] = None
+
+
+# Properties to receive on user story prompt update
+class UserStoryPromptUpdate(SQLModel):
+    prompt: Optional[str] = None
+    category_id: Optional[int] = None
+    image_id: Optional[int] = None
+
+
+# Properties to return via API, id is always required
+class UserStoryPromptPublic(UserStoryPromptCreate):
+    id: int
+    user_id: int
+
+
+class UserStoryPromptsPublic(SQLModel):
+    data: List[UserStoryPromptPublic]
+    count: int
 
 
 # Generic message

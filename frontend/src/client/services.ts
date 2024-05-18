@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,UserStoryPromptCreate,UserStoryPromptPublic,UserStoryPromptsPublic,UserStoryPromptUpdate,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -525,6 +525,286 @@ id,
 		return __request(OpenAPI, {
 			method: 'DELETE',
 			url: '/api/v1/items/{id}',
+			path: {
+				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+}
+
+export type TDataReadUserStoryPrompts = {
+                limit?: number
+skip?: number
+                
+            }
+export type TDataCreateUserStoryPrompt = {
+                requestBody: UserStoryPromptCreate
+                
+            }
+export type TDataReadUserStoryPrompt = {
+                id: number
+                
+            }
+export type TDataUpdateUserStoryPrompt = {
+                id: number
+requestBody: UserStoryPromptUpdate
+                
+            }
+export type TDataDeleteUserStoryPrompt = {
+                id: number
+                
+            }
+
+export class UserStoryPromptsService {
+
+	/**
+	 * Read User Story Prompts
+	 * Retrieve user story prompts.
+	 * @returns UserStoryPromptsPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readUserStoryPrompts(data: TDataReadUserStoryPrompts = {}): CancelablePromise<UserStoryPromptsPublic> {
+		const {
+limit = 100,
+skip = 0,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/user_story_prompts/',
+			query: {
+				skip, limit
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Create User Story Prompt
+	 * Create new user story prompt.
+	 * @returns UserStoryPromptPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static createUserStoryPrompt(data: TDataCreateUserStoryPrompt): CancelablePromise<UserStoryPromptPublic> {
+		const {
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/user_story_prompts/',
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Read User Story Prompt
+	 * Get user story prompt by ID.
+	 * @returns UserStoryPromptPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readUserStoryPrompt(data: TDataReadUserStoryPrompt): CancelablePromise<UserStoryPromptPublic> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/user_story_prompts/{id}',
+			path: {
+				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Update User Story Prompt
+	 * Update a user story prompt.
+	 * @returns UserStoryPromptPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static updateUserStoryPrompt(data: TDataUpdateUserStoryPrompt): CancelablePromise<UserStoryPromptPublic> {
+		const {
+id,
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'PUT',
+			url: '/api/v1/user_story_prompts/{id}',
+			path: {
+				id
+			},
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Delete User Story Prompt
+	 * Delete a user story prompt.
+	 * @returns Message Successful Response
+	 * @throws ApiError
+	 */
+	public static deleteUserStoryPrompt(data: TDataDeleteUserStoryPrompt): CancelablePromise<Message> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'DELETE',
+			url: '/api/v1/user_story_prompts/{id}',
+			path: {
+				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+}
+
+export type TDataReadCategories = {
+                limit?: number
+skip?: number
+                
+            }
+export type TDataCreateCategory = {
+                requestBody: CategoryCreate
+                
+            }
+export type TDataReadCategory = {
+                id: number
+                
+            }
+export type TDataUpdateCategory = {
+                id: number
+requestBody: CategoryUpdate
+                
+            }
+export type TDataDeleteCategory = {
+                id: number
+                
+            }
+
+export class CategoriesService {
+
+	/**
+	 * Read Categories
+	 * Retrieve categories.
+	 * @returns CategoriesPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readCategories(data: TDataReadCategories = {}): CancelablePromise<CategoriesPublic> {
+		const {
+limit = 100,
+skip = 0,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/categories/',
+			query: {
+				skip, limit
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Create Category
+	 * Create new category.
+	 * @returns CategoryPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static createCategory(data: TDataCreateCategory): CancelablePromise<CategoryPublic> {
+		const {
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/categories/',
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Read Category
+	 * Get category by ID.
+	 * @returns CategoryPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readCategory(data: TDataReadCategory): CancelablePromise<CategoryPublic> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/categories/{id}',
+			path: {
+				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Update Category
+	 * Update a category.
+	 * @returns CategoryPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static updateCategory(data: TDataUpdateCategory): CancelablePromise<CategoryPublic> {
+		const {
+id,
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'PUT',
+			url: '/api/v1/categories/{id}',
+			path: {
+				id
+			},
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Delete Category
+	 * Delete a category.
+	 * @returns Message Successful Response
+	 * @throws ApiError
+	 */
+	public static deleteCategory(data: TDataDeleteCategory): CancelablePromise<Message> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'DELETE',
+			url: '/api/v1/categories/{id}',
 			path: {
 				id
 			},

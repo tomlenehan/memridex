@@ -4,11 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="removing imgs">
-      <change afterPath="$PROJECT_DIR$/backend/app/alembic/versions/83bc08009865_adding_category_model_for_story_prompts.py" afterDir="false" />
+    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="added category model and initial data">
+      <change afterPath="$PROJECT_DIR$/backend/app/alembic/versions/230a99a3a2a3_updating_category_model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/api/routes/categories.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/api/routes/user_story_prompts.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/user_story_prompts/ActionsMenuUserStoryPrompt.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/user_story_prompts/EditUserStoryPrompt.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/routes/_layout/user_story_prompts.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/initial_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/initial_data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/client/models.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/client/models.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/client/schemas.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/client/schemas.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/client/services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/client/services.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Common/SidebarItems.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Common/SidebarItems.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/routeTree.gen.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/routeTree.gen.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,7 +73,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "last_opened_file_path": "/Users/tomlenehan/Dev/memribox/frontend/src/assets/images",
+    "last_opened_file_path": "/Users/tomlenehan/Dev/memribox/frontend",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -80,13 +91,15 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/frontend" />
+      <recent name="$PROJECT_DIR$/frontend/src/components/user_story_prompts" />
+      <recent name="$PROJECT_DIR$/frontend/src/client" />
       <recent name="$PROJECT_DIR$/frontend/src/assets/images" />
       <recent name="$PROJECT_DIR$/frontend/src/routes" />
-      <recent name="$PROJECT_DIR$/frontend" />
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/app" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/frontend/src/routes/_layout" />
+      <recent name="$PROJECT_DIR$/frontend/src/components/Admin" />
       <recent name="$PROJECT_DIR$/frontend" />
       <recent name="$PROJECT_DIR$/app" />
     </key>
@@ -140,7 +153,7 @@
       <workItem from="1714630745740" duration="2694000" />
       <workItem from="1715047863024" duration="6906000" />
       <workItem from="1715651019591" duration="44402000" />
-      <workItem from="1715812580176" duration="16514000" />
+      <workItem from="1715812580176" duration="50746000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <option name="closed" value="true" />
@@ -190,7 +203,15 @@
       <option name="project" value="LOCAL" />
       <updated>1715839579703</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="added category model and initial data">
+      <option name="closed" value="true" />
+      <created>1715842017684</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1715842017684</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -251,7 +272,8 @@
     <MESSAGE value="signup workflow and logos/branding." />
     <MESSAGE value="Add Image, StockStoryPrompt and UserStoryPrompt Models" />
     <MESSAGE value="removing imgs" />
-    <option name="LAST_COMMIT_MESSAGE" value="removing imgs" />
+    <MESSAGE value="added category model and initial data" />
+    <option name="LAST_COMMIT_MESSAGE" value="added category model and initial data" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

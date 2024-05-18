@@ -9,6 +9,35 @@ export type Body_login_login_access_token = {
 
 
 
+export type CategoriesPublic = {
+	data: Array<CategoryPublic>;
+	count: number;
+};
+
+
+
+export type CategoryCreate = {
+	name: string;
+	description?: string | null;
+};
+
+
+
+export type CategoryPublic = {
+	name: string;
+	description?: string | null;
+	id: number;
+};
+
+
+
+export type CategoryUpdate = {
+	name?: string | null;
+	description?: string | null;
+};
+
+
+
 export type HTTPValidationError = {
 	detail?: Array<ValidationError>;
 };
@@ -96,6 +125,39 @@ export type UserRegister = {
 	email: string;
 	password: string;
 	full_name?: string | null;
+};
+
+
+
+export type UserStoryPromptCreate = {
+	prompt: string;
+	category_id?: number | null;
+	image_id?: number | null;
+};
+
+
+
+export type UserStoryPromptPublic = {
+	prompt: string;
+	category_id?: number | null;
+	image_id?: number | null;
+	id: number;
+	user_id: number;
+};
+
+
+
+export type UserStoryPromptUpdate = {
+	prompt?: string | null;
+	category_id?: number | null;
+	image_id?: number | null;
+};
+
+
+
+export type UserStoryPromptsPublic = {
+	data: Array<UserStoryPromptPublic>;
+	count: number;
 };
 
 

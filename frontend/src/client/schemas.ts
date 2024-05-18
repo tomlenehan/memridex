@@ -40,6 +40,81 @@ export const $Body_login_login_access_token = {
 	},
 } as const;
 
+export const $CategoriesPublic = {
+	properties: {
+		data: {
+	type: 'array',
+	contains: {
+		type: 'CategoryPublic',
+	},
+	isRequired: true,
+},
+		count: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $CategoryCreate = {
+	properties: {
+		name: {
+	type: 'string',
+	isRequired: true,
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
+export const $CategoryPublic = {
+	properties: {
+		name: {
+	type: 'string',
+	isRequired: true,
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		id: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $CategoryUpdate = {
+	properties: {
+		name: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
 export const $HTTPValidationError = {
 	properties: {
 		detail: {
@@ -253,6 +328,109 @@ export const $UserRegister = {
 }, {
 	type: 'null',
 }],
+},
+	},
+} as const;
+
+export const $UserStoryPromptCreate = {
+	properties: {
+		prompt: {
+	type: 'string',
+	isRequired: true,
+},
+		category_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		image_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
+export const $UserStoryPromptPublic = {
+	properties: {
+		prompt: {
+	type: 'string',
+	isRequired: true,
+},
+		category_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		image_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		id: {
+	type: 'number',
+	isRequired: true,
+},
+		user_id: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $UserStoryPromptUpdate = {
+	properties: {
+		prompt: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		category_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		image_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
+export const $UserStoryPromptsPublic = {
+	properties: {
+		data: {
+	type: 'array',
+	contains: {
+		type: 'UserStoryPromptPublic',
+	},
+	isRequired: true,
+},
+		count: {
+	type: 'number',
+	isRequired: true,
 },
 	},
 } as const;
