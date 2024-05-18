@@ -15,25 +15,10 @@ def read_categories(
     """
     Retrieve categories.
     """
-    if current_user.is_superuser:
-        count_statement = select(func.count()).select_from(Category)
-        count = session.exec(count_statement).one()
-        statement = select(Category).offset(skip).limit(limit)
-        categories = session.exec(statement).all()
-    else:
-        count_statement = (
-            select(func.count())
-            .select_from(Category)
-            .where(Category.owner_id == current_user.id)
-        )
-        count = session.exec(count_statement).one()
-        statement = (
-            select(Category)
-            .where(Category.owner_id == current_user.id)
-            .offset(skip)
-            .limit(limit)
-        )
-        categories = session.exec(statement).all()
+    count_statement = select(func.count()).select_from(Category)
+    count = session.exec(count_statement).one()
+    statement = select(Category).offset(skip).limit(limit)
+    categories = session.exec(statement).all()
 
     return CategoriesPublic(data=categories, count=count)
 
@@ -46,8 +31,6 @@ def read_category(session: SessionDep, current_user: CurrentUser, id: int) -> An
     category = session.get(Category, id)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    if not current_user.is_superuser and (category.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
     return category
 
 
@@ -58,7 +41,7 @@ def create_category(
     """
     Create new category.
     """
-    category = Category.model_validate(category_in, update={"owner_id": current_user.id})
+    category = Category.from_orm(category_in)
     session.add(category)
     session.commit()
     session.refresh(category)
@@ -75,8 +58,6 @@ def update_category(
     category = session.get(Category, id)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    if not current_user.is_superuser and (category.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
     update_dict = category_in.model_dump(exclude_unset=True)
     category.sqlmodel_update(update_dict)
     session.add(category)
@@ -93,8 +74,6 @@ def delete_category(session: SessionDep, current_user: CurrentUser, id: int) -> 
     category = session.get(Category, id)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    if not current_user.is_superuser and (category.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
     session.delete(category)
     session.commit()
     return Message(message="Category deleted successfully")

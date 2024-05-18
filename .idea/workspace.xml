@@ -4,22 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="added category model and initial data">
-      <change afterPath="$PROJECT_DIR$/backend/app/alembic/versions/230a99a3a2a3_updating_category_model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/api/routes/categories.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/app/api/routes/user_story_prompts.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/user_story_prompts/ActionsMenuUserStoryPrompt.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/user_story_prompts/EditUserStoryPrompt.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/routes/_layout/user_story_prompts.tsx" afterDir="false" />
+    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="added prompt add/edit page">
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/user_story_prompts/AddUserStoryPrompt.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/initial_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/initial_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/client/models.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/client/models.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/client/schemas.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/client/schemas.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/client/services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/client/services.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Common/SidebarItems.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Common/SidebarItems.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/routeTree.gen.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/routeTree.gen.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/api/routes/categories.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/routes/categories.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/crud.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/crud.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/poetry.lock" beforeDir="false" afterPath="$PROJECT_DIR$/backend/poetry.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Common/Navbar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Common/Navbar.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,32 +55,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Docker.memribox-docker.executor": "Run",
-    "FastAPI.memoribox.executor": "Run",
-    "FastAPI.memribox.executor": "Debug",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "last_opened_file_path": "/Users/tomlenehan/Dev/memribox/frontend",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "ts.external.directory.path": "/Users/tomlenehan/Dev/memribox/frontend/node_modules/typescript/lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Docker.memribox-docker.executor&quot;: &quot;Run&quot;,
+    &quot;FastAPI.memoribox.executor&quot;: &quot;Run&quot;,
+    &quot;FastAPI.memribox.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.MemriBox Debug.executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/tomlenehan/Dev/memribox/frontend&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/tomlenehan/Dev/memribox/frontend/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "postgresql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/frontend" />
@@ -104,7 +97,31 @@
       <recent name="$PROJECT_DIR$/app" />
     </key>
   </component>
-  <component name="RunManager" selected="Docker.memribox-docker">
+  <component name="RunManager" selected="Python.MemriBox Debug">
+    <configuration name="MemriBox Debug" type="PythonConfigurationType" factoryName="Python">
+      <module name="memribox" />
+      <option name="ENV_FILES" value="$PROJECT_DIR$/.env" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.11 (memribox)" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/.venv/lib/python3.11/site-packages/uvicorn" />
+      <option name="PARAMETERS" value="app.main:app --reload" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="memoribox" type="Python.FastAPI">
       <option name="file" value="$PROJECT_DIR$/backend/app/main.py" />
       <module name="memribox" />
@@ -133,6 +150,7 @@
     <list>
       <item itemvalue="Docker.memribox-docker" />
       <item itemvalue="FastAPI.memoribox" />
+      <item itemvalue="Python.MemriBox Debug" />
     </list>
   </component>
   <component name="SharedIndexes">
@@ -153,7 +171,8 @@
       <workItem from="1714630745740" duration="2694000" />
       <workItem from="1715047863024" duration="6906000" />
       <workItem from="1715651019591" duration="44402000" />
-      <workItem from="1715812580176" duration="50746000" />
+      <workItem from="1715812580176" duration="56393000" />
+      <workItem from="1716008251887" duration="4360000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <option name="closed" value="true" />
@@ -211,7 +230,15 @@
       <option name="project" value="LOCAL" />
       <updated>1715842017684</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="added prompt add/edit page">
+      <option name="closed" value="true" />
+      <created>1716002380234</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1716002380236</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -273,7 +300,8 @@
     <MESSAGE value="Add Image, StockStoryPrompt and UserStoryPrompt Models" />
     <MESSAGE value="removing imgs" />
     <MESSAGE value="added category model and initial data" />
-    <option name="LAST_COMMIT_MESSAGE" value="added category model and initial data" />
+    <MESSAGE value="added prompt add/edit page" />
+    <option name="LAST_COMMIT_MESSAGE" value="added prompt add/edit page" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -284,10 +312,18 @@
           <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/memribox$memribox.coverage" NAME="memribox Coverage Results" MODIFIED="1715043929766" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/memribox$memoribox.coverage" NAME="memoribox Coverage Results" MODIFIED="1715657375328" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/memribox$MemriBox_Debug.coverage" NAME="MemriBox Debug Coverage Results" MODIFIED="1716008981838" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend" />
   </component>
 </project>
