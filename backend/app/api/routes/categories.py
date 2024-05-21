@@ -19,7 +19,8 @@ def read_categories(
     count = session.exec(count_statement).one()
     statement = select(Category).offset(skip).limit(limit)
     categories = session.exec(statement).all()
-
+    import pdb;
+    pdb.set_trace()
     return CategoriesPublic(data=categories, count=count)
 
 

@@ -1,7 +1,8 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
-from sqlmodel import func, select
+from fastapi import APIRouter, File, UploadFile, Form, HTTPException
+from typing import Optional
+from sqlmodel import func, select, Session
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
@@ -59,14 +60,41 @@ def read_user_story_prompt(session: SessionDep, current_user: CurrentUser, id: i
     return prompt
 
 
+def upload_image_to_s3(image: UploadFile) -> str:
+    # Implement the logic to upload the image to S3 and return the image URL
+    # You can use the boto3 library to interact with AWS S3
+    import boto3
+    s3_client = boto3.client('s3')
+    bucket_name = 'your-s3-bucket-name'
+    image_name = image.filename
+    s3_client.upload_fileobj(image.file, bucket_name, image_name)
+    image_url = f"https://{bucket_name}.s3.amazonaws.com/{image_name}"
+    return image_url
+
+
 @router.post("/", response_model=UserStoryPromptPublic)
 def create_user_story_prompt(
-    *, session: SessionDep, current_user: CurrentUser, prompt_in: UserStoryPromptCreate
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    prompt: str = Form(...),
+    category_id: Optional[int] = Form(None),
+    image: Optional[UploadFile] = File(None)
 ) -> Any:
     """
     Create new user story prompt.
     """
-    prompt = UserStoryPrompt(**prompt_in.dict(), user_id=current_user.id)
+    image_id = None
+    if image:
+        image_url = upload_image_to_s3(image)
+        new_image = Image(link=image_url)
+        session.add(new_image)
+        session.commit()
+        session.refresh(new_image)
+        image_id = new_image.id
+
+    prompt_data = UserStoryPromptCreate(prompt=prompt, category_id=category_id, image_id=image_id)
+    prompt = UserStoryPrompt(**prompt_data.dict(), user_id=current_user.id)
     session.add(prompt)
     session.commit()
     session.refresh(prompt)

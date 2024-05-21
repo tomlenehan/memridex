@@ -11,10 +11,14 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Select
+  Select,
+  Box,
+  Text,
+  VStack,
 } from "@chakra-ui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type SubmitHandler, useForm } from "react-hook-form";
+import { useDropzone } from "react-dropzone";
 
 import {
   type ApiError,
@@ -58,8 +62,10 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: UserStoryPromptCreate) =>
-      UserStoryPromptsService.createUserStoryPrompt({ requestBody: data }),
+    mutationFn: async (data: UserStoryPromptCreate) => {
+      const response = await UserStoryPromptsService.createUserStoryPrompt({ requestBody: data });
+      return response;
+    },
     onSuccess: () => {
       showToast("Success!", "User story prompt created successfully.", "success");
       reset();
@@ -75,80 +81,101 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
   });
 
   const onSubmit: SubmitHandler<UserStoryPromptCreate> = (data) => {
-    mutation.mutate(data);
+    const formData = new FormData();
+    formData.append("prompt", data.prompt);
+    formData.append("category_id", data.category_id?.toString() || "");
+    if (acceptedFiles.length > 0) {
+      formData.append("image", acceptedFiles[0]);
+    }
+
+    mutation.mutate(formData as any);
   };
 
-  return (
-    <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        size={{ base: "sm", md: "md" }}
-        isCentered
-      >
-        <ModalOverlay />
-        <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
-          <ModalHeader>Add User Story Prompt</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <FormControl isRequired isInvalid={!!errors.prompt}>
-              <FormLabel htmlFor="prompt">Prompt</FormLabel>
-              <Input
-                id="prompt"
-                {...register("prompt", {
-                  required: "Prompt is required.",
-                })}
-                placeholder="Prompt"
-                type="text"
-              />
-              {errors.prompt && (
-                <FormErrorMessage>{errors.prompt.message}</FormErrorMessage>
-              )}
-            </FormControl>
-            <FormControl mt={4} isInvalid={!!errors.category_id}>
-              <FormLabel htmlFor="category_id">Category</FormLabel>
-              <Select
-                id="category_id"
-                {...register("category_id")}
-                placeholder="Select category"
-              >
-                {categoriesLoading ? (
-                  <option>Loading...</option>
-                ) : (
-                  categoriesResponse?.data.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))
-                )}
-              </Select>
-              {errors.category_id && (
-                <FormErrorMessage>{errors.category_id.message}</FormErrorMessage>
-              )}
-            </FormControl>
-            <FormControl mt={4} isInvalid={!!errors.image_id}>
-              <FormLabel htmlFor="image_id">Image ID</FormLabel>
-              <Input
-                id="image_id"
-                {...register("image_id")}
-                placeholder="Image ID"
-                type="number"
-              />
-              {errors.image_id && (
-                <FormErrorMessage>{errors.image_id.message}</FormErrorMessage>
-              )}
-            </FormControl>
-          </ModalBody>
+  const {
+    getRootProps,
+    getInputProps,
+    acceptedFiles,
+  } = useDropzone({ accept: { 'image/*': ['.jpeg', '.jpg', '.png'] } });
 
-          <ModalFooter gap={3}>
-            <Button variant="primary" type="submit" isLoading={isSubmitting}>
-              Save
-            </Button>
-            <Button onClick={onClose}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={{ base: "sm", md: "md" }}
+      isCentered
+    >
+      <ModalOverlay />
+      <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
+        <ModalHeader>Add User Story Prompt</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody pb={6}>
+          <FormControl isRequired isInvalid={!!errors.prompt}>
+            <FormLabel htmlFor="prompt">Prompt</FormLabel>
+            <Input
+              id="prompt"
+              {...register("prompt", {
+                required: "Prompt is required.",
+              })}
+              placeholder="Prompt"
+              type="text"
+            />
+            {errors.prompt && (
+              <FormErrorMessage>{errors.prompt.message}</FormErrorMessage>
+            )}
+          </FormControl>
+          <FormControl mt={4} isInvalid={!!errors.category_id}>
+            <FormLabel htmlFor="category_id">Category</FormLabel>
+            <Select
+              id="category_id"
+              {...register("category_id")}
+              placeholder="Select category"
+            >
+              {categoriesLoading ? (
+                <option>Loading...</option>
+              ) : (
+                categoriesResponse?.data.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))
+              )}
+            </Select>
+            {errors.category_id && (
+              <FormErrorMessage>{errors.category_id.message}</FormErrorMessage>
+            )}
+          </FormControl>
+          <FormControl mt={4}>
+            <FormLabel htmlFor="image_id">Upload Image</FormLabel>
+            <Box
+              {...getRootProps()}
+              border="2px dashed"
+              borderColor="gray.300"
+              borderRadius="md"
+              p={4}
+              textAlign="center"
+              cursor="pointer"
+            >
+              <input {...getInputProps()} />
+              <Text>Drag 'n' drop an image here, or click to select one</Text>
+            </Box>
+            {acceptedFiles.length > 0 && (
+              <VStack mt={2}>
+                {acceptedFiles.map((file) => (
+                  <Text key={file.name}>{file.name}</Text>
+                ))}
+              </VStack>
+            )}
+          </FormControl>
+        </ModalBody>
+
+        <ModalFooter gap={3}>
+          <Button variant="primary" type="submit" isLoading={isSubmitting}>
+            Save
+          </Button>
+          <Button onClick={onClose}>Cancel</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 };
 
