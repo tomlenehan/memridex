@@ -1,0 +1,212 @@
+import {
+  Button,
+  FormControl,
+  FormErrorMessage,
+  FormLabel,
+  Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Select,
+  Box,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import { useDropzone } from "react-dropzone";
+import {
+  type ApiError,
+  CategoriesService,
+  CategoriesPublic,
+  // UserStoryPromptsService,
+  type UserStoryPromptPublic,
+  // type UserStoryPromptUpdate,
+} from "../../client";
+import useCustomToast from "../../hooks/useCustomToast";
+import axios from "axios";
+
+// Define the new type for the form data
+type FormDataUserStoryPromptUpdate = {
+  prompt: string;
+  category_id?: string;
+  image?: File;
+};
+
+interface EditUserStoryPromptProps {
+  userStoryPrompt: UserStoryPromptPublic;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const EditUserStoryPrompt = ({
+  userStoryPrompt,
+  isOpen,
+  onClose,
+}: EditUserStoryPromptProps) => {
+  const queryClient = useQueryClient();
+  const showToast = useCustomToast();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<FormDataUserStoryPromptUpdate>({
+    mode: "onBlur",
+    criteriaMode: "all",
+    defaultValues: {
+      prompt: userStoryPrompt.prompt,
+      category_id: userStoryPrompt.category_id?.toString(),
+      image: undefined,
+    },
+  });
+
+  // Fetch categories with a query
+  const { data: categoriesResponse, isLoading: categoriesLoading } =
+    useQuery<CategoriesPublic, ApiError>({
+      queryKey: ["categories"],
+      queryFn: async () => {
+        const response = await CategoriesService.readCategories();
+        return response;
+      },
+    });
+
+  const mutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("No access token found");
+      }
+      const response = await axios.put(
+        `/api/v1/user_story_prompts/${userStoryPrompt.id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      showToast("Success!", "User story prompt updated successfully.", "success");
+      reset();
+      onClose();
+    },
+    onError: (err: ApiError) => {
+      const errDetail = (err.body as any)?.detail;
+      showToast("Something went wrong.", `${errDetail}`, "error");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["userStoryPrompts"] });
+    },
+  });
+
+  const onSubmit: SubmitHandler<FormDataUserStoryPromptUpdate> = (data) => {
+    const formData = new FormData();
+    formData.append("prompt", data.prompt);
+    formData.append("category_id", data.category_id?.toString() || "");
+    if (acceptedFiles.length > 0) {
+      formData.append("image", acceptedFiles[0]);
+    }
+
+    console.log("FormData to be sent:");
+    formData.forEach((value, key) => {
+      console.log(`${key}: ${value}`);
+    });
+
+    mutation.mutate(formData);
+  };
+
+  const { getRootProps, getInputProps, acceptedFiles } = useDropzone({
+    accept: { "image/*": [".jpeg", ".jpg", ".png"] },
+  });
+
+  const onCancel = () => {
+    reset();
+    onClose();
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: "sm", md: "md" }} isCentered>
+      <ModalOverlay />
+      <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
+        <ModalHeader>Edit User Story Prompt</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody pb={6}>
+          <FormControl isRequired isInvalid={!!errors.prompt}>
+            <FormLabel htmlFor="prompt">Prompt</FormLabel>
+            <Input
+              id="prompt"
+              {...register("prompt", {
+                required: "Prompt is required.",
+              })}
+              placeholder="Prompt"
+              type="text"
+            />
+            {errors.prompt && (
+              <FormErrorMessage>{errors.prompt.message}</FormErrorMessage>
+            )}
+          </FormControl>
+          <FormControl mt={4} isInvalid={!!errors.category_id}>
+            <FormLabel htmlFor="category_id">Category</FormLabel>
+            <Select
+              id="category_id"
+              {...register("category_id")}
+              placeholder="Select category"
+            >
+              {categoriesLoading ? (
+                <option>Loading...</option>
+              ) : (
+                categoriesResponse?.data.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))
+              )}
+            </Select>
+            {errors.category_id && (
+              <FormErrorMessage>{errors.category_id.message}</FormErrorMessage>
+            )}
+          </FormControl>
+          <FormControl mt={4}>
+            <FormLabel htmlFor="image">Upload Image</FormLabel>
+            <Box
+              {...getRootProps()}
+              border="2px dashed"
+              borderColor="gray.300"
+              borderRadius="md"
+              p={4}
+              textAlign="center"
+              cursor="pointer"
+            >
+              <input {...getInputProps()} />
+              <Text>Drag 'n' drop an image here, or click to select one</Text>
+            </Box>
+            {acceptedFiles.length > 0 && (
+              <VStack mt={2}>
+                {acceptedFiles.map((file) => (
+                  <Text key={file.name}>{file.name}</Text>
+                ))}
+              </VStack>
+            )}
+          </FormControl>
+        </ModalBody>
+
+        <ModalFooter gap={3}>
+          <Button variant="primary" type="submit" isLoading={isSubmitting} isDisabled={!isDirty}>
+            Save
+          </Button>
+          <Button onClick={onCancel}>Cancel</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+};
+
+export default EditUserStoryPrompt;

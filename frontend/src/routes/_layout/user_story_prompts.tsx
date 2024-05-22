@@ -18,7 +18,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { UserStoryPromptsService, CategoriesService, ImagesService } from "../../client";
-import ActionsMenuUserStoryPrompt from "../../components/user_story_prompts/ActionsMenuUserStoryPrompt.tsx";
+import ActionsMenu from "../../components/Common/ActionsMenu"
 import Navbar from "../../components/Common/Navbar";
 
 export const Route = createFileRoute("/_layout/user_story_prompts")({
@@ -92,7 +92,7 @@ function UserStoryPromptsTableBody() {
               )}
           </Td>
           <Td>
-            <ActionsMenuUserStoryPrompt value={prompt} />
+            <ActionsMenu type="UserStoryPrompt" value={prompt} />
           </Td>
         </Tr>
       ))}

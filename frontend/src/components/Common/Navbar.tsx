@@ -3,7 +3,7 @@ import { FaPlus } from "react-icons/fa";
 
 import AddUser from "../Admin/AddUser";
 import AddItem from "../Items/AddItem";
-import AddUserStoryPrompt from "../user_story_prompts/AddUserStoryPrompt"; // Import the new component
+import AddUserStoryPrompt from "../UserStoryPrompts/AddUserStoryPrompt"; // Import the new component
 
 interface NavbarProps {
   type: string;
@@ -43,7 +43,7 @@ const Navbar = ({ type }: NavbarProps) => {
         </Button>
         <AddUser isOpen={addUserModal.isOpen} onClose={addUserModal.onClose} />
         <AddItem isOpen={addItemModal.isOpen} onClose={addItemModal.onClose} />
-        <AddUserStoryPrompt isOpen={addUserStoryPromptModal.isOpen} onClose={addUserStoryPromptModal.onClose} /> {/* New component */}
+        <AddUserStoryPrompt isOpen={addUserStoryPromptModal.isOpen} onClose={addUserStoryPromptModal.onClose} />
       </Flex>
     </>
   );

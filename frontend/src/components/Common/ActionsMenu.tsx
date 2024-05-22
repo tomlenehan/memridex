@@ -5,24 +5,25 @@ import {
   MenuItem,
   MenuList,
   useDisclosure,
-} from "@chakra-ui/react"
-import { BsThreeDotsVertical } from "react-icons/bs"
-import { FiEdit, FiTrash } from "react-icons/fi"
+} from "@chakra-ui/react";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { FiEdit, FiTrash } from "react-icons/fi";
 
-import type { ItemPublic, UserPublic } from "../../client"
-import EditUser from "../Admin/EditUser"
-import EditItem from "../Items/EditItem"
-import Delete from "./DeleteAlert"
+import type { ItemPublic, UserPublic, UserStoryPromptPublic } from "../../client";
+import EditUser from "../Admin/EditUser";
+import EditItem from "../Items/EditItem";
+import EditUserStoryPrompt from "../UserStoryPrompts/EditUserStoryPrompt";
+import Delete from "./DeleteAlert";
 
 interface ActionsMenuProps {
-  type: string
-  value: ItemPublic | UserPublic
-  disabled?: boolean
+  type: "User" | "Item" | "UserStoryPrompt";
+  value: ItemPublic | UserPublic | UserStoryPromptPublic;
+  disabled?: boolean;
 }
 
 const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
-  const editUserModal = useDisclosure()
-  const deleteModal = useDisclosure()
+  const editModal = useDisclosure();
+  const deleteModal = useDisclosure();
 
   return (
     <>
@@ -35,7 +36,7 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
         />
         <MenuList>
           <MenuItem
-            onClick={editUserModal.onOpen}
+            onClick={editModal.onOpen}
             icon={<FiEdit fontSize="16px" />}
           >
             Edit {type}
@@ -51,14 +52,20 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
         {type === "User" ? (
           <EditUser
             user={value as UserPublic}
-            isOpen={editUserModal.isOpen}
-            onClose={editUserModal.onClose}
+            isOpen={editModal.isOpen}
+            onClose={editModal.onClose}
           />
-        ) : (
+        ) : type === "Item" ? (
           <EditItem
             item={value as ItemPublic}
-            isOpen={editUserModal.isOpen}
-            onClose={editUserModal.onClose}
+            isOpen={editModal.isOpen}
+            onClose={editModal.onClose}
+          />
+        ) : (
+          <EditUserStoryPrompt
+            userStoryPrompt={value as UserStoryPromptPublic}
+            isOpen={editModal.isOpen}
+            onClose={editModal.onClose}
           />
         )}
         <Delete
@@ -69,7 +76,7 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
         />
       </Menu>
     </>
-  )
-}
+  );
+};
 
-export default ActionsMenu
+export default ActionsMenu;
