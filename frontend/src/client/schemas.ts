@@ -152,6 +152,98 @@ export const $HTTPValidationError = {
 	},
 } as const;
 
+export const $ImageCreate = {
+	properties: {
+		link: {
+	type: 'string',
+	isRequired: true,
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		date: {
+	type: 'string',
+	format: 'date-time',
+},
+	},
+} as const;
+
+export const $ImagePublic = {
+	properties: {
+		link: {
+	type: 'string',
+	isRequired: true,
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		date: {
+	type: 'string',
+	format: 'date-time',
+},
+		id: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $ImageUpdate = {
+	properties: {
+		link: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		date: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+	format: 'date-time',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
+export const $ImagesPublic = {
+	properties: {
+		data: {
+	type: 'array',
+	contains: {
+		type: 'ImagePublic',
+	},
+	isRequired: true,
+},
+		count: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
 export const $ItemCreate = {
 	properties: {
 		title: {

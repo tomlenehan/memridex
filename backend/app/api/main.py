@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.routes import items, login, users, utils, user_story_prompts, categories
+from app.api.routes import items, login, users, utils, user_story_prompts, categories, images
 
 api_router = APIRouter()
 api_router.include_router(login.router, tags=["login"])
@@ -9,3 +9,4 @@ api_router.include_router(utils.router, prefix="/utils", tags=["utils"])
 api_router.include_router(items.router, prefix="/items", tags=["items"])
 api_router.include_router(user_story_prompts.router, prefix="/user_story_prompts", tags=["user_story_prompts"])
 api_router.include_router(categories.router, prefix="/categories", tags=["categories"])
+api_router.include_router(images.router, prefix="/images", tags=["images"])

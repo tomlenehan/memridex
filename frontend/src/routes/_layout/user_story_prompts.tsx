@@ -2,6 +2,7 @@ import {
   Container,
   Flex,
   Heading,
+  Image,
   Skeleton,
   Table,
   TableContainer,
@@ -16,7 +17,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { UserStoryPromptsService } from "../../client";
+import { UserStoryPromptsService, CategoriesService, ImagesService } from "../../client";
 import ActionsMenuUserStoryPrompt from "../../components/user_story_prompts/ActionsMenuUserStoryPrompt.tsx";
 import Navbar from "../../components/Common/Navbar";
 
@@ -24,19 +25,72 @@ export const Route = createFileRoute("/_layout/user_story_prompts")({
   component: User_story_prompts,
 });
 
+// Define the types for the category and category map
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface CategoryMap {
+  [key: number]: string;
+}
+
+interface ImageData {
+  id: number;
+  link: string;
+}
+
+interface ImageMap {
+  [key: number]: string;
+}
+
 function UserStoryPromptsTableBody() {
   const { data: userStoryPrompts } = useSuspenseQuery({
     queryKey: ["userStoryPrompts"],
     queryFn: () => UserStoryPromptsService.readUserStoryPrompts({}),
   });
 
+  const { data: categories } = useSuspenseQuery({
+    queryKey: ["categories"],
+    queryFn: () => CategoriesService.readCategories({}),
+  });
+
+  const { data: images } = useSuspenseQuery({
+    queryKey: ["images"],
+    queryFn: () => ImagesService.readImages(),
+  });
+
+  // Create a mapping of category ID to category name
+  const categoryMap: CategoryMap = categories.data.reduce(
+    (acc: CategoryMap, category: Category) => {
+      acc[category.id] = category.name;
+      return acc;
+    },
+    {} as CategoryMap
+  );
+
+  const imageMap: ImageMap = images.data.reduce(
+    (acc: ImageMap, image: ImageData) => {
+      acc[image.id] = image.link;
+      return acc;
+    },
+    {} as ImageMap
+  );
+
   return (
     <Tbody>
       {userStoryPrompts.data.map((prompt) => (
         <Tr key={prompt.id}>
           <Td>{prompt.prompt}</Td>
-          <Td>{prompt.category_id || "N/A"}</Td>
-          <Td>{prompt.image_id || "N/A"}</Td>
+          <Td>{categoryMap[prompt.category_id || 0] || "N/A"}</Td>
+          <Td>
+              {prompt.image_id ? (
+                  <Image src={imageMap[prompt.image_id]} alt="thumbnail" boxSize="50px"
+                         objectFit="cover"/>
+              ) : (
+                  "N/A"
+              )}
+          </Td>
           <Td>
             <ActionsMenuUserStoryPrompt value={prompt} />
           </Td>
@@ -96,7 +150,7 @@ function User_story_prompts() {
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-        User Story Prompts Management
+        Manage Story Prompts
       </Heading>
 
       <Navbar type={"UserStoryPrompt"} />

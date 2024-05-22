@@ -135,7 +135,8 @@ def upload_image_to_s3(image: UploadFile) -> str:
         image_name = image.filename
 
         # Upload the file to S3
-        s3_client.upload_fileobj(image.file, bucket_name, image_name)
+        s3_client.upload_fileobj(image.file, bucket_name, image_name,
+                                 ExtraArgs={'ACL': 'public-read'})
 
         # Construct the image URL
         image_url = f"https://{bucket_name}.s3.amazonaws.com/{image_name}"

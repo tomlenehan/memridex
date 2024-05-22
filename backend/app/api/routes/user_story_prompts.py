@@ -74,14 +74,6 @@ def create_user_story_prompt(
     """
     Create new user story prompt.
     """
-    print("Received form data:")
-    print(f"prompt: {prompt}")
-    print(f"category_id: {category_id}")
-    print(f"image: {image.filename if image else 'No image uploaded'}")
-
-    print("Current user:")
-    print(current_user)
-
     image_id = None
     if image:
         image_url = upload_image_to_s3(image)

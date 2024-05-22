@@ -105,6 +105,30 @@ class Image(SQLModel, table=True):
     user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="image")
 
 
+# Properties to receive on image creation
+class ImageCreate(SQLModel):
+    link: str
+    description: Optional[str] = None
+    date: datetime = Field(default_factory=datetime.utcnow)
+
+
+# Properties to receive on image update
+class ImageUpdate(SQLModel):
+    link: Optional[str] = None
+    description: Optional[str] = None
+    date: Optional[datetime] = Field(default_factory=datetime.utcnow)
+
+
+# Properties to return via API, id is always required
+class ImagePublic(ImageCreate):
+    id: int
+
+
+class ImagesPublic(SQLModel):
+    data: List[ImagePublic]
+    count: int
+
+
 # Model for Categories
 class Category(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)

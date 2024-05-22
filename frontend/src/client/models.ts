@@ -52,6 +52,38 @@ export type HTTPValidationError = {
 
 
 
+export type ImageCreate = {
+	link: string;
+	description?: string | null;
+	date?: string;
+};
+
+
+
+export type ImagePublic = {
+	link: string;
+	description?: string | null;
+	date?: string;
+	id: number;
+};
+
+
+
+export type ImageUpdate = {
+	link?: string | null;
+	description?: string | null;
+	date?: string | null;
+};
+
+
+
+export type ImagesPublic = {
+	data: Array<ImagePublic>;
+	count: number;
+};
+
+
+
 export type ItemCreate = {
 	title: string;
 	description?: string | null;
