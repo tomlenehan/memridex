@@ -34,7 +34,6 @@ function UserStoryPromptsTableBody() {
     <Tbody>
       {userStoryPrompts.data.map((prompt) => (
         <Tr key={prompt.id}>
-          <Td>{prompt.id}</Td>
           <Td>{prompt.prompt}</Td>
           <Td>{prompt.category_id || "N/A"}</Td>
           <Td>{prompt.image_id || "N/A"}</Td>
@@ -53,7 +52,6 @@ function UserStoryPromptsTable() {
       <Table size={{ base: "sm", md: "md" }}>
         <Thead>
           <Tr>
-            <Th>ID</Th>
             <Th>Prompt</Th>
             <Th>Category</Th>
             <Th>Image</Th>

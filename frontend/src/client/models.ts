@@ -9,6 +9,14 @@ export type Body_login_login_access_token = {
 
 
 
+export type Body_user_story_prompts_create_user_story_prompt = {
+	prompt: string;
+	category_id?: number | null;
+	image?: Blob | File | null;
+};
+
+
+
 export type CategoriesPublic = {
 	data: Array<CategoryPublic>;
 	count: number;
@@ -125,14 +133,6 @@ export type UserRegister = {
 	email: string;
 	password: string;
 	full_name?: string | null;
-};
-
-
-
-export type UserStoryPromptCreate = {
-	prompt: string;
-	category_id?: number | null;
-	image_id?: number | null;
 };
 
 

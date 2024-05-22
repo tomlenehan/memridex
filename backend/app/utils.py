@@ -1,12 +1,16 @@
+import os
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from fastapi import UploadFile
 import emails  # type: ignore
 from jinja2 import Template
 from jose import JWTError, jwt
+import boto3
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
 from app.core.config import settings
 
@@ -114,3 +118,31 @@ def verify_password_reset_token(token: str) -> str | None:
         return str(decoded_token["sub"])
     except JWTError:
         return None
+
+
+def upload_image_to_s3(image: UploadFile) -> str:
+    try:
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+            region_name=os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
+        )
+        bucket_name = os.getenv('AWS_UPLOAD_BUCKET_NAME')
+        if not bucket_name:
+            raise ValueError("Bucket name not set in environment variables")
+
+        image_name = image.filename
+
+        # Upload the file to S3
+        s3_client.upload_fileobj(image.file, bucket_name, image_name)
+
+        # Construct the image URL
+        image_url = f"https://{bucket_name}.s3.amazonaws.com/{image_name}"
+        return image_url
+    except NoCredentialsError:
+        raise Exception("AWS credentials not available")
+    except PartialCredentialsError:
+        raise Exception("Incomplete AWS credentials provided")
+    except s3_client.exceptions.ClientError as e:
+        raise Exception(f"Failed to upload image to S3: {e}")

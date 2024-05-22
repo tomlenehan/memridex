@@ -11,8 +11,10 @@ from app.models import (
     UserStoryPromptPublic,
     UserStoryPromptUpdate,
     UserStoryPromptsPublic,
-    Message
+    Message,
+    Image
 )
+from app.utils import upload_image_to_s3
 
 router = APIRouter()
 
@@ -60,18 +62,6 @@ def read_user_story_prompt(session: SessionDep, current_user: CurrentUser, id: i
     return prompt
 
 
-def upload_image_to_s3(image: UploadFile) -> str:
-    # Implement the logic to upload the image to S3 and return the image URL
-    # You can use the boto3 library to interact with AWS S3
-    import boto3
-    s3_client = boto3.client('s3')
-    bucket_name = 'your-s3-bucket-name'
-    image_name = image.filename
-    s3_client.upload_fileobj(image.file, bucket_name, image_name)
-    image_url = f"https://{bucket_name}.s3.amazonaws.com/{image_name}"
-    return image_url
-
-
 @router.post("/", response_model=UserStoryPromptPublic)
 def create_user_story_prompt(
     *,
@@ -84,6 +74,14 @@ def create_user_story_prompt(
     """
     Create new user story prompt.
     """
+    print("Received form data:")
+    print(f"prompt: {prompt}")
+    print(f"category_id: {category_id}")
+    print(f"image: {image.filename if image else 'No image uploaded'}")
+
+    print("Current user:")
+    print(current_user)
+
     image_id = None
     if image:
         image_url = upload_image_to_s3(image)

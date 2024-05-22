@@ -19,15 +19,20 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useDropzone } from "react-dropzone";
-
 import {
   type ApiError,
-  type UserStoryPromptCreate,
-  UserStoryPromptsService,
   CategoriesService,
   CategoriesPublic,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
+import axios from 'axios';
+
+// Define the new type for the form data
+type FormDataUserStoryPromptCreate = {
+  prompt: string;
+  category_id?: string;
+  image?: File;
+};
 
 interface AddUserStoryPromptProps {
   isOpen: boolean;
@@ -42,13 +47,13 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<UserStoryPromptCreate>({
+  } = useForm<FormDataUserStoryPromptCreate>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
       prompt: "",
       category_id: undefined,
-      image_id: undefined,
+      image: undefined,
     },
   });
 
@@ -62,9 +67,20 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: UserStoryPromptCreate) => {
-      const response = await UserStoryPromptsService.createUserStoryPrompt({ requestBody: data });
-      return response;
+    mutationFn: async (formData: FormData) => {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('No access token found');
+      }
+      console.error("test");
+      // return UserStoryPromptsService.createUserStoryPrompt({ formData: formData as unknown as Body_user_story_prompts_create_user_story_prompt });
+      const response = await axios.post('/api/v1/user_story_prompts/', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
     },
     onSuccess: () => {
       showToast("Success!", "User story prompt created successfully.", "success");
@@ -80,7 +96,7 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
     },
   });
 
-  const onSubmit: SubmitHandler<UserStoryPromptCreate> = (data) => {
+  const onSubmit: SubmitHandler<FormDataUserStoryPromptCreate> = (data) => {
     const formData = new FormData();
     formData.append("prompt", data.prompt);
     formData.append("category_id", data.category_id?.toString() || "");
@@ -88,7 +104,12 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
       formData.append("image", acceptedFiles[0]);
     }
 
-    mutation.mutate(formData as any);
+    console.log("FormData to be sent:");
+    formData.forEach((value, key) => {
+      console.log(`${key}: ${value}`);
+    });
+
+    mutation.mutate(formData);
   };
 
   const {
@@ -145,7 +166,7 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
             )}
           </FormControl>
           <FormControl mt={4}>
-            <FormLabel htmlFor="image_id">Upload Image</FormLabel>
+            <FormLabel htmlFor="image">Upload Image</FormLabel>
             <Box
               {...getRootProps()}
               border="2px dashed"

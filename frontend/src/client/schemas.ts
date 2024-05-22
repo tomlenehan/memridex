@@ -40,6 +40,32 @@ export const $Body_login_login_access_token = {
 	},
 } as const;
 
+export const $Body_user_story_prompts_create_user_story_prompt = {
+	properties: {
+		prompt: {
+	type: 'string',
+	isRequired: true,
+},
+		category_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		image: {
+	type: 'any-of',
+	contains: [{
+	type: 'binary',
+	format: 'binary',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
 export const $CategoriesPublic = {
 	properties: {
 		data: {
@@ -325,31 +351,6 @@ export const $UserRegister = {
 	type: 'any-of',
 	contains: [{
 	type: 'string',
-}, {
-	type: 'null',
-}],
-},
-	},
-} as const;
-
-export const $UserStoryPromptCreate = {
-	properties: {
-		prompt: {
-	type: 'string',
-	isRequired: true,
-},
-		category_id: {
-	type: 'any-of',
-	contains: [{
-	type: 'number',
-}, {
-	type: 'null',
-}],
-},
-		image_id: {
-	type: 'any-of',
-	contains: [{
-	type: 'number',
 }, {
 	type: 'null',
 }],

@@ -54,6 +54,7 @@ services:
     restart: "no"
     ports:
       - "8888:8888"
+      - "8567:8567"
     volumes:
       - ./backend/:/app
     build:
