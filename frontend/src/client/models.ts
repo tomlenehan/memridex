@@ -17,6 +17,14 @@ export type Body_user_story_prompts_create_user_story_prompt = {
 
 
 
+export type Body_user_story_prompts_update_user_story_prompt = {
+	prompt: string;
+	category_id?: number | null;
+	image?: Blob | File | null;
+};
+
+
+
 export type CategoriesPublic = {
 	data: Array<CategoryPublic>;
 	count: number;
@@ -175,14 +183,6 @@ export type UserStoryPromptPublic = {
 	image_id?: number | null;
 	id: number;
 	user_id: number;
-};
-
-
-
-export type UserStoryPromptUpdate = {
-	prompt?: string | null;
-	category_id?: number | null;
-	image_id?: number | null;
 };
 
 

@@ -93,23 +93,38 @@ def create_user_story_prompt(
 
 @router.put("/{id}", response_model=UserStoryPromptPublic)
 def update_user_story_prompt(
-    *, session: SessionDep, current_user: CurrentUser, id: int, prompt_in: UserStoryPromptUpdate
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: int,
+    prompt: str = Form(...),
+    category_id: Optional[int] = Form(None),
+    image: Optional[UploadFile] = File(None)
 ) -> Any:
     """
     Update a user story prompt.
     """
-    prompt = session.get(UserStoryPrompt, id)
-    if not prompt:
+    prompt_instance = session.get(UserStoryPrompt, id)
+    if not prompt_instance:
         raise HTTPException(status_code=404, detail="User story prompt not found")
-    if not current_user.is_superuser and (prompt.user_id != current_user.id):
+    if not current_user.is_superuser and (prompt_instance.user_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    update_dict = prompt_in.dict(exclude_unset=True)
-    for key, value in update_dict.items():
-        setattr(prompt, key, value)
-    session.add(prompt)
+
+    if image:
+        image_url = upload_image_to_s3(image)
+        new_image = Image(link=image_url)
+        session.add(new_image)
+        session.commit()
+        session.refresh(new_image)
+        prompt_instance.image_id = new_image.id
+
+    prompt_instance.prompt = prompt
+    prompt_instance.category_id = category_id
+
+    session.add(prompt_instance)
     session.commit()
-    session.refresh(prompt)
-    return prompt
+    session.refresh(prompt_instance)
+    return prompt_instance
 
 
 @router.delete("/{id}")

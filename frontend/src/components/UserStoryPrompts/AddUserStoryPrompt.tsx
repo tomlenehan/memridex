@@ -3,7 +3,6 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
-  Input,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -15,6 +14,7 @@ import {
   Box,
   Text,
   VStack,
+  Textarea,
 } from "@chakra-ui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type SubmitHandler, useForm } from "react-hook-form";
@@ -132,13 +132,13 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
         <ModalBody pb={6}>
           <FormControl isRequired isInvalid={!!errors.prompt}>
             <FormLabel htmlFor="prompt">Prompt</FormLabel>
-            <Input
+            <Textarea
               id="prompt"
               {...register("prompt", {
                 required: "Prompt is required.",
               })}
               placeholder="Prompt"
-              type="text"
+              size="sm"
             />
             {errors.prompt && (
               <FormErrorMessage>{errors.prompt.message}</FormErrorMessage>

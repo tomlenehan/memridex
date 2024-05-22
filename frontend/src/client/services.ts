@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,Body_user_story_prompts_create_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,UserStoryPromptUpdate,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -550,8 +550,8 @@ export type TDataReadUserStoryPrompt = {
                 
             }
 export type TDataUpdateUserStoryPrompt = {
-                id: number
-requestBody: UserStoryPromptUpdate
+                formData: Body_user_story_prompts_update_user_story_prompt
+id: number
                 
             }
 export type TDataDeleteUserStoryPrompt = {
@@ -635,8 +635,8 @@ id,
 	 */
 	public static updateUserStoryPrompt(data: TDataUpdateUserStoryPrompt): CancelablePromise<UserStoryPromptPublic> {
 		const {
+formData,
 id,
-requestBody,
 } = data;
 		return __request(OpenAPI, {
 			method: 'PUT',
@@ -644,8 +644,8 @@ requestBody,
 			path: {
 				id
 			},
-			body: requestBody,
-			mediaType: 'application/json',
+			formData: formData,
+			mediaType: 'multipart/form-data',
 			errors: {
 				422: `Validation Error`,
 			},

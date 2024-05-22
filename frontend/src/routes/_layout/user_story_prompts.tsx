@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Container,
   Flex,
@@ -11,14 +12,15 @@ import {
   Th,
   Thead,
   Tr,
+  Spinner,
 } from "@chakra-ui/react";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { UserStoryPromptsService, CategoriesService, ImagesService } from "../../client";
-import ActionsMenu from "../../components/Common/ActionsMenu"
+import ActionsMenu from "../../components/Common/ActionsMenu";
 import Navbar from "../../components/Common/Navbar";
 
 export const Route = createFileRoute("/_layout/user_story_prompts")({
@@ -45,6 +47,8 @@ interface ImageMap {
 }
 
 function UserStoryPromptsTableBody() {
+  const queryClient = useQueryClient();
+
   const { data: userStoryPrompts } = useSuspenseQuery({
     queryKey: ["userStoryPrompts"],
     queryFn: () => UserStoryPromptsService.readUserStoryPrompts({}),
@@ -77,6 +81,19 @@ function UserStoryPromptsTableBody() {
     {} as ImageMap
   );
 
+  // Use effect to refetch images periodically if any image URLs are missing
+  useEffect(() => {
+    const interval = setInterval(() => {
+      userStoryPrompts.data.forEach((prompt) => {
+        if (prompt.image_id && !imageMap[prompt.image_id]) {
+          queryClient.invalidateQueries({ queryKey: ["images"] });
+        }
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [userStoryPrompts, imageMap, queryClient]);
+
   return (
     <Tbody>
       {userStoryPrompts.data.map((prompt) => (
@@ -84,12 +101,20 @@ function UserStoryPromptsTableBody() {
           <Td>{prompt.prompt}</Td>
           <Td>{categoryMap[prompt.category_id || 0] || "N/A"}</Td>
           <Td>
-              {prompt.image_id ? (
-                  <Image src={imageMap[prompt.image_id]} alt="thumbnail" boxSize="50px"
-                         objectFit="cover"/>
+            {prompt.image_id ? (
+              imageMap[prompt.image_id] ? (
+                <Image
+                  src={imageMap[prompt.image_id]}
+                  alt="thumbnail"
+                  boxSize="50px"
+                  objectFit="cover"
+                />
               ) : (
-                  "N/A"
-              )}
+                <Spinner size="sm" />
+              )
+            ) : (
+              "N/A"
+            )}
           </Td>
           <Td>
             <ActionsMenu type="UserStoryPrompt" value={prompt} />

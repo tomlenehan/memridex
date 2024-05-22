@@ -1,9 +1,9 @@
+import { useState, useEffect } from "react";
 import {
   Button,
   FormControl,
   FormErrorMessage,
   FormLabel,
-  Input,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -15,6 +15,7 @@ import {
   Box,
   Text,
   VStack,
+  Image, Textarea,
 } from "@chakra-ui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type SubmitHandler, useForm } from "react-hook-form";
@@ -23,9 +24,8 @@ import {
   type ApiError,
   CategoriesService,
   CategoriesPublic,
-  // UserStoryPromptsService,
   type UserStoryPromptPublic,
-  // type UserStoryPromptUpdate,
+  ImagesService,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 import axios from "axios";
@@ -50,20 +50,24 @@ const EditUserStoryPrompt = ({
 }: EditUserStoryPromptProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
+  const [newImageUploaded, setNewImageUploaded] = useState(false);
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting, isDirty },
+    setValue,
   } = useForm<FormDataUserStoryPromptUpdate>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: {
-      prompt: userStoryPrompt.prompt,
-      category_id: userStoryPrompt.category_id?.toString(),
-      image: undefined,
-    },
   });
+
+  useEffect(() => {
+    setValue("prompt", userStoryPrompt.prompt);
+    setValue("category_id", userStoryPrompt.category_id?.toString());
+    setValue("image", undefined);
+  }, [userStoryPrompt, setValue]);
 
   // Fetch categories with a query
   const { data: categoriesResponse, isLoading: categoriesLoading } =
@@ -74,6 +78,20 @@ const EditUserStoryPrompt = ({
         return response;
       },
     });
+
+  // Fetch the image data
+  const { data: imageData, isLoading: imageLoading } = useQuery({
+    queryKey: ["image", userStoryPrompt.image_id],
+    queryFn: async () => {
+      if (userStoryPrompt.image_id) {
+        const response = await ImagesService.readImage({
+          id: userStoryPrompt.image_id,
+        });
+        return response;
+      }
+    },
+    enabled: !!userStoryPrompt.image_id,
+  });
 
   const mutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -97,13 +115,11 @@ const EditUserStoryPrompt = ({
       showToast("Success!", "User story prompt updated successfully.", "success");
       reset();
       onClose();
+      queryClient.invalidateQueries({ queryKey: ["userStoryPrompts"] });
     },
     onError: (err: ApiError) => {
       const errDetail = (err.body as any)?.detail;
       showToast("Something went wrong.", `${errDetail}`, "error");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["userStoryPrompts"] });
     },
   });
 
@@ -115,16 +131,14 @@ const EditUserStoryPrompt = ({
       formData.append("image", acceptedFiles[0]);
     }
 
-    console.log("FormData to be sent:");
-    formData.forEach((value, key) => {
-      console.log(`${key}: ${value}`);
-    });
-
     mutation.mutate(formData);
   };
 
   const { getRootProps, getInputProps, acceptedFiles } = useDropzone({
     accept: { "image/*": [".jpeg", ".jpg", ".png"] },
+    onDrop: () => {
+      setNewImageUploaded(true);
+    },
   });
 
   const onCancel = () => {
@@ -141,13 +155,13 @@ const EditUserStoryPrompt = ({
         <ModalBody pb={6}>
           <FormControl isRequired isInvalid={!!errors.prompt}>
             <FormLabel htmlFor="prompt">Prompt</FormLabel>
-            <Input
+            <Textarea
               id="prompt"
               {...register("prompt", {
                 required: "Prompt is required.",
               })}
               placeholder="Prompt"
-              type="text"
+              size="sm"
             />
             {errors.prompt && (
               <FormErrorMessage>{errors.prompt.message}</FormErrorMessage>
@@ -176,6 +190,15 @@ const EditUserStoryPrompt = ({
           </FormControl>
           <FormControl mt={4}>
             <FormLabel htmlFor="image">Upload Image</FormLabel>
+            {!imageLoading && imageData && !newImageUploaded && (
+              <Image
+                src={imageData.link}
+                alt="Current image"
+                boxSize="50px"
+                objectFit="cover"
+                mb={2}
+              />
+            )}
             <Box
               {...getRootProps()}
               border="2px dashed"
@@ -199,7 +222,7 @@ const EditUserStoryPrompt = ({
         </ModalBody>
 
         <ModalFooter gap={3}>
-          <Button variant="primary" type="submit" isLoading={isSubmitting} isDisabled={!isDirty}>
+          <Button variant="primary" type="submit" isLoading={isSubmitting} isDisabled={!isDirty && !newImageUploaded}>
             Save
           </Button>
           <Button onClick={onCancel}>Cancel</Button>

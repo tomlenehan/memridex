@@ -66,6 +66,32 @@ export const $Body_user_story_prompts_create_user_story_prompt = {
 	},
 } as const;
 
+export const $Body_user_story_prompts_update_user_story_prompt = {
+	properties: {
+		prompt: {
+	type: 'string',
+	isRequired: true,
+},
+		category_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		image: {
+	type: 'any-of',
+	contains: [{
+	type: 'binary',
+	format: 'binary',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
 export const $CategoriesPublic = {
 	properties: {
 		data: {
@@ -479,35 +505,6 @@ export const $UserStoryPromptPublic = {
 		user_id: {
 	type: 'number',
 	isRequired: true,
-},
-	},
-} as const;
-
-export const $UserStoryPromptUpdate = {
-	properties: {
-		prompt: {
-	type: 'any-of',
-	contains: [{
-	type: 'string',
-}, {
-	type: 'null',
-}],
-},
-		category_id: {
-	type: 'any-of',
-	contains: [{
-	type: 'number',
-}, {
-	type: 'null',
-}],
-},
-		image_id: {
-	type: 'any-of',
-	contains: [{
-	type: 'number',
-}, {
-	type: 'null',
-}],
 },
 	},
 } as const;
