@@ -114,6 +114,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutUserstorypromptsImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/conversation': {
+      preLoaderRoute: typeof LayoutUserstorypromptsImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/': {
       preLoaderRoute: typeof LayoutIndexImport
       parentRoute: typeof LayoutImport

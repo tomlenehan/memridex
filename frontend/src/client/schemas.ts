@@ -167,6 +167,129 @@ export const $CategoryUpdate = {
 	},
 } as const;
 
+export const $ChatMessageCreate = {
+	properties: {
+		conversation_id: {
+	type: 'number',
+	isRequired: true,
+},
+		sender_id: {
+	type: 'number',
+	isRequired: true,
+},
+		sender_type: {
+	type: 'ChatMessageSender',
+	isRequired: true,
+},
+		content: {
+	type: 'string',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $ChatMessagePublic = {
+	properties: {
+		conversation_id: {
+	type: 'number',
+	isRequired: true,
+},
+		sender_id: {
+	type: 'number',
+	isRequired: true,
+},
+		sender_type: {
+	type: 'ChatMessageSender',
+	isRequired: true,
+},
+		content: {
+	type: 'string',
+	isRequired: true,
+},
+		id: {
+	type: 'number',
+	isRequired: true,
+},
+		timestamp: {
+	type: 'string',
+	isRequired: true,
+	format: 'date-time',
+},
+	},
+} as const;
+
+export const $ChatMessageSender = {
+	type: 'Enum',
+	enum: ['user','ai',],
+} as const;
+
+export const $ChatMessagesPublic = {
+	properties: {
+		data: {
+	type: 'array',
+	contains: {
+		type: 'ChatMessagePublic',
+	},
+	isRequired: true,
+},
+		count: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $ConversationCreate = {
+	properties: {
+		user_story_prompt_id: {
+	type: 'number',
+	isRequired: true,
+},
+		user_id: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $ConversationPublic = {
+	properties: {
+		user_story_prompt_id: {
+	type: 'number',
+	isRequired: true,
+},
+		user_id: {
+	type: 'number',
+	isRequired: true,
+},
+		id: {
+	type: 'number',
+	isRequired: true,
+},
+		created_at: {
+	type: 'string',
+	isRequired: true,
+	format: 'date-time',
+},
+	},
+} as const;
+
+export const $ConversationsPublic = {
+	properties: {
+		data: {
+	type: 'array',
+	contains: {
+		type: 'ConversationPublic',
+	},
+	isRequired: true,
+},
+		count: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
 export const $HTTPValidationError = {
 	properties: {
 		detail: {

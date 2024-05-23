@@ -54,6 +54,60 @@ export type CategoryUpdate = {
 
 
 
+export type ChatMessageCreate = {
+	conversation_id: number;
+	sender_id: number;
+	sender_type: ChatMessageSender;
+	content: string;
+};
+
+
+
+export type ChatMessagePublic = {
+	conversation_id: number;
+	sender_id: number;
+	sender_type: ChatMessageSender;
+	content: string;
+	id: number;
+	timestamp: string;
+};
+
+
+
+export type ChatMessageSender = 'user' | 'ai';
+
+
+
+export type ChatMessagesPublic = {
+	data: Array<ChatMessagePublic>;
+	count: number;
+};
+
+
+
+export type ConversationCreate = {
+	user_story_prompt_id: number;
+	user_id: number;
+};
+
+
+
+export type ConversationPublic = {
+	user_story_prompt_id: number;
+	user_id: number;
+	id: number;
+	created_at: string;
+};
+
+
+
+export type ConversationsPublic = {
+	data: Array<ConversationPublic>;
+	count: number;
+};
+
+
+
 export type HTTPValidationError = {
 	detail?: Array<ValidationError>;
 };

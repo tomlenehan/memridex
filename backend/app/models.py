@@ -1,226 +1,219 @@
 from datetime import datetime
 from typing import List, Optional
 from sqlmodel import Field, Relationship, SQLModel
-
+from enum import Enum
 
 # Shared properties
-# TODO replace email str with EmailStr when sqlmodel supports it
 class UserBase(SQLModel):
     email: str = Field(unique=True, index=True)
     is_active: bool = True
     is_superuser: bool = False
-    full_name: str | None = None
+    full_name: Optional[str] = None
 
-
-# Properties to receive via API on creation
 class UserCreate(UserBase):
     password: str
 
-
-# TODO replace email str with EmailStr when sqlmodel supports it
 class UserRegister(SQLModel):
     email: str
     password: str
-    full_name: str | None = None
+    full_name: Optional[str] = None
 
-
-# Properties to receive via API on update, all are optional
-# TODO replace email str with EmailStr when sqlmodel supports it
 class UserUpdate(UserBase):
-    email: str | None = None  # type: ignore
-    password: str | None = None
+    email: Optional[str] = None  # type: ignore
+    password: Optional[str] = None
 
-
-# TODO replace email str with EmailStr when sqlmodel supports it
 class UserUpdateMe(SQLModel):
-    full_name: str | None = None
-    email: str | None = None
-
+    full_name: Optional[str] = None
+    email: Optional[str] = None
 
 class UpdatePassword(SQLModel):
     current_password: str
     new_password: str
 
-
-# Database model, database table inferred from class name
 class User(UserBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     hashed_password: str
     items: List["Item"] = Relationship(back_populates="owner")
     user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="user")
+    conversations: List["Conversation"] = Relationship(back_populates="user")
+    chat_messages: List["ChatMessage"] = Relationship(back_populates="sender")
 
-
-# Properties to return via API, id is always required
 class UserPublic(UserBase):
     id: int
-
 
 class UsersPublic(SQLModel):
     data: List[UserPublic]
     count: int
 
-
-# Shared properties
 class ItemBase(SQLModel):
     title: str
-    description: str | None = None
+    description: Optional[str] = None
 
-
-# Properties to receive on item creation
 class ItemCreate(ItemBase):
     title: str
 
-
-# Properties to receive on item update
 class ItemUpdate(ItemBase):
-    title: str | None = None  # type: ignore
+    title: Optional[str] = None  # type: ignore
 
-
-# Database model, database table inferred from class name
 class Item(ItemBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     title: str
-    owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
-    owner: User | None = Relationship(back_populates="items")
+    owner_id: int = Field(foreign_key="user.id", nullable=False)
+    owner: Optional[User] = Relationship(back_populates="items")
 
-
-# Properties to return via API, id is always required
 class ItemPublic(ItemBase):
     id: int
     owner_id: int
-
 
 class ItemsPublic(SQLModel):
     data: List[ItemPublic]
     count: int
 
-
-# Model for Images
 class Image(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     link: str
-    description: str | None = None
+    description: Optional[str] = None
     date: datetime = Field(default_factory=datetime.utcnow)
     stock_story_prompts: List["StockStoryPrompt"] = Relationship(back_populates="image")
     user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="image")
 
-
-# Properties to receive on image creation
 class ImageCreate(SQLModel):
     link: str
     description: Optional[str] = None
     date: datetime = Field(default_factory=datetime.utcnow)
 
-
-# Properties to receive on image update
 class ImageUpdate(SQLModel):
     link: Optional[str] = None
     description: Optional[str] = None
     date: Optional[datetime] = Field(default_factory=datetime.utcnow)
 
-
-# Properties to return via API, id is always required
 class ImagePublic(ImageCreate):
     id: int
-
 
 class ImagesPublic(SQLModel):
     data: List[ImagePublic]
     count: int
 
-
-# Model for Categories
 class Category(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-    description: str | None = None
+    description: Optional[str] = None
     stock_story_prompts: List["StockStoryPrompt"] = Relationship(back_populates="category")
     user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="category")
 
-
-# Properties to receive on category creation
 class CategoryCreate(SQLModel):
     name: str
     description: Optional[str] = None
 
-
-# Properties to receive on category update
 class CategoryUpdate(SQLModel):
     name: Optional[str] = None
     description: Optional[str] = None
 
-
-# Properties to return via API, id is always required
 class CategoryPublic(CategoryCreate):
     id: int
-
 
 class CategoriesPublic(SQLModel):
     data: List[CategoryPublic]
     count: int
 
-# Model for Stock Story Prompts
 class StockStoryPrompt(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     prompt: str
-    category_id: int | None = Field(default=None, foreign_key="category.id")
+    category_id: Optional[int] = Field(default=None, foreign_key="category.id")
     category: Optional[Category] = Relationship(back_populates="stock_story_prompts")
-    image_id: int | None = Field(default=None, foreign_key="image.id")
+    image_id: Optional[int] = Field(default=None, foreign_key="image.id")
     image: Optional[Image] = Relationship(back_populates="stock_story_prompts")
 
-
-# Model for User Story Prompts
 class UserStoryPrompt(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     prompt: str
     user_id: int = Field(foreign_key="user.id")
-    user: User | None = Relationship(back_populates="user_story_prompts")
-    category_id: int | None = Field(default=None, foreign_key="category.id")
+    user: Optional[User] = Relationship(back_populates="user_story_prompts")
+    category_id: Optional[int] = Field(default=None, foreign_key="category.id")
     category: Optional[Category] = Relationship(back_populates="user_story_prompts")
-    image_id: int | None = Field(default=None, foreign_key="image.id")
+    image_id: Optional[int] = Field(default=None, foreign_key="image.id")
     image: Optional[Image] = Relationship(back_populates="user_story_prompts")
+    conversations: List["Conversation"] = Relationship(back_populates="user_story_prompt")
 
-
-# Properties to receive on user story prompt creation
 class UserStoryPromptCreate(SQLModel):
     prompt: str
     category_id: Optional[int] = None
     image_id: Optional[int] = None
 
-
-# Properties to receive on user story prompt update
 class UserStoryPromptUpdate(SQLModel):
     prompt: Optional[str] = None
     category_id: Optional[int] = None
     image_id: Optional[int] = None
 
-
-# Properties to return via API, id is always required
 class UserStoryPromptPublic(UserStoryPromptCreate):
     id: int
     user_id: int
-
 
 class UserStoryPromptsPublic(SQLModel):
     data: List[UserStoryPromptPublic]
     count: int
 
+class Conversation(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    user: Optional[User] = Relationship(back_populates="conversations")
+    user_story_prompt_id: int = Field(foreign_key="userstoryprompt.id")
+    user_story_prompt: Optional[UserStoryPrompt] = Relationship(back_populates="conversations")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    chat_messages: List["ChatMessage"] = Relationship(back_populates="conversation")
+
+class ChatMessageSender(str, Enum):
+    USER = "user"
+    AI = "ai"
+
+class ChatMessage(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    conversation_id: int = Field(foreign_key="conversation.id")
+    conversation: Optional[Conversation] = Relationship(back_populates="chat_messages")
+    sender_id: int = Field(foreign_key="user.id")
+    sender: Optional[User] = Relationship(back_populates="chat_messages")
+    sender_type: ChatMessageSender = Field(default=ChatMessageSender.USER)
+    content: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class ConversationCreate(SQLModel):
+    user_story_prompt_id: int
+    user_id: int
+
+class ConversationPublic(ConversationCreate):
+    id: int
+    created_at: datetime
+
+class ChatMessageCreate(SQLModel):
+    conversation_id: int
+    sender_id: int
+    sender_type: ChatMessageSender
+    content: str
+
+class ChatMessagePublic(ChatMessageCreate):
+    id: int
+    timestamp: datetime
+
+class ConversationsPublic(SQLModel):
+    data: List[ConversationPublic]
+    count: int
+
+class ChatMessagesPublic(SQLModel):
+    data: List[ChatMessagePublic]
+    count: int
 
 # Generic message
 class Message(SQLModel):
     message: str
-
 
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
     token_type: str = "bearer"
 
-
 # Contents of JWT token
 class TokenPayload(SQLModel):
-    sub: int | None = None
-
+    sub: Optional[int] = None
 
 class NewPassword(SQLModel):
     token: str

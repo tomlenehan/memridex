@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,ConversationCreate,ConversationPublic,ConversationsPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -527,6 +527,118 @@ id,
 			url: '/api/v1/items/{id}',
 			path: {
 				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+}
+
+export type TDataCreateConversation = {
+                requestBody: ConversationCreate
+                
+            }
+export type TDataReadConversations = {
+                limit?: number
+skip?: number
+                
+            }
+export type TDataCreateChatMessage = {
+                requestBody: ChatMessageCreate
+                
+            }
+export type TDataReadChatMessages = {
+                conversationId: number
+limit?: number
+skip?: number
+                
+            }
+
+export class ConversationsService {
+
+	/**
+	 * Create Conversation
+	 * @returns ConversationPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static createConversation(data: TDataCreateConversation): CancelablePromise<ConversationPublic> {
+		const {
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/conversations/conversations/',
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Read Conversations
+	 * @returns ConversationsPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readConversations(data: TDataReadConversations = {}): CancelablePromise<ConversationsPublic> {
+		const {
+limit = 100,
+skip = 0,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/conversations/conversations/',
+			query: {
+				skip, limit
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Create Chat Message
+	 * @returns ChatMessagePublic Successful Response
+	 * @throws ApiError
+	 */
+	public static createChatMessage(data: TDataCreateChatMessage): CancelablePromise<ChatMessagePublic> {
+		const {
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/conversations/chat_messages/',
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Read Chat Messages
+	 * @returns ChatMessagesPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readChatMessages(data: TDataReadChatMessages): CancelablePromise<ChatMessagesPublic> {
+		const {
+conversationId,
+limit = 100,
+skip = 0,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/conversations/chat_messages/{conversation_id}',
+			path: {
+				conversation_id: conversationId
+			},
+			query: {
+				skip, limit
 			},
 			errors: {
 				422: `Validation Error`,
