@@ -4,18 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="fixing add user_story_prompt form (categories)">
+    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="Added Conversation and ChatMessage models">
+      <change afterPath="$PROJECT_DIR$/backend/app/api/routes/conversations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/app/llm/conversation_agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/routes/categories.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/routes/categories.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/api/routes/user_story_prompts.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/api/routes/user_story_prompts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.override.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.override.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/client/models.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/client/models.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/client/schemas.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/client/schemas.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/client/services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/client/services.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/user_story_prompts/AddUserStoryPrompt.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/user_story_prompts/AddUserStoryPrompt.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/routes/_layout/user_story_prompts.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/routes/_layout/user_story_prompts.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SECURITY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/deployment.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/development.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Common/SidebarItems.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Common/SidebarItems.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/routeTree.gen.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/routeTree.gen.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/routes/_layout/conversations.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/routes/_layout/conversations.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/release-notes.md" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,7 +79,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "reference.settings.deploy.options",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
     "ts.external.directory.path": "/Users/tomlenehan/Dev/memribox/frontend/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   },
@@ -273,17 +274,18 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Docker.memribox-docker" />
       <item itemvalue="Docker.docker-backend" />
+      <item itemvalue="Docker.memribox-docker" />
       <item itemvalue="FastAPI.memoribox" />
-      <item itemvalue="Python.localhost" />
       <item itemvalue="Python.localhost2" />
+      <item itemvalue="Python.localhost" />
     </list>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-09665e90c3a7-b11f5e8da5ad-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-233.15026.15" />
+        <option value="bundled-js-predefined-1d06a55b98c1-91d5c284f522-JavaScript-PY-241.15989.155" />
+        <option value="bundled-python-sdk-babbdf50b680-7c6932dee5e4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.15989.155" />
       </set>
     </attachedChunks>
   </component>
@@ -306,7 +308,13 @@
       <workItem from="1716254474485" duration="492000" />
       <workItem from="1716255303726" duration="26979000" />
       <workItem from="1716325187677" duration="1447000" />
-      <workItem from="1716326645449" duration="22666000" />
+      <workItem from="1716326645449" duration="65680000" />
+      <workItem from="1716907935340" duration="692000" />
+      <workItem from="1716949892058" duration="171000" />
+      <workItem from="1716951875840" duration="280000" />
+      <workItem from="1716952180663" duration="19000" />
+      <workItem from="1716952217917" duration="101000" />
+      <workItem from="1716952325991" duration="1728000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <option name="closed" value="true" />
@@ -388,7 +396,55 @@
       <option name="project" value="LOCAL" />
       <updated>1716327017993</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="image uploading to s3 with user story prompt">
+      <option name="closed" value="true" />
+      <created>1716358438049</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1716358438051</updated>
+    </task>
+    <task id="LOCAL-00012" summary="more support for images in story prompts">
+      <option name="closed" value="true" />
+      <created>1716393057193</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1716393057195</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Edit/Delete Story Prompts">
+      <option name="closed" value="true" />
+      <created>1716397764465</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1716397764465</updated>
+    </task>
+    <task id="LOCAL-00014" summary="updating logic for Edit/Delete Story Prompts UI refresh">
+      <option name="closed" value="true" />
+      <created>1716419570136</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1716419570138</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Added Conversation and ChatMessage models">
+      <option name="closed" value="true" />
+      <created>1716443964242</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1716443964243</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Added Conversation and ChatMessage models">
+      <option name="closed" value="true" />
+      <created>1716443992760</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1716443992760</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -452,7 +508,12 @@
     <MESSAGE value="added category model and initial data" />
     <MESSAGE value="added prompt add/edit page" />
     <MESSAGE value="fixing add user_story_prompt form (categories)" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixing add user_story_prompt form (categories)" />
+    <MESSAGE value="image uploading to s3 with user story prompt" />
+    <MESSAGE value="more support for images in story prompts" />
+    <MESSAGE value="Edit/Delete Story Prompts" />
+    <MESSAGE value="updating logic for Edit/Delete Story Prompts UI refresh" />
+    <MESSAGE value="Added Conversation and ChatMessage models" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added Conversation and ChatMessage models" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -473,18 +534,13 @@
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/backend/app/api/routes/categories.py</url>
-          <line>29</line>
-          <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/backend/app/api/main.py</url>
-          <line>10</line>
+          <line>11</line>
           <option name="timeStamp" value="17" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/backend/app/api/routes/user_story_prompts.py</url>
-          <line>84</line>
+          <line>76</line>
           <option name="timeStamp" value="18" />
         </line-breakpoint>
       </breakpoints>

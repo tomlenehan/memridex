@@ -20,6 +20,7 @@ import { Route as LayoutIndexImport } from './routes/_layout/index'
 import { Route as LayoutUserstorypromptsImport } from './routes/_layout/user_story_prompts'
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
 import { Route as LayoutItemsImport } from './routes/_layout/items'
+import { Route as LayoutConversationsImport } from './routes/_layout/conversations'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 
 // Create/Update Routes
@@ -69,6 +70,11 @@ const LayoutItemsRoute = LayoutItemsImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutConversationsRoute = LayoutConversationsImport.update({
+  path: '/conversations',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
 const LayoutAdminRoute = LayoutAdminImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
@@ -102,6 +108,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/conversations': {
+      preLoaderRoute: typeof LayoutConversationsImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/items': {
       preLoaderRoute: typeof LayoutItemsImport
       parentRoute: typeof LayoutImport
@@ -111,10 +121,6 @@ declare module '@tanstack/react-router' {
       parentRoute: typeof LayoutImport
     }
     '/_layout/user_story_prompts': {
-      preLoaderRoute: typeof LayoutUserstorypromptsImport
-      parentRoute: typeof LayoutImport
-    }
-    '/_layout/conversation': {
       preLoaderRoute: typeof LayoutUserstorypromptsImport
       parentRoute: typeof LayoutImport
     }
@@ -130,6 +136,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren([
   LayoutRoute.addChildren([
     LayoutAdminRoute,
+    LayoutConversationsRoute,
     LayoutItemsRoute,
     LayoutSettingsRoute,
     LayoutUserstorypromptsRoute,
