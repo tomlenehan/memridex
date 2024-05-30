@@ -545,6 +545,19 @@ export type TDataReadConversations = {
 skip?: number
                 
             }
+export type TDataReadConversation = {
+                id: number
+                
+            }
+export type TDataUpdateConversation = {
+                id: number
+requestBody: ConversationCreate
+                
+            }
+export type TDataDeleteConversation = {
+                id: number
+                
+            }
 export type TDataCreateChatMessage = {
                 requestBody: ChatMessageCreate
                 
@@ -593,6 +606,72 @@ skip = 0,
 			url: '/api/v1/conversations/conversations/',
 			query: {
 				skip, limit
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Read Conversation
+	 * @returns ConversationPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readConversation(data: TDataReadConversation): CancelablePromise<ConversationPublic> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/conversations/conversations/{id}',
+			path: {
+				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Update Conversation
+	 * @returns ConversationPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static updateConversation(data: TDataUpdateConversation): CancelablePromise<ConversationPublic> {
+		const {
+id,
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'PUT',
+			url: '/api/v1/conversations/conversations/{id}',
+			path: {
+				id
+			},
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Delete Conversation
+	 * @returns Message Successful Response
+	 * @throws ApiError
+	 */
+	public static deleteConversation(data: TDataDeleteConversation): CancelablePromise<Message> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'DELETE',
+			url: '/api/v1/conversations/conversations/{id}',
+			path: {
+				id
 			},
 			errors: {
 				422: `Validation Error`,

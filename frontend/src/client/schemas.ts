@@ -301,6 +301,35 @@ export const $HTTPValidationError = {
 	},
 } as const;
 
+export const $Image = {
+	properties: {
+		id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		link: {
+	type: 'string',
+	isRequired: true,
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		date: {
+	type: 'string',
+	format: 'date-time',
+},
+	},
+} as const;
+
 export const $ImageCreate = {
 	properties: {
 		link: {
@@ -627,6 +656,15 @@ export const $UserStoryPromptPublic = {
 },
 		user_id: {
 	type: 'number',
+	isRequired: true,
+},
+		image: {
+	type: 'any-of',
+	contains: [{
+	type: 'Image',
+}, {
+	type: 'null',
+}],
 	isRequired: true,
 },
 	},

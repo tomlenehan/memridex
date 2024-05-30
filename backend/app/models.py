@@ -148,6 +148,7 @@ class UserStoryPromptUpdate(SQLModel):
 class UserStoryPromptPublic(UserStoryPromptCreate):
     id: int
     user_id: int
+    image: Optional[Image]
 
 class UserStoryPromptsPublic(SQLModel):
     data: List[UserStoryPromptPublic]

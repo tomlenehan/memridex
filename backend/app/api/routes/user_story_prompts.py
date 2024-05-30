@@ -1,11 +1,10 @@
-from typing import Any
-
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException
-from typing import Optional
+from typing import Any, Optional
+from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Depends
 from sqlmodel import func, select, Session
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, get_current_user, get_db
 from app.models import (
+    User,
     UserStoryPrompt,
     UserStoryPromptCreate,
     UserStoryPromptPublic,
@@ -18,10 +17,12 @@ from app.utils import upload_image_to_s3
 
 router = APIRouter()
 
-
 @router.get("/", response_model=UserStoryPromptsPublic)
 def read_user_story_prompts(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+    skip: int = 0,
+    limit: int = 100,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ) -> Any:
     """
     Retrieve user story prompts.
@@ -48,9 +49,12 @@ def read_user_story_prompts(
 
     return UserStoryPromptsPublic(data=prompts, count=count)
 
-
 @router.get("/{id}", response_model=UserStoryPromptPublic)
-def read_user_story_prompt(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
+def read_user_story_prompt(
+    id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Any:
     """
     Get user story prompt by ID.
     """
@@ -61,12 +65,11 @@ def read_user_story_prompt(session: SessionDep, current_user: CurrentUser, id: i
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return prompt
 
-
 @router.post("/", response_model=UserStoryPromptPublic)
 def create_user_story_prompt(
     *,
-    session: SessionDep,
-    current_user: CurrentUser,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     prompt: str = Form(...),
     category_id: Optional[int] = Form(None),
     image: Optional[UploadFile] = File(None)
@@ -90,13 +93,12 @@ def create_user_story_prompt(
     session.refresh(prompt)
     return prompt
 
-
 @router.put("/{id}", response_model=UserStoryPromptPublic)
 def update_user_story_prompt(
     *,
-    session: SessionDep,
-    current_user: CurrentUser,
     id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     prompt: str = Form(...),
     category_id: Optional[int] = Form(None),
     image: Optional[UploadFile] = File(None)
@@ -126,9 +128,12 @@ def update_user_story_prompt(
     session.refresh(prompt_instance)
     return prompt_instance
 
-
 @router.delete("/{id}")
-def delete_user_story_prompt(session: SessionDep, current_user: CurrentUser, id: int) -> Message:
+def delete_user_story_prompt(
+    id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Message:
     """
     Delete a user story prompt.
     """

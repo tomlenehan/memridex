@@ -114,6 +114,15 @@ export type HTTPValidationError = {
 
 
 
+export type Image = {
+	id?: number | null;
+	link: string;
+	description?: string | null;
+	date?: string;
+};
+
+
+
 export type ImageCreate = {
 	link: string;
 	description?: string | null;
@@ -237,6 +246,7 @@ export type UserStoryPromptPublic = {
 	image_id?: number | null;
 	id: number;
 	user_id: number;
+	image: Image | null;
 };
 
 
