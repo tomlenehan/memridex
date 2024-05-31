@@ -180,7 +180,6 @@ class ChatMessage(SQLModel, table=True):
 
 class ConversationCreate(SQLModel):
     user_story_prompt_id: int
-    user_id: int
 
 class ConversationPublic(ConversationCreate):
     id: int

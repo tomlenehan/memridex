@@ -95,14 +95,12 @@ export type ChatMessagesPublic = {
 
 export type ConversationCreate = {
 	user_story_prompt_id: number;
-	user_id: number;
 };
 
 
 
 export type ConversationPublic = {
 	user_story_prompt_id: number;
-	user_id: number;
 	id: number;
 	created_at: string;
 };

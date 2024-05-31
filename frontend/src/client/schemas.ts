@@ -270,20 +270,12 @@ export const $ConversationCreate = {
 	type: 'number',
 	isRequired: true,
 },
-		user_id: {
-	type: 'number',
-	isRequired: true,
-},
 	},
 } as const;
 
 export const $ConversationPublic = {
 	properties: {
 		user_story_prompt_id: {
-	type: 'number',
-	isRequired: true,
-},
-		user_id: {
 	type: 'number',
 	isRequired: true,
 },
