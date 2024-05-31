@@ -672,13 +672,24 @@ id,
 }
 
 export type TDataCreateChatMessage = {
-                requestBody: ChatMessageCreate
+                conversationId: number
+requestBody: ChatMessageCreate
                 
             }
 export type TDataReadChatMessages = {
                 conversationId: number
 limit?: number
 skip?: number
+                
+            }
+export type TDataReadChatMessage = {
+                conversationId: number
+messageId: number
+                
+            }
+export type TDataDeleteChatMessage = {
+                conversationId: number
+messageId: number
                 
             }
 
@@ -691,11 +702,15 @@ export class ChatMessagesService {
 	 */
 	public static createChatMessage(data: TDataCreateChatMessage): CancelablePromise<ChatMessagePublic> {
 		const {
+conversationId,
 requestBody,
 } = data;
 		return __request(OpenAPI, {
 			method: 'POST',
-			url: '/api/v1/chat_messages/',
+			url: '/api/v1/chat_messages/{conversation_id}/messages',
+			path: {
+				conversation_id: conversationId
+			},
 			body: requestBody,
 			mediaType: 'application/json',
 			errors: {
@@ -717,12 +732,56 @@ skip = 0,
 } = data;
 		return __request(OpenAPI, {
 			method: 'GET',
-			url: '/api/v1/chat_messages/{conversation_id}',
+			url: '/api/v1/chat_messages/{conversation_id}/messages',
 			path: {
 				conversation_id: conversationId
 			},
 			query: {
 				skip, limit
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Read Chat Message
+	 * @returns ChatMessagePublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readChatMessage(data: TDataReadChatMessage): CancelablePromise<ChatMessagePublic> {
+		const {
+conversationId,
+messageId,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/chat_messages/{conversation_id}/messages/{message_id}',
+			path: {
+				conversation_id: conversationId, message_id: messageId
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Delete Chat Message
+	 * @returns Message Successful Response
+	 * @throws ApiError
+	 */
+	public static deleteChatMessage(data: TDataDeleteChatMessage): CancelablePromise<Message> {
+		const {
+conversationId,
+messageId,
+} = data;
+		return __request(OpenAPI, {
+			method: 'DELETE',
+			url: '/api/v1/chat_messages/{conversation_id}/messages/{message_id}',
+			path: {
+				conversation_id: conversationId, message_id: messageId
 			},
 			errors: {
 				422: `Validation Error`,

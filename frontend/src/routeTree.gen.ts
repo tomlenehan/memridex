@@ -21,6 +21,7 @@ import { Route as LayoutUserstorypromptsImport } from './routes/_layout/user_sto
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
 import { Route as LayoutItemsImport } from './routes/_layout/items'
 import { Route as LayoutConversationsImport } from './routes/_layout/conversations'
+import { Route as LayoutConversationImport } from './routes/_layout/conversation'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 
 // Create/Update Routes
@@ -75,6 +76,11 @@ const LayoutConversationsRoute = LayoutConversationsImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutConversationRoute = LayoutConversationImport.update({
+  path: '/conversation',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
 const LayoutAdminRoute = LayoutAdminImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
@@ -108,6 +114,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/conversation': {
+      preLoaderRoute: typeof LayoutConversationImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/conversations': {
       preLoaderRoute: typeof LayoutConversationsImport
       parentRoute: typeof LayoutImport
@@ -136,6 +146,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren([
   LayoutRoute.addChildren([
     LayoutAdminRoute,
+    LayoutConversationRoute,
     LayoutConversationsRoute,
     LayoutItemsRoute,
     LayoutSettingsRoute,

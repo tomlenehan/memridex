@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from sqlmodel import func, Session, select
+from typing import Any
 from app.models import (
     Conversation,
     ConversationCreate,
@@ -14,21 +15,34 @@ from app.models import User
 
 router = APIRouter()
 
+
 @router.post("/", response_model=ConversationPublic)
 def create_conversation(
         *,
-        sessions: Session = Depends(get_db),
+        session: Session = Depends(get_db),
         conversation_in: ConversationCreate,
         current_user: User = Depends(get_current_user),
-) -> Conversation:
-    user_story_prompt = sessions.get(UserStoryPrompt, conversation_in.user_story_prompt_id)
+) -> Any:
+    user_story_prompt = session.get(UserStoryPrompt, conversation_in.user_story_prompt_id)
     if not user_story_prompt:
         raise HTTPException(status_code=404, detail="User story prompt not found")
 
+    # Check if a conversation already exists with the same user_story_prompt_id for the current user
+    existing_conversation = session.exec(
+        select(Conversation).where(
+            Conversation.user_id == current_user.id,
+            Conversation.user_story_prompt_id == conversation_in.user_story_prompt_id
+        )
+    ).first()
+
+    if existing_conversation:
+        raise HTTPException(status_code=400,
+                            detail="Conversation with this story prompt already exists")
+
     conversation = Conversation(user_id=current_user.id, user_story_prompt_id=user_story_prompt.id)
-    sessions.add(conversation)
-    sessions.commit()
-    sessions.refresh(conversation)
+    session.add(conversation)
+    session.commit()
+    session.refresh(conversation)
     return conversation
 
 @router.get("/", response_model=ConversationsPublic)
