@@ -3,7 +3,7 @@ import { FaPlus } from "react-icons/fa";
 
 import AddUser from "../Admin/AddUser";
 import AddItem from "../Items/AddItem";
-import AddUserStoryPrompt from "../UserStoryPrompts/AddUserStoryPrompt"; // Import the new component
+import AddUserStoryPrompt from "../UserStoryPrompts/AddUserStoryPrompt";
 
 interface NavbarProps {
   type: string;
@@ -12,7 +12,7 @@ interface NavbarProps {
 const Navbar = ({ type }: NavbarProps) => {
   const addUserModal = useDisclosure();
   const addItemModal = useDisclosure();
-  const addUserStoryPromptModal = useDisclosure(); // New modal control
+  const addUserStoryPromptModal = useDisclosure();
 
   const handleOpen = () => {
     switch (type) {

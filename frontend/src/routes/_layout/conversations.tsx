@@ -7,12 +7,14 @@ import {
   Image,
   Skeleton,
   Text,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { ErrorBoundary } from "react-error-boundary";
-import { UserStoryPromptsService } from "../../client";
-// import Navbar from "../../components/Common/Navbar";
+import { UserStoryPromptsService, UserStoryPromptPublic } from "../../client";
+import AddConversation from "../../components/Conversations/AddConversation";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_layout/conversations")({
   component: Conversations,
@@ -23,6 +25,14 @@ function UserStoryPromptsList() {
     queryKey: ["userStoryPrompts"],
     queryFn: () => UserStoryPromptsService.readUserStoryPrompts({}),
   });
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedPrompt, setSelectedPrompt] = useState<UserStoryPromptPublic | null>(null);
+
+  const handleStartConversation = (prompt: UserStoryPromptPublic) => {
+    setSelectedPrompt(prompt);
+    onOpen();
+  };
 
   if (isLoading) {
     return (
@@ -58,36 +68,42 @@ function UserStoryPromptsList() {
   }
 
   return (
-    <Flex wrap="wrap" justify="center">
-      {userStoryPrompts?.data.map((prompt) => (
-        <Box
-          key={prompt.id}
-          maxW="sm"
-          borderWidth="1px"
-          borderRadius="lg"
-          overflow="hidden"
-          m={4}
-        >
-          {prompt.image?.link ? (
-            <Image src={prompt.image.link} alt={prompt.prompt} />
-          ) : (
-            <Skeleton height="200px" />
-          )}
-          <Box p={6}>
-            <Heading size="md">{prompt.prompt}</Heading>
-            <Text mt={2} color="gray.600">
-              Category: {prompt.category_id}
-            </Text>
-            <Text mt={2} color="gray.600">
-              User ID: {prompt.user_id}
-            </Text>
-            <Button mt={4} colorScheme="teal">
-              Start Conversation
-            </Button>
+    <>
+      <Flex wrap="wrap" justify="center">
+        {userStoryPrompts?.data.map((prompt) => (
+          <Box
+            key={prompt.id}
+            maxW="sm"
+            borderWidth="1px"
+            borderRadius="lg"
+            overflow="hidden"
+            m={4}
+          >
+            {prompt.image?.link ? (
+              <Image src={prompt.image.link} alt={prompt.prompt} />
+            ) : (
+              <Skeleton height="200px" />
+            )}
+            <Box p={6}>
+              <Heading size="md">{prompt.prompt}</Heading>
+              {prompt.category ? (
+                <Text mt={2} color="gray.600">
+                  Category: {prompt.category.name}
+                </Text>
+              ) : (
+                <Text mt={2} color="gray.600">
+                  Category: N/A
+                </Text>
+              )}
+              <Button mt={4} colorScheme="teal" onClick={() => handleStartConversation(prompt)}>
+                Start Chat
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      ))}
-    </Flex>
+        ))}
+      </Flex>
+      <AddConversation isOpen={isOpen} onClose={onClose} prompt={selectedPrompt} />
+    </>
   );
 }
 
@@ -95,10 +111,8 @@ function Conversations() {
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-        User Story Prompts
+        Start New Chat
       </Heading>
-
-      {/*<Navbar type={"Conversation"} />*/}
 
       <ErrorBoundary
         fallbackRender={({ error }) => (

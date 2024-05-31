@@ -6,10 +6,6 @@ from app.models import (
     ConversationCreate,
     ConversationPublic,
     ConversationsPublic,
-    ChatMessage,
-    ChatMessageCreate,
-    ChatMessagePublic,
-    ChatMessagesPublic,
     UserStoryPrompt,
     Message
 )
@@ -18,7 +14,7 @@ from app.models import User
 
 router = APIRouter()
 
-@router.post("/conversations/", response_model=ConversationPublic)
+@router.post("/", response_model=ConversationPublic)
 def create_conversation(
         *,
         sessions: Session = Depends(get_db),
@@ -35,7 +31,7 @@ def create_conversation(
     sessions.refresh(conversation)
     return conversation
 
-@router.get("/conversations/", response_model=ConversationsPublic)
+@router.get("/", response_model=ConversationsPublic)
 def read_conversations(
         sessions: Session = Depends(get_db),
         skip: int = 0,
@@ -56,7 +52,7 @@ def read_conversations(
     count = sessions.exec(count_statement).one()
     return ConversationsPublic(data=conversations, count=count)
 
-@router.get("/conversations/{id}", response_model=ConversationPublic)
+@router.get("/{id}", response_model=ConversationPublic)
 def read_conversation(
         id: int,
         sessions: Session = Depends(get_db),
@@ -69,7 +65,7 @@ def read_conversation(
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return conversation
 
-@router.put("/conversations/{id}", response_model=ConversationPublic)
+@router.put("/{id}", response_model=ConversationPublic)
 def update_conversation(
         *,
         id: int,
@@ -90,7 +86,7 @@ def update_conversation(
     sessions.refresh(conversation)
     return conversation
 
-@router.delete("/conversations/{id}")
+@router.delete("/{id}")
 def delete_conversation(
         id: int,
         sessions: Session = Depends(get_db),
@@ -104,42 +100,3 @@ def delete_conversation(
     sessions.delete(conversation)
     sessions.commit()
     return Message(message="Conversation deleted successfully")
-
-@router.post("/chat_messages/", response_model=ChatMessagePublic)
-def create_chat_message(
-        *,
-        sessions: Session = Depends(get_db),
-        chat_message_in: ChatMessageCreate,
-        current_user: User = Depends(get_current_user),
-) -> ChatMessage:
-    conversation = sessions.get(Conversation, chat_message_in.conversation_id)
-    if not conversation:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-
-    chat_message = ChatMessage(sender_id=current_user.id, **chat_message_in.dict())
-    sessions.add(chat_message)
-    sessions.commit()
-    sessions.refresh(chat_message)
-    return chat_message
-
-@router.get("/chat_messages/{conversation_id}", response_model=ChatMessagesPublic)
-def read_chat_messages(
-        conversation_id: int,
-        sessions: Session = Depends(get_db),
-        skip: int = 0,
-        limit: int = 100,
-        current_user: User = Depends(get_current_user),
-) -> ChatMessagesPublic:
-    chat_messages = sessions.exec(
-        select(ChatMessage)
-        .where(ChatMessage.conversation_id == conversation_id)
-        .offset(skip)
-        .limit(limit)
-    ).all()
-    count_statement = (
-        select(func.count())
-        .select_from(ChatMessage)
-        .where(ChatMessage.conversation_id == conversation_id)
-    )
-    count = sessions.exec(count_statement).one()
-    return ChatMessagesPublic(data=chat_messages, count=count)

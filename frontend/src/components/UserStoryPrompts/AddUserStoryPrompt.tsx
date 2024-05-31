@@ -127,7 +127,7 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
     >
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
-        <ModalHeader>Add User Story Prompt</ModalHeader>
+        <ModalHeader>Add Story Prompts</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
           <FormControl isRequired isInvalid={!!errors.prompt}>

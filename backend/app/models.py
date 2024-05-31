@@ -149,6 +149,7 @@ class UserStoryPromptPublic(UserStoryPromptCreate):
     id: int
     user_id: int
     image: Optional[Image]
+    category: Optional[Category]
 
 class UserStoryPromptsPublic(SQLModel):
     data: List[UserStoryPromptPublic]

@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,ConversationCreate,ConversationPublic,ConversationsPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -558,16 +558,6 @@ export type TDataDeleteConversation = {
                 id: number
                 
             }
-export type TDataCreateChatMessage = {
-                requestBody: ChatMessageCreate
-                
-            }
-export type TDataReadChatMessages = {
-                conversationId: number
-limit?: number
-skip?: number
-                
-            }
 
 export class ConversationsService {
 
@@ -582,7 +572,7 @@ requestBody,
 } = data;
 		return __request(OpenAPI, {
 			method: 'POST',
-			url: '/api/v1/conversations/conversations/',
+			url: '/api/v1/conversations/',
 			body: requestBody,
 			mediaType: 'application/json',
 			errors: {
@@ -603,7 +593,7 @@ skip = 0,
 } = data;
 		return __request(OpenAPI, {
 			method: 'GET',
-			url: '/api/v1/conversations/conversations/',
+			url: '/api/v1/conversations/',
 			query: {
 				skip, limit
 			},
@@ -624,7 +614,7 @@ id,
 } = data;
 		return __request(OpenAPI, {
 			method: 'GET',
-			url: '/api/v1/conversations/conversations/{id}',
+			url: '/api/v1/conversations/{id}',
 			path: {
 				id
 			},
@@ -646,7 +636,7 @@ requestBody,
 } = data;
 		return __request(OpenAPI, {
 			method: 'PUT',
-			url: '/api/v1/conversations/conversations/{id}',
+			url: '/api/v1/conversations/{id}',
 			path: {
 				id
 			},
@@ -669,7 +659,7 @@ id,
 } = data;
 		return __request(OpenAPI, {
 			method: 'DELETE',
-			url: '/api/v1/conversations/conversations/{id}',
+			url: '/api/v1/conversations/{id}',
 			path: {
 				id
 			},
@@ -678,6 +668,21 @@ id,
 			},
 		});
 	}
+
+}
+
+export type TDataCreateChatMessage = {
+                requestBody: ChatMessageCreate
+                
+            }
+export type TDataReadChatMessages = {
+                conversationId: number
+limit?: number
+skip?: number
+                
+            }
+
+export class ChatMessagesService {
 
 	/**
 	 * Create Chat Message
@@ -690,7 +695,7 @@ requestBody,
 } = data;
 		return __request(OpenAPI, {
 			method: 'POST',
-			url: '/api/v1/conversations/chat_messages/',
+			url: '/api/v1/chat_messages/',
 			body: requestBody,
 			mediaType: 'application/json',
 			errors: {
@@ -712,7 +717,7 @@ skip = 0,
 } = data;
 		return __request(OpenAPI, {
 			method: 'GET',
-			url: '/api/v1/conversations/chat_messages/{conversation_id}',
+			url: '/api/v1/chat_messages/{conversation_id}',
 			path: {
 				conversation_id: conversationId
 			},

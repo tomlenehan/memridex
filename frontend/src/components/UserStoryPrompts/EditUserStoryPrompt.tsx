@@ -150,7 +150,7 @@ const EditUserStoryPrompt = ({
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: "sm", md: "md" }} isCentered>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
-        <ModalHeader>Edit User Story Prompt</ModalHeader>
+        <ModalHeader>Edit Story Prompt</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
           <FormControl isRequired isInvalid={!!errors.prompt}>

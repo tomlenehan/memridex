@@ -108,6 +108,31 @@ export const $CategoriesPublic = {
 	},
 } as const;
 
+export const $Category = {
+	properties: {
+		id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		name: {
+	type: 'string',
+	isRequired: true,
+},
+		description: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
 export const $CategoryCreate = {
 	properties: {
 		name: {
@@ -662,6 +687,15 @@ export const $UserStoryPromptPublic = {
 	type: 'any-of',
 	contains: [{
 	type: 'Image',
+}, {
+	type: 'null',
+}],
+	isRequired: true,
+},
+		category: {
+	type: 'any-of',
+	contains: [{
+	type: 'Category',
 }, {
 	type: 'null',
 }],

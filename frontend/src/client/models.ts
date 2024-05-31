@@ -32,6 +32,14 @@ export type CategoriesPublic = {
 
 
 
+export type Category = {
+	id?: number | null;
+	name: string;
+	description?: string | null;
+};
+
+
+
 export type CategoryCreate = {
 	name: string;
 	description?: string | null;
@@ -247,6 +255,7 @@ export type UserStoryPromptPublic = {
 	id: number;
 	user_id: number;
 	image: Image | null;
+	category: Category | null;
 };
 
 
