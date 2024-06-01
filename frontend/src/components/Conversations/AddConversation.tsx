@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {useForm, type SubmitHandler} from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "@tanstack/react-router";
 import {
     ConversationCreate,
     ConversationsService,
@@ -32,7 +32,7 @@ interface AddConversationProps {
 const AddConversation = ({isOpen, onClose, prompt}: AddConversationProps) => {
     const queryClient = useQueryClient();
     const showToast = useCustomToast();
-    const navigate = useNavigate();
+    const router = useRouter();
 
     const {
         register,
@@ -54,7 +54,10 @@ const AddConversation = ({isOpen, onClose, prompt}: AddConversationProps) => {
             showToast("Success!", "Conversation started successfully.", "success");
             reset();
             onClose();
-            navigate(`/conversation/${data.id}`);
+            router.navigate({
+                to: "/conversation/$conversationId",
+                params: {conversationId: data.id.toString()},
+            });
         },
         onError: (err: ApiError) => {
             const errDetail = (err.body as any)?.detail;

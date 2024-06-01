@@ -7,6 +7,9 @@ from app.models import (
     ConversationCreate,
     ConversationPublic,
     ConversationsPublic,
+    ConversationStatus,
+    ChatMessage,
+    ChatMessageSender,
     UserStoryPrompt,
     Message
 )
@@ -18,10 +21,10 @@ router = APIRouter()
 
 @router.post("/", response_model=ConversationPublic)
 def create_conversation(
-        *,
-        session: Session = Depends(get_db),
-        conversation_in: ConversationCreate,
-        current_user: User = Depends(get_current_user),
+    *,
+    session: Session = Depends(get_db),
+    conversation_in: ConversationCreate,
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     user_story_prompt = session.get(UserStoryPrompt, conversation_in.user_story_prompt_id)
     if not user_story_prompt:
@@ -39,10 +42,27 @@ def create_conversation(
         raise HTTPException(status_code=400,
                             detail="Conversation with this story prompt already exists")
 
-    conversation = Conversation(user_id=current_user.id, user_story_prompt_id=user_story_prompt.id)
+    # Create the new conversation with status set to active
+    conversation = Conversation(
+        user_id=current_user.id,
+        user_story_prompt_id=user_story_prompt.id,
+        status=ConversationStatus.ACTIVE
+    )
     session.add(conversation)
     session.commit()
     session.refresh(conversation)
+
+    # Create the first message with the prompt from the user_story_prompt
+    initial_message = ChatMessage(
+        conversation_id=conversation.id,
+        sender_id=current_user.id,
+        sender_type=ChatMessageSender.AI,
+        content=user_story_prompt.prompt
+    )
+    session.add(initial_message)
+    session.commit()
+    session.refresh(conversation)  # Refresh to include the new message
+
     return conversation
 
 @router.get("/", response_model=ConversationsPublic)

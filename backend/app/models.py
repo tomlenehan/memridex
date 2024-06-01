@@ -155,6 +155,11 @@ class UserStoryPromptsPublic(SQLModel):
     data: List[UserStoryPromptPublic]
     count: int
 
+class ConversationStatus(str, Enum):
+    INACTIVE = "inactive"
+    ACTIVE = "active"
+    COMPLETE = "complete"
+
 class Conversation(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
@@ -163,6 +168,7 @@ class Conversation(SQLModel, table=True):
     user_story_prompt: Optional[UserStoryPrompt] = Relationship(back_populates="conversations")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     chat_messages: List["ChatMessage"] = Relationship(back_populates="conversation")
+    status: ConversationStatus = Field(default=ConversationStatus.INACTIVE)
 
 class ChatMessageSender(str, Enum):
     USER = "user"
