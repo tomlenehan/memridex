@@ -192,7 +192,6 @@ class ConversationPublic(ConversationCreate):
     created_at: datetime
 
 class ChatMessageCreate(SQLModel):
-    conversation_id: int
     sender_type: ChatMessageSender
     content: str
 

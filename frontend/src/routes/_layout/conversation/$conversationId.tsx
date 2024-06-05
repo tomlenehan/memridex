@@ -2,7 +2,7 @@ import {
     Box,
     Container,
     Flex,
-    // Heading
+    Heading
 } from "@chakra-ui/react";
 import { createFileRoute } from "@tanstack/react-router";
 import ChatMessages from "../../../components/Conversations/ChatMessages";
@@ -29,14 +29,14 @@ function ConversationPage() {
 
   return (
     <Container maxW="full" height="100vh" display="flex" flexDirection="column">
-      {/*<Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>*/}
-      {/*  Conversation*/}
-      {/*</Heading>*/}
+      <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
+      </Heading>
 
       {/*<Navbar type={"Conversation"} />*/}
 
       <Flex flex="1" direction="column" overflow="hidden" mt={4}>
-        <Box flex="1" overflowY="auto" bg="gray.100">
+        {/*<Box flex="1" overflowY="auto" bg="gray.100">*/}
+        <Box flex="1" overflowY="auto" >
           <ChatMessages conversationId={conversationIdNumber} />
         </Box>
         <Box>

@@ -9,9 +9,8 @@ interface ChatInputProps {
 }
 
 const ChatInput = ({ conversationId }: ChatInputProps) => {
-  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<ChatMessageCreate>({
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<Omit<ChatMessageCreate, 'conversation_id'>>({
     defaultValues: {
-      conversation_id: conversationId,
       sender_type: "user",
     },
   });
@@ -19,7 +18,7 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
   const showToast = useCustomToast();
 
   const mutation = useMutation({
-    mutationFn: (newMessage: ChatMessageCreate) =>
+    mutationFn: (newMessage: Omit<ChatMessageCreate, 'conversation_id'>) =>
       ChatMessagesService.createChatMessage({
         conversationId,
         requestBody: newMessage,
@@ -34,7 +33,7 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
     },
   });
 
-  const onSubmit: SubmitHandler<ChatMessageCreate> = (data) => {
+  const onSubmit: SubmitHandler<Omit<ChatMessageCreate, 'conversation_id'>> = (data) => {
     mutation.mutate(data);
   };
 

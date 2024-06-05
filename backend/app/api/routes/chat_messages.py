@@ -26,8 +26,12 @@ def create_chat_message(
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    chat_message = ChatMessage(sender_id=current_user.id, conversation_id=conversation_id,
-                               **chat_message_in.dict())
+    chat_message = ChatMessage(
+        conversation_id=conversation_id,
+        sender_id=current_user.id,
+        sender_type=chat_message_in.sender_type,
+        content=chat_message_in.content
+    )
     session.add(chat_message)
     session.commit()
     session.refresh(chat_message)

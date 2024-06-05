@@ -63,8 +63,6 @@ export type CategoryUpdate = {
 
 
 export type ChatMessageCreate = {
-	conversation_id: number;
-	sender_id: number;
 	sender_type: ChatMessageSender;
 	content: string;
 };
@@ -72,8 +70,6 @@ export type ChatMessageCreate = {
 
 
 export type ChatMessagePublic = {
-	conversation_id: number;
-	sender_id: number;
 	sender_type: ChatMessageSender;
 	content: string;
 	id: number;

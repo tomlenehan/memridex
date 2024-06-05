@@ -194,14 +194,6 @@ export const $CategoryUpdate = {
 
 export const $ChatMessageCreate = {
 	properties: {
-		conversation_id: {
-	type: 'number',
-	isRequired: true,
-},
-		sender_id: {
-	type: 'number',
-	isRequired: true,
-},
 		sender_type: {
 	type: 'ChatMessageSender',
 	isRequired: true,
@@ -215,14 +207,6 @@ export const $ChatMessageCreate = {
 
 export const $ChatMessagePublic = {
 	properties: {
-		conversation_id: {
-	type: 'number',
-	isRequired: true,
-},
-		sender_id: {
-	type: 'number',
-	isRequired: true,
-},
 		sender_type: {
 	type: 'ChatMessageSender',
 	isRequired: true,
