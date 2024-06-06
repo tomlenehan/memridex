@@ -30,9 +30,9 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<ChatMessagePublic>) => {
       state.messages.push(action.payload);
     },
-    startStreamingMessage: (state) => {
+    startStreamingMessage: (state, action: PayloadAction<{ id: number }>) => {
       const newMessage: ChatMessagePublic = {
-        id: Date.now(), // Temporary unique identifier
+        id: action.payload.id,
         timestamp: new Date().toISOString(),
         sender_type: 'ai',
         content: '',
@@ -40,9 +40,9 @@ const chatSlice = createSlice({
       state.messages.push(newMessage);
       state.currentStreamingMessageId = newMessage.id;
     },
-    addStreamingMessage: (state, action: PayloadAction<Partial<ChatMessagePublic>>) => {
+    addStreamingMessage: (state, action: PayloadAction<{ id: number, content: string }>) => {
       const streamingMessage = state.messages.find(
-        (msg) => msg.id === state.currentStreamingMessageId
+        (msg) => msg.id === action.payload.id
       );
 
       if (streamingMessage) {

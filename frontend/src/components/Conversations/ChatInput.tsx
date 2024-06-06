@@ -2,7 +2,6 @@ import { Box, Button, Flex, Input } from "@chakra-ui/react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChatMessageCreate } from "../../client";
-// import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } from "../../redux/chatSlice";
 
@@ -26,7 +25,8 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
       throw new Error('No access token found');
     }
 
-    dispatch(startStreamingMessage());
+    const tempId = Date.now();
+    dispatch(startStreamingMessage({ id: tempId }));
 
     const response = await fetch(`/api/v1/chat_messages/${conversationId}/messages`, {
       method: "POST",
@@ -46,7 +46,7 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
       const { done, value } = await reader.read();
       if (done) break;
       const chunk = decoder.decode(value);
-      dispatch(addStreamingMessage({ content: chunk }));
+      dispatch(addStreamingMessage({ id: tempId, content: chunk }));
     }
 
     dispatch(endStreamingMessage());
@@ -72,11 +72,6 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
           Send
         </Button>
       </Flex>
-      {/*{streamingResponse && (*/}
-      {/*  <Box mt={2} p={2} bg="gray.200" borderRadius="md">*/}
-      {/*    <Text>{streamingResponse}</Text>*/}
-      {/*  </Box>*/}
-      {/*)}*/}
     </Box>
   );
 };
