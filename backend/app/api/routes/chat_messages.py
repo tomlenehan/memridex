@@ -17,14 +17,14 @@ router = APIRouter()
 
 
 @router.post("/{conversation_id}/messages", response_model=ChatMessagePublic)
-def create_chat_message(
+async def create_chat_message(
         *,
-        session: Session = Depends(get_db),
         conversation_id: int,
         chat_message_in: ChatMessageCreate,
         current_user: User = Depends(get_current_user),
-) -> ChatMessage:
-    conversation = session.get(Conversation, conversation_id)
+        db_session: Session = Depends(get_db)
+) -> StreamingResponse:
+    conversation = db_session.get(Conversation, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
@@ -34,13 +34,31 @@ def create_chat_message(
         sender_type=chat_message_in.sender_type,
         content=chat_message_in.content
     )
-    session.add(chat_message)
-    session.commit()
-    session.refresh(chat_message)
+    db_session.add(chat_message)
+    db_session.commit()
+    db_session.refresh(chat_message)
 
-    # Stream the response from the model
-    generator = send_message(chat_message_in.content)
-    return StreamingResponse(generator, media_type="text/event-stream")
+    async def message_generator(db_session: Session, current_user_id: int):
+        response_content = ""
+        async for token in send_message(chat_message_in.content):
+            response_content += token
+            yield token
+
+        # Save the AI message after streaming is complete
+        ai_message = ChatMessage(
+            conversation_id=conversation_id,
+            sender_id=current_user_id,  # Assuming None or some specific AI identifier
+            sender_type="AI",
+            content=response_content
+        )
+        db_session.add(ai_message)
+        db_session.commit()
+        db_session.refresh(ai_message)
+
+    # Extract current_user id before the generator function
+    current_user_id = current_user.id
+
+    return StreamingResponse(message_generator(db_session, current_user_id), media_type="text/event-stream")
 
 
 @router.get("/{conversation_id}/messages", response_model=ChatMessagesPublic)
@@ -60,6 +78,7 @@ def read_chat_messages(
     chat_messages = session.exec(
         select(ChatMessage)
         .where(ChatMessage.conversation_id == conversation_id)
+        .order_by(ChatMessage.timestamp.asc())
         .offset(skip)
         .limit(limit)
     ).all()

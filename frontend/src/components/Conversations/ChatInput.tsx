@@ -25,7 +25,7 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
       throw new Error('No access token found');
     }
 
-    const tempId = Date.now() + 2;
+    const tempId = Date.now() + 1;
     dispatch(startStreamingMessage({ id: tempId }));
 
     const response = await fetch(`/api/v1/chat_messages/${conversationId}/messages`, {
