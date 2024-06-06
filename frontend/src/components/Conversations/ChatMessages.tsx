@@ -1,31 +1,47 @@
 import { Box, VStack, Text } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { ChatMessagesService, ChatMessagesPublic, ChatMessagePublic } from "../../client";
-import ChatMessage from "./ChatMessage";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { fetchMessages } from "../../redux/chatSlice";
+import { RootState, AppDispatch } from "../../redux/store";
 
 interface ChatMessagesProps {
   conversationId: number;
 }
 
 const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
-  const { data, isLoading, error } = useQuery<ChatMessagesPublic, Error>({
-    queryKey: ["chatMessages", conversationId],
-    queryFn: () => ChatMessagesService.readChatMessages({ conversationId: Number(conversationId) }),
-  });
+  const dispatch: AppDispatch = useDispatch();
+  const messages = useSelector((state: RootState) => state.chat.messages);
+  const status = useSelector((state: RootState) => state.chat.status);
+  const error = useSelector((state: RootState) => state.chat.error);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatch(fetchMessages(conversationId));
+    }
+  }, [status, dispatch, conversationId]);
+
+  if (status === 'loading') {
     return <Text>Loading...</Text>;
   }
 
-  if (error) {
-    return <Text>Error loading messages</Text>;
+  if (status === 'failed') {
+    return <Text>Error loading messages: {error}</Text>;
   }
 
   return (
     <Box flex="1" overflowY="auto" p={4} bg="white">
       <VStack spacing={4} align="start">
-        {data?.data.map((message: ChatMessagePublic) => (
-          <ChatMessage key={message.id} message={message} />
+        {messages.map((message) => (
+          <Box key={message.id}
+               // bg="gray.200"
+               bg={message.sender_type === "ai" ? "gray.200" : "blue.200"}
+               p={3}
+               borderRadius="md"
+               // alignSelf={message.sender_type === "ai" ? "start" : "end"}
+               alignSelf="start"
+          >
+            <Text>{message.content}</Text>
+          </Box>
         ))}
       </VStack>
     </Box>

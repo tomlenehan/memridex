@@ -1,21 +1,22 @@
 import {
-    Box,
-    Container,
-    Flex,
-    Heading
+  Box,
+  Container,
+  Flex,
+  Heading
 } from "@chakra-ui/react";
 import { createFileRoute } from "@tanstack/react-router";
 import ChatMessages from "../../../components/Conversations/ChatMessages";
 import ChatInput from "../../../components/Conversations/ChatInput";
+// import { ChatMessageCreate } from "../../../client";
+// import { useState } from "react";
 
 export const Route = createFileRoute("/_layout/conversation/$conversationId")({
   component: ConversationPage,
 });
 
 function ConversationPage() {
-  // const params = useParams<{ conversationId: string }>();
-  const {conversationId} = Route.useParams();
-  // const conversationId = params.conversationId;
+  const { conversationId } = Route.useParams();
+  // const [messages, setMessages] = useState<Omit<ChatMessageCreate, 'conversation_id'>[]>([]);
 
   if (!conversationId) {
     return <Box>Error: No conversation ID provided</Box>;
@@ -27,16 +28,19 @@ function ConversationPage() {
     return <Box>Error: Invalid conversation ID provided</Box>;
   }
 
+  // const handleNewMessage = (message: Omit<ChatMessageCreate, 'conversation_id'>) => {
+  //   setMessages(prevMessages => [...prevMessages, message]);
+  // };
+
   return (
     <Container maxW="full" height="100vh" display="flex" flexDirection="column">
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
       </Heading>
 
-      {/*<Navbar type={"Conversation"} />*/}
+      {/* <Navbar type={"Conversation"} /> */}
 
       <Flex flex="1" direction="column" overflow="hidden" mt={4}>
-        {/*<Box flex="1" overflowY="auto" bg="gray.100">*/}
-        <Box flex="1" overflowY="auto" >
+        <Box flex="1" overflowY="auto">
           <ChatMessages conversationId={conversationIdNumber} />
         </Box>
         <Box>
@@ -46,3 +50,5 @@ function ConversationPage() {
     </Container>
   );
 }
+
+export default ConversationPage;

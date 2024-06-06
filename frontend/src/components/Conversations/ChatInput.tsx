@@ -1,40 +1,63 @@
 import { Box, Button, Flex, Input } from "@chakra-ui/react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ApiError, ChatMessageCreate, ChatMessagesService } from "../../client";
-import useCustomToast from "../../hooks/useCustomToast";
+import { useQueryClient } from "@tanstack/react-query";
+import { ChatMessageCreate } from "../../client";
+// import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } from "../../redux/chatSlice";
 
 interface ChatInputProps {
   conversationId: number;
 }
 
 const ChatInput = ({ conversationId }: ChatInputProps) => {
-  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<Omit<ChatMessageCreate, 'conversation_id'>>({
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<ChatMessageCreate>({
     defaultValues: {
       sender_type: "user",
+      content: "",
     },
   });
   const queryClient = useQueryClient();
-  const showToast = useCustomToast();
+  const dispatch = useDispatch();
 
-  const mutation = useMutation({
-    mutationFn: (newMessage: Omit<ChatMessageCreate, 'conversation_id'>) =>
-      ChatMessagesService.createChatMessage({
-        conversationId,
-        requestBody: newMessage,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["chatMessages", conversationId] });
-      reset();
-    },
-    onError: (err: ApiError) => {
-      const errDetail = (err.body as any)?.detail;
-      showToast("Something went wrong.", `${errDetail}`, "error");
-    },
-  });
+  const handleStream = async (newMessage: ChatMessageCreate) => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      throw new Error('No access token found');
+    }
 
-  const onSubmit: SubmitHandler<Omit<ChatMessageCreate, 'conversation_id'>> = (data) => {
-    mutation.mutate(data);
+    dispatch(startStreamingMessage());
+
+    const response = await fetch(`/api/v1/chat_messages/${conversationId}/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(newMessage)
+    });
+
+    if (!response.body) return;
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value);
+      dispatch(addStreamingMessage({ content: chunk }));
+    }
+
+    dispatch(endStreamingMessage());
+    queryClient.invalidateQueries({ queryKey: ["chatMessages", conversationId] });
+  };
+
+  const onSubmit: SubmitHandler<ChatMessageCreate> = (data) => {
+    const newMessage = { id: Date.now(), sender_type: data.sender_type, content: data.content, timestamp: new Date().toISOString() };
+    dispatch(addMessage(newMessage));
+    handleStream(data);
+    reset();
   };
 
   return (
@@ -49,6 +72,11 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
           Send
         </Button>
       </Flex>
+      {/*{streamingResponse && (*/}
+      {/*  <Box mt={2} p={2} bg="gray.200" borderRadius="md">*/}
+      {/*    <Text>{streamingResponse}</Text>*/}
+      {/*  </Box>*/}
+      {/*)}*/}
     </Box>
   );
 };

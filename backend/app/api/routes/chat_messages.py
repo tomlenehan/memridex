@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlmodel import func, Session, select
 from app.models import (
     ChatMessage,
@@ -10,6 +11,7 @@ from app.models import (
 )
 from app.api.deps import get_current_user, get_db
 from app.models import User
+from app.llm.conversation_agent import send_message, Message
 
 router = APIRouter()
 
@@ -35,7 +37,10 @@ def create_chat_message(
     session.add(chat_message)
     session.commit()
     session.refresh(chat_message)
-    return chat_message
+
+    # Stream the response from the model
+    generator = send_message(chat_message_in.content)
+    return StreamingResponse(generator, media_type="text/event-stream")
 
 
 @router.get("/{conversation_id}/messages", response_model=ChatMessagesPublic)
