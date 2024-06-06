@@ -41,12 +41,15 @@ const chatSlice = createSlice({
       state.currentStreamingMessageId = newMessage.id;
     },
     addStreamingMessage: (state, action: PayloadAction<{ id: number, content: string }>) => {
-      const streamingMessage = state.messages.find(
-        (msg) => msg.id === action.payload.id
-      );
+      // if(state.currentStreamingMessageId != null) {
+      if(action.payload.id) {
+        const streamingMessage = state.messages.find(
+            (msg) => msg.id === action.payload.id
+        );
 
-      if (streamingMessage) {
-        streamingMessage.content += action.payload.content;
+        if (streamingMessage) {
+          streamingMessage.content += action.payload.content;
+        }
       }
     },
     endStreamingMessage: (state) => {
