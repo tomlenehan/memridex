@@ -86,7 +86,7 @@ async def send_message(content: str, conversation_id: int, session: Session) -> 
     chain = prompt | model
 
     try:
-        for chunk in chain.stream({"question": content, "history": chat_history}):
+        async for chunk in chain.astream({"question": content, "history": chat_history}):
             yield chunk.content
     except Exception as e:
         print(f"Caught exception: {e}")
