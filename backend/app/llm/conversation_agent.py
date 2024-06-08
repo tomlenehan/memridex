@@ -1,15 +1,30 @@
-from typing import AsyncIterable
+from typing import AsyncIterable, Tuple
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+import tiktoken
 from pydantic import BaseModel
 from sqlmodel import func, Session, select
 from app.models import (
     ChatMessage,
     Conversation
 )
+
 class Message(BaseModel):
     content: str
+
+MODEL_NAME = "gpt-3.5-turbo"
+
+import logging
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def num_tokens_from_string(string: str) -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.encoding_for_model(MODEL_NAME)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
 
 
 async def get_formatted_history(conversation_id: int, session: Session):
@@ -24,28 +39,38 @@ async def get_formatted_history(conversation_id: int, session: Session):
         .order_by(ChatMessage.timestamp.asc())
     ).all()
 
-    # Convert chat messages to the desired format
+
     messages = []
+    total_tokens = 0
+
     if story_prompt:
-        system_prompt = (f"You are an AI journalist tasked with interviewing the user "
-                         f"regarding {story_prompt}. continue to ask good follow-up"
+        system_prompt = (f"You are an AI tasked with interviewing the user "
+                         f"about this story prompt {story_prompt}. continue to ask good follow-up "
                          f"questions based on their input.")
-        messages.append(SystemMessage(content=system_prompt))
+        system_message = SystemMessage(content=system_prompt)
+        messages.append(system_message)
+        total_tokens += num_tokens_from_string(system_message.content)
 
     for msg in chat_messages:
         if msg.sender_type == "HUMAN":
-            messages.append(HumanMessage(content=msg.content))
+            human_message = HumanMessage(content=msg.content)
+            messages.append(human_message)
+            total_tokens += num_tokens_from_string(human_message.content)
         elif msg.sender_type == "AI":
-            messages.append(AIMessage(content=msg.content))
+            ai_message = AIMessage(content=msg.content)
+            messages.append(ai_message)
+            total_tokens += num_tokens_from_string(ai_message.content)
 
-    return messages
+    logger.info(f"Total token count for conversation {conversation_id}: {total_tokens}")
+
+    return messages, total_tokens
 
 async def send_message(content: str, conversation_id: int, session: Session) -> AsyncIterable[str]:
 
-    chat_history = await get_formatted_history(conversation_id, session)
+    chat_history, total_tokens = await get_formatted_history(conversation_id, session)
 
     model = ChatOpenAI(
-        model="gpt-3.5-turbo",
+        model=MODEL_NAME,
         streaming=True,
         verbose=True,
     )
