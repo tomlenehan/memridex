@@ -12,6 +12,7 @@ from app.models import (
 from app.api.deps import get_current_user, get_db
 from app.models import User
 from app.llm.conversation_agent import send_message, Message
+# from app.llm.conversation_agent2 import send_message, Message
 
 router = APIRouter()
 
@@ -40,14 +41,14 @@ async def create_chat_message(
 
     async def message_generator(db_session: Session, current_user_id: int):
         response_content = ""
-        async for token in send_message(chat_message_in.content):
+        async for token in send_message(chat_message_in.content, conversation_id, db_session):
             response_content += token
             yield token
 
         # Save the AI message after streaming is complete
         ai_message = ChatMessage(
             conversation_id=conversation_id,
-            sender_id=current_user_id,  # Assuming None or some specific AI identifier
+            sender_id=current_user_id,
             sender_type="AI",
             content=response_content
         )

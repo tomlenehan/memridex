@@ -2214,6 +2214,16 @@ toml = ["tomli (>=2.0.1)"]
 yaml = ["pyyaml (>=6.0.1)"]
 
 [[package]]
+name = "pydevd-pycharm"
+version = "241.15989.155"
+description = "PyCharm Debugger (used in PyCharm and PyDev)"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pydevd-pycharm-241.15989.155.tar.gz", hash = "sha256:428d98047ecbd7f347fb5e443869dead42aa0b389d8b64fc2034bb1cedae3609"},
+]
+
+[[package]]
 name = "pytest"
 version = "7.4.4"
 description = "pytest: simple powerful testing with Python"
@@ -3306,4 +3316,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "c460a203b19171310d606539b3bf8dfdf124ee2a506c8191f093a8043ce279db"
+content-hash = "be92f67e672727c166eb98aeae7cc50d33837a19ab3657d473298857ebac6f43"

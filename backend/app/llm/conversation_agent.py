@@ -1,43 +1,67 @@
-import asyncio
 from typing import AsyncIterable
-
-# from dotenv import load_dotenv
-# from fastapi import FastAPI
-# from fastapi.middleware.cors import CORSMiddleware
-# from fastapi.responses import StreamingResponse
-from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
+from langchain.schema import HumanMessage, AIMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from pydantic import BaseModel
-
+from sqlmodel import func, Session, select
+from app.models import (
+    ChatMessage,
+    Conversation
+)
 class Message(BaseModel):
     content: str
 
 
-async def send_message(content: str) -> AsyncIterable[str]:
-    callback = AsyncIteratorCallbackHandler()
+async def get_formatted_history(conversation_id: int, session: Session):
+
+    conversation = session.get(Conversation, conversation_id)
+
+    story_prompt = conversation.user_story_prompt.prompt
+
+    chat_messages = session.exec(
+        select(ChatMessage)
+        .where(ChatMessage.conversation_id == conversation_id)
+        .order_by(ChatMessage.timestamp.asc())
+    ).all()
+
+    # Convert chat messages to the desired format
+    messages = []
+    if story_prompt:
+        system_prompt = (f"You are an AI journalist tasked with interviewing the user "
+                         f"regarding {story_prompt}. continue to ask good follow-up"
+                         f"questions based on their input.")
+        messages.append(SystemMessage(content=system_prompt))
+
+    for msg in chat_messages:
+        if msg.sender_type == "HUMAN":
+            messages.append(HumanMessage(content=msg.content))
+        elif msg.sender_type == "AI":
+            messages.append(AIMessage(content=msg.content))
+
+    return messages
+
+async def send_message(content: str, conversation_id: int, session: Session) -> AsyncIterable[str]:
+
+    chat_history = await get_formatted_history(conversation_id, session)
+
     model = ChatOpenAI(
+        model="gpt-3.5-turbo",
         streaming=True,
         verbose=True,
-        callbacks=[callback],
     )
 
-    task = asyncio.create_task(
-        model.agenerate(messages=[[HumanMessage(content=content)]])
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            # ("system", "You are a helpful assistant."),
+            MessagesPlaceholder("history"),
+            ("human", "{question}")
+        ]
     )
+
+    chain = prompt | model
 
     try:
-        async for token in callback.aiter():
-            yield token
+        for chunk in chain.stream({"question": content, "history": chat_history}):
+            yield chunk.content
     except Exception as e:
         print(f"Caught exception: {e}")
-    finally:
-        callback.done.set()
-
-    await task
-
-
-# @app.post("/stream_chat/")
-# async def stream_chat(message: Message):
-#     generator = send_message(message.content)
-#     return StreamingResponse(generator, media_type="text/event-stream")
