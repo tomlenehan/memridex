@@ -25,7 +25,6 @@ import {
   CategoriesService,
   CategoriesPublic,
   type UserStoryPromptPublic,
-  ImagesService,
 } from "../../client";
 import useCustomToast from "../../hooks/useCustomToast";
 import axios from "axios";
@@ -78,20 +77,6 @@ const EditUserStoryPrompt = ({
         return response;
       },
     });
-
-  // Fetch the image data
-  const { data: imageData, isLoading: imageLoading } = useQuery({
-    queryKey: ["image", userStoryPrompt.image_id],
-    queryFn: async () => {
-      if (userStoryPrompt.image_id) {
-        const response = await ImagesService.readImage({
-          id: userStoryPrompt.image_id,
-        });
-        return response;
-      }
-    },
-    enabled: !!userStoryPrompt.image_id,
-  });
 
   const mutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -190,9 +175,9 @@ const EditUserStoryPrompt = ({
           </FormControl>
           <FormControl mt={4}>
             <FormLabel htmlFor="image">Upload Image</FormLabel>
-            {!imageLoading && imageData && !newImageUploaded && (
+            {userStoryPrompt.image_url && !newImageUploaded && (
               <Image
-                src={imageData.link}
+                src={userStoryPrompt.image_url}
                 alt="Current image"
                 boxSize="50px"
                 objectFit="cover"
