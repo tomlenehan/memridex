@@ -10,15 +10,16 @@ from app.models import (
     Conversation
 )
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class Message(BaseModel):
     content: str
 
+
 MODEL_NAME = "gpt-3.5-turbo"
 
-import logging
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 def num_tokens_from_string(string: str) -> int:
     """Returns the number of tokens in a text string."""
@@ -30,7 +31,6 @@ def num_tokens_from_string(string: str) -> int:
 async def get_formatted_history(conversation_id: int, session: Session):
 
     conversation = session.get(Conversation, conversation_id)
-
     story_prompt = conversation.user_story_prompt.prompt
 
     chat_messages = session.exec(
@@ -38,7 +38,6 @@ async def get_formatted_history(conversation_id: int, session: Session):
         .where(ChatMessage.conversation_id == conversation_id)
         .order_by(ChatMessage.timestamp.asc())
     ).all()
-
 
     messages = []
     total_tokens = 0
@@ -77,7 +76,6 @@ async def send_message(content: str, conversation_id: int, session: Session) -> 
 
     prompt = ChatPromptTemplate.from_messages(
         [
-            # ("system", "You are a helpful assistant."),
             MessagesPlaceholder("history"),
             ("human", "{question}")
         ]

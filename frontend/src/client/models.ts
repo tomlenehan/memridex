@@ -116,15 +116,6 @@ export type HTTPValidationError = {
 
 
 
-export type Image = {
-	id?: number | null;
-	link: string;
-	description?: string | null;
-	date?: string;
-};
-
-
-
 export type ImageCreate = {
 	link: string;
 	description?: string | null;
@@ -187,12 +178,6 @@ export type ItemsPublic = {
 
 
 
-export type Message = {
-	message: string;
-};
-
-
-
 export type NewPassword = {
 	token: string;
 	new_password: string;
@@ -245,10 +230,9 @@ export type UserRegister = {
 export type UserStoryPromptPublic = {
 	prompt: string;
 	category_id?: number | null;
-	image_id?: number | null;
+	image_url?: string | null;
 	id: number;
 	user_id: number;
-	image: Image | null;
 	category: Category | null;
 };
 
@@ -289,5 +273,17 @@ export type ValidationError = {
 	loc: Array<string | number>;
 	msg: string;
 	type: string;
+};
+
+
+
+export type app__llm__conversation_agent__Message = {
+	content: string;
+};
+
+
+
+export type app__models__Message = {
+	message: string;
 };
 

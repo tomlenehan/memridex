@@ -74,8 +74,6 @@ class Image(SQLModel, table=True):
     link: str
     description: Optional[str] = None
     date: datetime = Field(default_factory=datetime.utcnow)
-    stock_story_prompts: List["StockStoryPrompt"] = Relationship(back_populates="image")
-    user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="image")
 
 class ImageCreate(SQLModel):
     link: str
@@ -121,8 +119,7 @@ class StockStoryPrompt(SQLModel, table=True):
     prompt: str
     category_id: Optional[int] = Field(default=None, foreign_key="category.id")
     category: Optional[Category] = Relationship(back_populates="stock_story_prompts")
-    image_id: Optional[int] = Field(default=None, foreign_key="image.id")
-    image: Optional[Image] = Relationship(back_populates="stock_story_prompts")
+    image_url: Optional[str] = None  # New field for image URL
 
 class UserStoryPrompt(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -131,24 +128,22 @@ class UserStoryPrompt(SQLModel, table=True):
     user: Optional[User] = Relationship(back_populates="user_story_prompts")
     category_id: Optional[int] = Field(default=None, foreign_key="category.id")
     category: Optional[Category] = Relationship(back_populates="user_story_prompts")
-    image_id: Optional[int] = Field(default=None, foreign_key="image.id")
-    image: Optional[Image] = Relationship(back_populates="user_story_prompts")
+    image_url: Optional[str] = None  # New field for image URL
     conversations: List["Conversation"] = Relationship(back_populates="user_story_prompt")
 
 class UserStoryPromptCreate(SQLModel):
     prompt: str
     category_id: Optional[int] = None
-    image_id: Optional[int] = None
+    image_url: Optional[str] = None  # New field for image URL
 
 class UserStoryPromptUpdate(SQLModel):
     prompt: Optional[str] = None
     category_id: Optional[int] = None
-    image_id: Optional[int] = None
+    image_url: Optional[str] = None  # New field for image URL
 
 class UserStoryPromptPublic(UserStoryPromptCreate):
     id: int
     user_id: int
-    image: Optional[Image]
     category: Optional[Category]
 
 class UserStoryPromptsPublic(SQLModel):

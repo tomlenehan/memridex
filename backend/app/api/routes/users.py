@@ -22,6 +22,8 @@ from app.models import (
     UsersPublic,
     UserUpdate,
     UserUpdateMe,
+    UserStoryPrompt,
+    StockStoryPrompt,
 )
 from app.utils import generate_new_account_email, send_email
 
@@ -64,6 +66,20 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
         )
 
     user = crud.create_user(session=session, user_create=user_in)
+
+    # Copy all prompts from StockStoryPrompt to UserStoryPrompt
+    stock_prompts = session.query(StockStoryPrompt).all()
+    for stock_prompt in stock_prompts:
+        user_prompt = UserStoryPrompt(
+            prompt=stock_prompt.prompt,
+            user_id=user.id,
+            category_id=stock_prompt.category_id,
+            image_url=stock_prompt.image_url
+        )
+        session.add(user_prompt)
+
+    session.commit()
+
     if settings.emails_enabled and user_in.email:
         email_data = generate_new_account_email(
             email_to=user_in.email, username=user_in.email, password=user_in.password

@@ -79,8 +79,8 @@ function UserStoryPromptsList() {
             overflow="hidden"
             m={4}
           >
-            {prompt.image?.link ? (
-              <Image src={prompt.image.link} alt={prompt.prompt} />
+            {prompt.image_url ? (
+              <Image src={prompt.image_url} alt={prompt.prompt} />
             ) : (
               <Skeleton height="200px" />
             )}
@@ -111,7 +111,7 @@ function Conversations() {
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-        Start New Chat
+        Story Chats
       </Heading>
 
       <ErrorBoundary

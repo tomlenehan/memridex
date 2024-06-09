@@ -302,35 +302,6 @@ export const $HTTPValidationError = {
 	},
 } as const;
 
-export const $Image = {
-	properties: {
-		id: {
-	type: 'any-of',
-	contains: [{
-	type: 'number',
-}, {
-	type: 'null',
-}],
-},
-		link: {
-	type: 'string',
-	isRequired: true,
-},
-		description: {
-	type: 'any-of',
-	contains: [{
-	type: 'string',
-}, {
-	type: 'null',
-}],
-},
-		date: {
-	type: 'string',
-	format: 'date-time',
-},
-	},
-} as const;
-
 export const $ImageCreate = {
 	properties: {
 		link: {
@@ -502,15 +473,6 @@ export const $ItemsPublic = {
 	},
 } as const;
 
-export const $Message = {
-	properties: {
-		message: {
-	type: 'string',
-	isRequired: true,
-},
-	},
-} as const;
-
 export const $NewPassword = {
 	properties: {
 		token: {
@@ -643,10 +605,10 @@ export const $UserStoryPromptPublic = {
 	type: 'null',
 }],
 },
-		image_id: {
+		image_url: {
 	type: 'any-of',
 	contains: [{
-	type: 'number',
+	type: 'string',
 }, {
 	type: 'null',
 }],
@@ -657,15 +619,6 @@ export const $UserStoryPromptPublic = {
 },
 		user_id: {
 	type: 'number',
-	isRequired: true,
-},
-		image: {
-	type: 'any-of',
-	contains: [{
-	type: 'Image',
-}, {
-	type: 'null',
-}],
 	isRequired: true,
 },
 		category: {
@@ -789,6 +742,24 @@ export const $ValidationError = {
 	isRequired: true,
 },
 		type: {
+	type: 'string',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $app__llm__conversation_agent__Message = {
+	properties: {
+		content: {
+	type: 'string',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $app__models__Message = {
+	properties: {
+		message: {
 	type: 'string',
 	isRequired: true,
 },

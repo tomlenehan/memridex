@@ -77,16 +77,11 @@ def create_user_story_prompt(
     """
     Create new user story prompt.
     """
-    image_id = None
+    image_url = None
     if image:
         image_url = upload_image_to_s3(image)
-        new_image = Image(link=image_url)
-        session.add(new_image)
-        session.commit()
-        session.refresh(new_image)
-        image_id = new_image.id
 
-    prompt_data = UserStoryPromptCreate(prompt=prompt, category_id=category_id, image_id=image_id)
+    prompt_data = UserStoryPromptCreate(prompt=prompt, category_id=category_id, image_url=image_url)
     prompt = UserStoryPrompt(**prompt_data.dict(), user_id=current_user.id)
     session.add(prompt)
     session.commit()

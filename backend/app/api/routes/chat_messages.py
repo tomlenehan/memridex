@@ -12,7 +12,7 @@ from app.models import (
 from app.api.deps import get_current_user, get_db
 from app.models import User
 from app.llm.conversation_agent import send_message, Message
-# from app.llm.conversation_agent2 import send_message, Message
+
 
 router = APIRouter()
 
@@ -56,7 +56,6 @@ async def create_chat_message(
         db_session.commit()
         db_session.refresh(ai_message)
 
-    # Extract current_user id before the generator function
     current_user_id = current_user.id
 
     return StreamingResponse(message_generator(db_session, current_user_id), media_type="text/event-stream")

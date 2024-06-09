@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
+import type { app__models__Message,Body_login_login_access_token,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,app__llm__conversation_agent__Message,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -60,10 +60,10 @@ formData,
 	/**
 	 * Recover Password
 	 * Password Recovery
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static recoverPassword(data: TDataRecoverPassword): CancelablePromise<Message> {
+	public static recoverPassword(data: TDataRecoverPassword): CancelablePromise<app__models__Message> {
 		const {
 email,
 } = data;
@@ -82,10 +82,10 @@ email,
 	/**
 	 * Reset Password
 	 * Reset password
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static resetPassword(data: TDataResetPassword): CancelablePromise<Message> {
+	public static resetPassword(data: TDataResetPassword): CancelablePromise<app__models__Message> {
 		const {
 requestBody,
 } = data;
@@ -221,10 +221,10 @@ requestBody,
 	/**
 	 * Delete User Me
 	 * Delete own user.
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteUserMe(): CancelablePromise<Message> {
+	public static deleteUserMe(): CancelablePromise<app__models__Message> {
 				return __request(OpenAPI, {
 			method: 'DELETE',
 			url: '/api/v1/users/me',
@@ -255,10 +255,10 @@ requestBody,
 	/**
 	 * Update Password Me
 	 * Update own password.
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static updatePasswordMe(data: TDataUpdatePasswordMe): CancelablePromise<Message> {
+	public static updatePasswordMe(data: TDataUpdatePasswordMe): CancelablePromise<app__models__Message> {
 		const {
 requestBody,
 } = data;
@@ -344,10 +344,10 @@ userId,
 	/**
 	 * Delete User
 	 * Delete a user.
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteUser(data: TDataDeleteUser): CancelablePromise<Message> {
+	public static deleteUser(data: TDataDeleteUser): CancelablePromise<app__models__Message> {
 		const {
 userId,
 } = data;
@@ -375,10 +375,10 @@ export class UtilsService {
 	/**
 	 * Test Email
 	 * Test emails.
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static testEmail(data: TDataTestEmail): CancelablePromise<Message> {
+	public static testEmail(data: TDataTestEmail): CancelablePromise<app__models__Message> {
 		const {
 emailTo,
 } = data;
@@ -515,10 +515,10 @@ requestBody,
 	/**
 	 * Delete Item
 	 * Delete an item.
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteItem(data: TDataDeleteItem): CancelablePromise<Message> {
+	public static deleteItem(data: TDataDeleteItem): CancelablePromise<app__models__Message> {
 		const {
 id,
 } = data;
@@ -650,10 +650,10 @@ requestBody,
 
 	/**
 	 * Delete Conversation
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteConversation(data: TDataDeleteConversation): CancelablePromise<Message> {
+	public static deleteConversation(data: TDataDeleteConversation): CancelablePromise<app__models__Message> {
 		const {
 id,
 } = data;
@@ -769,10 +769,10 @@ messageId,
 
 	/**
 	 * Delete Chat Message
-	 * @returns Message Successful Response
+	 * @returns app__llm__conversation_agent__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteChatMessage(data: TDataDeleteChatMessage): CancelablePromise<Message> {
+	public static deleteChatMessage(data: TDataDeleteChatMessage): CancelablePromise<app__llm__conversation_agent__Message> {
 		const {
 conversationId,
 messageId,
@@ -910,10 +910,10 @@ id,
 	/**
 	 * Delete User Story Prompt
 	 * Delete a user story prompt.
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteUserStoryPrompt(data: TDataDeleteUserStoryPrompt): CancelablePromise<Message> {
+	public static deleteUserStoryPrompt(data: TDataDeleteUserStoryPrompt): CancelablePromise<app__models__Message> {
 		const {
 id,
 } = data;
@@ -1050,10 +1050,10 @@ requestBody,
 	/**
 	 * Delete Category
 	 * Delete a category.
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteCategory(data: TDataDeleteCategory): CancelablePromise<Message> {
+	public static deleteCategory(data: TDataDeleteCategory): CancelablePromise<app__models__Message> {
 		const {
 id,
 } = data;
@@ -1190,10 +1190,10 @@ requestBody,
 	/**
 	 * Delete Image
 	 * Delete an image.
-	 * @returns Message Successful Response
+	 * @returns app__models__Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteImage(data: TDataDeleteImage): CancelablePromise<Message> {
+	public static deleteImage(data: TDataDeleteImage): CancelablePromise<app__models__Message> {
 		const {
 id,
 } = data;
