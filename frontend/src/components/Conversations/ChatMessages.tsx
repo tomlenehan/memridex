@@ -1,7 +1,7 @@
 import { Box, VStack, Text } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef } from "react";
-import { fetchMessages } from "../../redux/chatSlice";
+import { fetchMessages, clearMessages } from "../../redux/chatSlice";
 import { RootState, AppDispatch } from "../../redux/store";
 
 interface ChatMessagesProps {
@@ -15,11 +15,18 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
   const error = useSelector((state: RootState) => state.chat.error);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  // useEffect(() => {
+  //   if (status === 'idle') {
+  //     dispatch(fetchMessages(conversationId));
+  //   }
+  // }, [status, dispatch, conversationId]);
+
   useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchMessages(conversationId));
-    }
-  }, [status, dispatch, conversationId]);
+    // Clear messages when conversationId changes
+    dispatch(clearMessages());
+    // Fetch new messages for the conversation
+    dispatch(fetchMessages(conversationId));
+  }, [conversationId, dispatch]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

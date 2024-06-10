@@ -27,6 +27,12 @@ const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
+    clearMessages: (state) => {
+      state.messages = [];
+      state.status = 'idle';
+      state.error = null;
+      state.currentStreamingMessageId = null;
+    },
     addMessage: (state, action: PayloadAction<ChatMessagePublic>) => {
       state.messages.push(action.payload);
     },
@@ -41,10 +47,9 @@ const chatSlice = createSlice({
       state.currentStreamingMessageId = newMessage.id;
     },
     addStreamingMessage: (state, action: PayloadAction<{ id: number, content: string }>) => {
-      // if(state.currentStreamingMessageId != null) {
-      if(action.payload.id) {
+      if (action.payload.id) {
         const streamingMessage = state.messages.find(
-            (msg) => msg.id === action.payload.id
+          (msg) => msg.id === action.payload.id
         );
 
         if (streamingMessage) {
@@ -72,6 +77,6 @@ const chatSlice = createSlice({
   },
 });
 
-export const { addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } = chatSlice.actions;
+export const { clearMessages, addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } = chatSlice.actions;
 
 export default chatSlice.reducer;

@@ -18,7 +18,8 @@ class Message(BaseModel):
     content: str
 
 
-MODEL_NAME = "gpt-3.5-turbo"
+# MODEL_NAME = "gpt-3.5-turbo"
+MODEL_NAME = "gpt-4-turbo"
 
 
 def num_tokens_from_string(string: str) -> int:

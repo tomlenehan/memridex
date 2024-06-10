@@ -10,9 +10,9 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ErrorBoundary } from "react-error-boundary";
-import { UserStoryPromptsService, UserStoryPromptPublic } from "../../client";
+import { UserStoryPromptsService, UserStoryPromptPublic, ConversationsService } from "../../client";
 import AddConversation from "../../components/Conversations/AddConversation";
 import { useState } from "react";
 
@@ -26,6 +26,11 @@ function UserStoryPromptsList() {
     queryFn: () => UserStoryPromptsService.readUserStoryPrompts({}),
   });
 
+  const { data: conversationsData, isLoading: conversationsLoading } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: () => ConversationsService.readConversations({}),
+  });
+
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedPrompt, setSelectedPrompt] = useState<UserStoryPromptPublic | null>(null);
 
@@ -34,7 +39,7 @@ function UserStoryPromptsList() {
     onOpen();
   };
 
-  if (isLoading) {
+  if (isLoading || conversationsLoading) {
     return (
       <Flex wrap="wrap" justify="center">
         {new Array(5).fill(null).map((_, index) => (
@@ -67,40 +72,55 @@ function UserStoryPromptsList() {
     );
   }
 
+  const conversations = conversationsData?.data || [];
+
+  const getConversationForPrompt = (promptId: number) => {
+    return conversations.find(conversation => conversation.user_story_prompt_id === promptId);
+  };
+
   return (
     <>
       <Flex wrap="wrap" justify="center">
-        {userStoryPrompts?.data.map((prompt) => (
-          <Box
-            key={prompt.id}
-            maxW="sm"
-            borderWidth="1px"
-            borderRadius="lg"
-            overflow="hidden"
-            m={4}
-          >
-            {prompt.image_url ? (
-              <Image src={prompt.image_url} alt={prompt.prompt} />
-            ) : (
-              <Skeleton height="200px" />
-            )}
-            <Box p={6}>
-              <Heading size="md">{prompt.prompt}</Heading>
-              {prompt.category ? (
-                <Text mt={2} color="gray.600">
-                  Category: {prompt.category.name}
-                </Text>
+        {userStoryPrompts?.data.map((prompt) => {
+          const existingConversation = getConversationForPrompt(prompt.id);
+          return (
+            <Box
+              key={prompt.id}
+              maxW="sm"
+              borderWidth="1px"
+              borderRadius="lg"
+              overflow="hidden"
+              m={4}
+            >
+              {prompt.image_url ? (
+                <Image src={prompt.image_url} alt={prompt.prompt} />
               ) : (
-                <Text mt={2} color="gray.600">
-                  Category: N/A
-                </Text>
+                <Skeleton height="200px" />
               )}
-              <Button mt={4} colorScheme="teal" onClick={() => handleStartConversation(prompt)}>
-                Start Chat
-              </Button>
+              <Box p={6}>
+                <Heading size="md">{prompt.prompt}</Heading>
+                {prompt.category ? (
+                  <Text mt={2} color="gray.600">
+                    Category: {prompt.category.name}
+                  </Text>
+                ) : (
+                  <Text mt={2} color="gray.600">
+                    Category: N/A
+                  </Text>
+                )}
+                {existingConversation ? (
+                  <Button as={Link} to={`/conversation/${existingConversation.id}`} mt={4} colorScheme="blue">
+                    Continue Chat
+                  </Button>
+                ) : (
+                  <Button mt={4} colorScheme="teal" onClick={() => handleStartConversation(prompt)}>
+                    Start Chat
+                  </Button>
+                )}
+              </Box>
             </Box>
-          </Box>
-        ))}
+          );
+        })}
       </Flex>
       <AddConversation isOpen={isOpen} onClose={onClose} prompt={selectedPrompt} />
     </>

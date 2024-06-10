@@ -7,8 +7,7 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import ChatMessages from "../../../components/Conversations/ChatMessages";
 import ChatInput from "../../../components/Conversations/ChatInput";
-// import { ChatMessageCreate } from "../../../client";
-// import { useState } from "react";
+
 
 export const Route = createFileRoute("/_layout/conversation/$conversationId")({
   component: ConversationPage,
@@ -16,7 +15,6 @@ export const Route = createFileRoute("/_layout/conversation/$conversationId")({
 
 function ConversationPage() {
   const { conversationId } = Route.useParams();
-  // const [messages, setMessages] = useState<Omit<ChatMessageCreate, 'conversation_id'>[]>([]);
 
   if (!conversationId) {
     return <Box>Error: No conversation ID provided</Box>;
@@ -27,10 +25,6 @@ function ConversationPage() {
   if (isNaN(conversationIdNumber)) {
     return <Box>Error: Invalid conversation ID provided</Box>;
   }
-
-  // const handleNewMessage = (message: Omit<ChatMessageCreate, 'conversation_id'>) => {
-  //   setMessages(prevMessages => [...prevMessages, message]);
-  // };
 
   return (
     <Container maxW="full" height="100vh" display="flex" flexDirection="column">

@@ -30,18 +30,6 @@ def create_conversation(
     if not user_story_prompt:
         raise HTTPException(status_code=404, detail="User story prompt not found")
 
-    # Check if a conversation already exists with the same user_story_prompt_id for the current user
-    existing_conversation = session.exec(
-        select(Conversation).where(
-            Conversation.user_id == current_user.id,
-            Conversation.user_story_prompt_id == conversation_in.user_story_prompt_id
-        )
-    ).first()
-
-    if existing_conversation:
-        raise HTTPException(status_code=400,
-                            detail="Conversation with this story prompt already exists")
-
     # Create the new conversation with status set to active
     conversation = Conversation(
         user_id=current_user.id,
