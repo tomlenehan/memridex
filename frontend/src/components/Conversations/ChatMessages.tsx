@@ -19,9 +19,7 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
 
   useEffect(() => {
-    // Clear messages when conversationId changes
     dispatch(clearMessages());
-    // Fetch new messages for the conversation
     dispatch(fetchMessages(conversationId));
   }, [conversationId, dispatch]);
 
@@ -38,7 +36,7 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
   }
 
   return (
-    <Box flex="1" overflowY="auto" p={4} bg={bgColor}>
+    <Box flex="1" overflowY="auto" p={4} bg={bgColor} height="100%">
       <VStack spacing={4} align="start">
         {messages.map((message) => (
           <Box

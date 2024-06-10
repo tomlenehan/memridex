@@ -66,7 +66,7 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
   };
 
   return (
-    <Box as="form" onSubmit={handleSubmit(onSubmit)} p={4} bg={secBgColor} borderTop="1px" borderColor="gray.200">
+    <Box as="form" onSubmit={handleSubmit(onSubmit)} p={4} bg={secBgColor} borderTop="1px" borderColor="gray.200" width="100%">
       <Flex>
         <Input
           {...register("content", { required: true })}
