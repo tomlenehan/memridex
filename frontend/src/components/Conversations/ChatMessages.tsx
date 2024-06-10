@@ -1,4 +1,4 @@
-import { Box, VStack, Text } from "@chakra-ui/react";
+import { Box, VStack, Text, useColorModeValue } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef } from "react";
 import { fetchMessages, clearMessages } from "../../redux/chatSlice";
@@ -14,12 +14,9 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
   const status = useSelector((state: RootState) => state.chat.status);
   const error = useSelector((state: RootState) => state.chat.error);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
-  // useEffect(() => {
-  //   if (status === 'idle') {
-  //     dispatch(fetchMessages(conversationId));
-  //   }
-  // }, [status, dispatch, conversationId]);
+  const bgColor = useColorModeValue("ui.light", "ui.dark");
+  const textColor = useColorModeValue("ui.dark", "ui.light");
+  const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
 
   useEffect(() => {
     // Clear messages when conversationId changes
@@ -41,21 +38,21 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
   }
 
   return (
-    <Box flex="1" overflowY="auto" p={4} bg="white">
+    <Box flex="1" overflowY="auto" p={4} bg={bgColor}>
       <VStack spacing={4} align="start">
         {messages.map((message) => (
-            <Box key={message.id}
-                // bg="gray.200"
-                 bg={message.sender_type === "ai" ? "gray.200" : "blue.200"}
-                 p={3}
-                 borderRadius="md"
-                 alignSelf={message.sender_type === "ai" ? "start" : "end"}
-                // alignSelf="start"
-            >
-              <Text>{message.content}</Text>
-            </Box>
+          <Box
+            key={message.id}
+            bg={message.sender_type === "ai" ? secBgColor : "blue.200"}
+            p={3}
+            borderRadius="md"
+            alignSelf={message.sender_type === "ai" ? "start" : "end"}
+            color={textColor}
+          >
+            <Text>{message.content}</Text>
+          </Box>
         ))}
-        <div ref={messagesEndRef}/>
+        <div ref={messagesEndRef} />
       </VStack>
     </Box>
   );

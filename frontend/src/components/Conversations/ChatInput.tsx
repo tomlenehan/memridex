@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Input } from "@chakra-ui/react";
+import { Box, Button, Flex, Input, useColorModeValue } from "@chakra-ui/react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChatMessageCreate } from "../../client";
@@ -18,6 +18,11 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
   });
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
+
+  // Color scheme values
+  const bgColor = useColorModeValue("ui.light", "ui.dark");
+  const textColor = useColorModeValue("ui.dark", "ui.light");
+  const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
 
   const handleStream = async (newMessage: ChatMessageCreate) => {
     const token = localStorage.getItem('access_token');
@@ -61,12 +66,14 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
   };
 
   return (
-    <Box as="form" onSubmit={handleSubmit(onSubmit)} p={4} bg="gray.50" borderTop="1px" borderColor="gray.200">
+    <Box as="form" onSubmit={handleSubmit(onSubmit)} p={4} bg={secBgColor} borderTop="1px" borderColor="gray.200">
       <Flex>
         <Input
           {...register("content", { required: true })}
           placeholder="Type your message..."
           mr={2}
+          bg={bgColor}
+          color={textColor}
         />
         <Button type="submit" colorScheme="blue" isLoading={isSubmitting}>
           Send
