@@ -30,7 +30,7 @@ function ConversationPage() {
   return (
     <Container maxW="full" height="100vh" display="flex" flexDirection="column">
       <Flex justifyContent="space-between" alignItems="center" pt={12}>
-        <Button as={Link} to="/conversations" colorScheme="blue" variant="outline">
+        <Button as={Link} to="/conversations" marginTop={-6} colorScheme="teal" variant="outline">
           <Box as={IoChevronBackCircleOutline} size="20px" mr={2} />
           Back
         </Button>

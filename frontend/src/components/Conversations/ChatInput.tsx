@@ -18,8 +18,6 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
   });
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
-
-  // Color scheme values
   const bgColor = useColorModeValue("ui.light", "ui.dark");
   const textColor = useColorModeValue("ui.dark", "ui.light");
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");

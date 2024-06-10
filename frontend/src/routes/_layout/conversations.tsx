@@ -2,12 +2,12 @@ import {
   Box,
   Button,
   Container,
-  Flex,
   Heading,
   Image,
   Skeleton,
   Text,
   useDisclosure,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -41,15 +41,14 @@ function UserStoryPromptsList() {
 
   if (isLoading || conversationsLoading) {
     return (
-      <Flex wrap="wrap" justify="center">
-        {new Array(5).fill(null).map((_, index) => (
+      <SimpleGrid columns={[1, 2, 3]} spacing={4}>
+        {new Array(6).fill(null).map((_, index) => (
           <Box
             key={index}
             maxW="sm"
             borderWidth="1px"
             borderRadius="lg"
             overflow="hidden"
-            m={4}
           >
             <Skeleton height="200px" />
             <Box p={6}>
@@ -60,7 +59,7 @@ function UserStoryPromptsList() {
             </Box>
           </Box>
         ))}
-      </Flex>
+      </SimpleGrid>
     );
   }
 
@@ -80,7 +79,7 @@ function UserStoryPromptsList() {
 
   return (
     <>
-      <Flex wrap="wrap" justify="center">
+      <SimpleGrid columns={[1, 2, 3]} spacing={4}>
         {userStoryPrompts?.data.map((prompt) => {
           const existingConversation = getConversationForPrompt(prompt.id);
           return (
@@ -90,7 +89,6 @@ function UserStoryPromptsList() {
               borderWidth="1px"
               borderRadius="lg"
               overflow="hidden"
-              m={4}
             >
               {prompt.image_url ? (
                 <Image src={prompt.image_url} alt={prompt.prompt} />
@@ -121,7 +119,7 @@ function UserStoryPromptsList() {
             </Box>
           );
         })}
-      </Flex>
+      </SimpleGrid>
       <AddConversation isOpen={isOpen} onClose={onClose} prompt={selectedPrompt} />
     </>
   );
