@@ -2,12 +2,13 @@ import {
   Box,
   Container,
   Flex,
-  Heading
+  Heading,
+  Button,
 } from "@chakra-ui/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import ChatMessages from "../../../components/Conversations/ChatMessages";
 import ChatInput from "../../../components/Conversations/ChatInput";
-
+import { IoChevronBackCircleOutline } from "react-icons/io5";
 
 export const Route = createFileRoute("/_layout/conversation/$conversationId")({
   component: ConversationPage,
@@ -28,10 +29,14 @@ function ConversationPage() {
 
   return (
     <Container maxW="full" height="100vh" display="flex" flexDirection="column">
-      <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-      </Heading>
-
-      {/* <Navbar type={"Conversation"} /> */}
+      <Flex justifyContent="space-between" alignItems="center" pt={12}>
+        <Button as={Link} to="/conversations" colorScheme="blue" variant="outline">
+          <Box as={IoChevronBackCircleOutline} size="20px" mr={2} />
+          Back
+        </Button>
+        <Heading size="lg" textAlign={{ base: "center", md: "left" }}>
+        </Heading>
+      </Flex>
 
       <Flex flex="1" direction="column" overflow="hidden" mt={4}>
         <Box flex="1" overflowY="auto">
