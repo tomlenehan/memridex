@@ -34,6 +34,7 @@ langchain-core = "^0.2.1"
 langgraph = "^0.0.55"
 langchainhub = "^0.1.15"
 pydevd-pycharm = ">=241.15989.155,<241.15990.0"
+faiss-cpu = "^1.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
