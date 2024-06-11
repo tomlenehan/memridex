@@ -164,6 +164,7 @@ class Conversation(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     chat_messages: List["ChatMessage"] = Relationship(back_populates="conversation")
     status: ConversationStatus = Field(default=ConversationStatus.INACTIVE)
+    story_summary: Optional["StorySummary"] = Relationship(back_populates="conversation")
 
 class ChatMessageSender(str, Enum):
     USER = "user"
@@ -178,6 +179,19 @@ class ChatMessage(SQLModel, table=True):
     sender_type: ChatMessageSender = Field(default=ChatMessageSender.USER)
     content: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class StorySummary(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    conversation_id: int = Field(foreign_key="conversation.id")
+    conversation: Optional[Conversation] = Relationship(back_populates="story_summary")
+    summary_text: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class StorySummaryPublic(SQLModel):
+    id: int
+    conversation_id: int
+    summary_text: str
+    created_at: datetime
 
 class ConversationCreate(SQLModel):
     user_story_prompt_id: int
