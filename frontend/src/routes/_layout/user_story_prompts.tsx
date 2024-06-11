@@ -60,15 +60,17 @@ function UserStoryPromptsTableBody() {
 
   // Use effect to refetch user story prompts periodically if any image URLs are missing
   useEffect(() => {
-    const interval = setInterval(() => {
-      userStoryPrompts.data.forEach((prompt) => {
-        if (prompt.image_url) {
-          queryClient.invalidateQueries({ queryKey: ["userStoryPrompts"] });
-        }
-      });
-    }, 3000);
+    const promptsMissingImages = userStoryPrompts.data.some(
+      (prompt) => !prompt.image_url
+    );
 
-    return () => clearInterval(interval);
+    if (promptsMissingImages) {
+      const interval = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: ["userStoryPrompts"] });
+      }, 3000);
+
+      return () => clearInterval(interval);
+    }
   }, [userStoryPrompts, queryClient]);
 
   return (
