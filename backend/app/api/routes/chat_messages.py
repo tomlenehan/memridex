@@ -8,15 +8,15 @@ from app.models import (
     ChatMessagePublic,
     ChatMessagesPublic,
     Conversation,
-    Message
+    Message,
+    StorySummary
 )
 from app.api.deps import get_current_user, get_db
 from app.models import User
 from app.llm.conversation_agent import send_message, Message
-
+from app.llm.conversation_summarize import generate_summary
 
 router = APIRouter()
-
 
 @router.post("/{conversation_id}/messages", response_model=ChatMessagePublic)
 async def create_chat_message(
@@ -67,6 +67,27 @@ async def create_chat_message(
         db_session.add(ai_message)
         db_session.commit()
         db_session.refresh(ai_message)
+
+        if total_tokens > 40:
+            yield "I think that I have all I need to know about this story"
+            summary_content = ""
+
+            chat_history = chat_history + [response_content]
+
+            system_prompt = (f"You are an AI tasked with summarizing the following conversation "
+                             f"based on this story prompt {story_prompt}. ")
+
+            async for token in generate_summary(system_prompt, chat_history):
+                summary_content += token
+                yield token
+
+            story_summary = StorySummary(
+                conversation_id=conversation_id,
+                summary_text=summary_content
+            )
+            db_session.add(story_summary)
+            db_session.commit()
+            db_session.refresh(story_summary)
 
     current_user_id = current_user.id
 
