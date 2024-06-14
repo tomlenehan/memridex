@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlmodel import func, Session, select
+from app.llm.utils import get_formatted_history
 from app.models import (
     ChatMessage,
     ChatMessageCreate,
@@ -41,8 +42,19 @@ async def create_chat_message(
 
     async def message_generator(db_session: Session, current_user_id: int):
         response_content = ""
-        async for token in send_message(chat_message_in.content, conversation_id, db_session):
+
+        conversation = db_session.get(Conversation, conversation_id)
+        story_prompt = conversation.user_story_prompt.prompt
+
+        system_prompt = (f"You are an AI tasked with interviewing the user "
+                         f"about this story prompt {story_prompt}. continue to ask good follow-up "
+                         f"questions based on their input.")
+
+        chat_history, total_tokens = get_formatted_history(conversation_id, system_prompt, db_session)
+
+        async for token in send_message(chat_message_in.content, chat_history):
             response_content += token
+            total_tokens += 1
             yield token
 
         # Save the AI message after streaming is complete
