@@ -1,5 +1,4 @@
 import tiktoken
-from typing import List
 from sqlmodel import Session, select
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from app.models import ChatMessage
@@ -16,7 +15,8 @@ def num_tokens_from_string(string: str) -> int:
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
-def get_formatted_history(conversation_id: int, system_prompt: str, session: Session) -> List:
+def get_formatted_history(conversation_id: int, session: Session) -> tuple[
+    list[HumanMessage | AIMessage | SystemMessage], int]:
 
     chat_messages = session.exec(
         select(ChatMessage)
@@ -27,22 +27,18 @@ def get_formatted_history(conversation_id: int, system_prompt: str, session: Ses
     messages = []
     total_tokens = 0
 
-    if system_prompt:
-
-        system_message = SystemMessage(content=system_prompt)
-        messages.append(system_message)
-        total_tokens += num_tokens_from_string(system_message.content)
-
     for msg in chat_messages:
-        if msg.sender_type == "USER":
+        if msg.sender_type == "user":
             human_message = HumanMessage(content=msg.content)
             messages.append(human_message)
             total_tokens += num_tokens_from_string(human_message.content)
-        elif msg.sender_type == "AI":
+        elif msg.sender_type == "ai":
             ai_message = AIMessage(content=msg.content)
             messages.append(ai_message)
             total_tokens += num_tokens_from_string(ai_message.content)
 
+    logger.error(f"Formatted messages: {messages}")
     logger.info(f"Total token count for conversation {conversation_id}: {total_tokens}")
 
     return messages, total_tokens
+

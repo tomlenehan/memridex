@@ -16,7 +16,10 @@ from app.api.deps import get_current_user, get_db
 from app.models import User
 from app.llm.conversation_agent import send_message, Message
 from app.llm.conversation_summarize import generate_summary
+import logging
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -49,13 +52,15 @@ async def create_chat_message(
         conversation = db_session.get(Conversation, conversation_id)
         story_prompt = conversation.user_story_prompt.prompt
 
-        system_prompt = (f"You are an AI tasked with interviewing the user "
+        system_message = (f"You are an AI tasked with interviewing the user "
                          f"about this story prompt {story_prompt}. continue to ask good follow-up "
                          f"questions based on their input.")
 
-        chat_history, total_tokens = get_formatted_history(conversation_id, system_prompt, db_session)
+        chat_history, total_tokens = get_formatted_history(conversation_id, db_session)
 
-        async for token in send_message(chat_message_in.content, chat_history):
+        logger.info(chat_history)
+
+        async for token in send_message(chat_message_in.content, system_message, chat_history):
             response_content += token
             total_tokens += 1
             yield token
@@ -72,18 +77,18 @@ async def create_chat_message(
         db_session.refresh(ai_message)
 
         if total_tokens > 40:
-            yield ("<br><br>I think that I have all I need to know about this story<br><br>"
-                   "Give me a moment to process your story:<br><br>")
+            yield ("<br />I think that I have all I need to know about this story<br><br>"
+                   "Give me a moment to process your story:<br />")
 
             summary_content = ""
 
             # Append the AI response to the chat history
             chat_history.append(AIMessage(content=response_content))
 
-            system_prompt = (f"You are an AI tasked with summarizing the following conversation "
+            system_message = (f"You are an AI tasked with summarizing the following conversation "
                              f"based on this story prompt {story_prompt}. ")
 
-            async for token in generate_summary(system_prompt, chat_history):
+            async for token in generate_summary(system_message, chat_history):
                 summary_content += token
                 yield token
 
