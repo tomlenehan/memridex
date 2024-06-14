@@ -1,7 +1,6 @@
-from typing import AsyncIterable
-from typing import List
+from typing import AsyncIterable, List
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.schema import HumanMessage
+from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.vectorstores.faiss import FAISS
 import logging
@@ -21,13 +20,13 @@ async def index_messages(messages: List[HumanMessage]) -> FAISS:
     return index
 
 async def get_relevant_messages(index: FAISS, query: str, k: int = 20) -> List[HumanMessage]:
-    docs = await index.similarity_search(query, k=k)
+    docs = index.similarity_search(query, k=k)
 
     relevant_messages = [HumanMessage(content=doc.page_content) for doc in docs]
 
     return relevant_messages
 
-async def generate_summary(system_prompt: str, chat_history: list) -> AsyncIterable[str]:
+async def generate_summary(system_prompt: str, chat_history: List[HumanMessage]) -> AsyncIterable[str]:
     index = await index_messages(chat_history)
     relevant_messages = await get_relevant_messages(index, "Please summarize this conversation")
 

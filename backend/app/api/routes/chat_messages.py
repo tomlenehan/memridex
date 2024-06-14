@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlmodel import func, Session, select
+from langchain.schema import AIMessage
 from app.llm.utils import get_formatted_history
 from app.models import (
     ChatMessage,
@@ -16,7 +17,9 @@ from app.models import User
 from app.llm.conversation_agent import send_message, Message
 from app.llm.conversation_summarize import generate_summary
 
+
 router = APIRouter()
+
 
 @router.post("/{conversation_id}/messages", response_model=ChatMessagePublic)
 async def create_chat_message(
@@ -69,10 +72,13 @@ async def create_chat_message(
         db_session.refresh(ai_message)
 
         if total_tokens > 40:
-            yield "I think that I have all I need to know about this story"
+            yield ("<br><br>I think that I have all I need to know about this story<br><br>"
+                   "Give me a moment to process your story:<br><br>")
+
             summary_content = ""
 
-            chat_history = chat_history + [response_content]
+            # Append the AI response to the chat history
+            chat_history.append(AIMessage(content=response_content))
 
             system_prompt = (f"You are an AI tasked with summarizing the following conversation "
                              f"based on this story prompt {story_prompt}. ")
