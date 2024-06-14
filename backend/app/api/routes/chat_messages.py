@@ -16,6 +16,7 @@ from app.api.deps import get_current_user, get_db
 from app.models import User
 from app.llm.conversation_agent import send_message, Message
 from app.llm.conversation_summarize import generate_summary
+from app.llm.utils import STORY_TOKEN_LIMIT
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -51,42 +52,41 @@ async def create_chat_message(
 
         conversation = db_session.get(Conversation, conversation_id)
         story_prompt = conversation.user_story_prompt.prompt
-
-        system_message = (f"You are an AI tasked with interviewing the user "
-                         f"about this story prompt {story_prompt}. continue to ask good follow-up "
-                         f"questions based on their input.")
-
         chat_history, total_tokens = get_formatted_history(conversation_id, db_session)
 
-        logger.info(chat_history)
+        if total_tokens < STORY_TOKEN_LIMIT:
+            system_message = (f"You are an AI tasked with interviewing the user "
+                             f"about this story prompt {story_prompt}. continue to ask good follow-up "
+                             f"questions based on their input.")
 
-        async for token in send_message(chat_message_in.content, system_message, chat_history):
-            response_content += token
-            total_tokens += 1
-            yield token
+            async for token in send_message(chat_message_in.content, system_message, chat_history):
+                response_content += token
+                total_tokens += 1
+                yield token
 
-        # Save the AI message after streaming is complete
-        ai_message = ChatMessage(
-            conversation_id=conversation_id,
-            sender_id=current_user_id,
-            sender_type="AI",
-            content=response_content
-        )
-        db_session.add(ai_message)
-        db_session.commit()
-        db_session.refresh(ai_message)
+            # Save the AI message after streaming is complete
+            ai_message = ChatMessage(
+                conversation_id=conversation_id,
+                sender_id=current_user_id,
+                sender_type="AI",
+                content=response_content
+            )
+            db_session.add(ai_message)
+            db_session.commit()
+            db_session.refresh(ai_message)
 
-        if total_tokens > 40:
-            yield ("<br />I think that I have all I need to know about this story<br><br>"
-                   "Give me a moment to process your story:<br />")
+        else:
+            yield ("I think that I have all I need to know about this story.<br>"
+                   "Give me a moment to process your story:<br>")
 
             summary_content = ""
 
             # Append the AI response to the chat history
             chat_history.append(AIMessage(content=response_content))
 
-            system_message = (f"You are an AI tasked with summarizing the following conversation "
-                             f"based on this story prompt {story_prompt}. ")
+            system_message = (f"You are an AI ghostwriter tasked with summarizing the following conversation "
+                             f"based on this story prompt {story_prompt}. Your output should be verbose"
+                              f"prose, fit to be publish in a biography.")
 
             async for token in generate_summary(system_message, chat_history):
                 summary_content += token
