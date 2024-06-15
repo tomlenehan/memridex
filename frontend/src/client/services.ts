@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { app__models__Message,Body_login_login_access_token,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,app__llm__conversation_agent__Message,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
+import type { app__models__Message,Body_login_login_access_token,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,app__llm__conversation_agent__Message,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,StorySummaryPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -682,10 +682,6 @@ limit?: number
 skip?: number
                 
             }
-export type TDataGetSummary = {
-                conversationId: number
-                
-            }
 export type TDataReadChatMessage = {
                 conversationId: number
 messageId: number
@@ -742,27 +738,6 @@ skip = 0,
 			},
 			query: {
 				skip, limit
-			},
-			errors: {
-				422: `Validation Error`,
-			},
-		});
-	}
-
-	/**
-	 * Get Summary
-	 * @returns ChatMessagePublic Successful Response
-	 * @throws ApiError
-	 */
-	public static getSummary(data: TDataGetSummary): CancelablePromise<ChatMessagePublic> {
-		const {
-conversationId,
-} = data;
-		return __request(OpenAPI, {
-			method: 'GET',
-			url: '/api/v1/chat_messages/{conversation_id}/summary',
-			path: {
-				conversation_id: conversationId
 			},
 			errors: {
 				422: `Validation Error`,
@@ -945,6 +920,147 @@ id,
 		return __request(OpenAPI, {
 			method: 'DELETE',
 			url: '/api/v1/user_story_prompts/{id}',
+			path: {
+				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+}
+
+export type TDataReadStorySummaries = {
+                limit?: number
+skip?: number
+                
+            }
+export type TDataCreateStorySummary = {
+                conversationId: number
+                
+            }
+export type TDataReadStorySummary = {
+                id: number
+                
+            }
+export type TDataUpdateStorySummary = {
+                id: number
+summaryText: string
+                
+            }
+export type TDataDeleteStorySummary = {
+                id: number
+                
+            }
+
+export class SummariesService {
+
+	/**
+	 * Read Story Summaries
+	 * Retrieve story summaries.
+	 * @returns StorySummaryPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readStorySummaries(data: TDataReadStorySummaries = {}): CancelablePromise<Array<StorySummaryPublic>> {
+		const {
+limit = 100,
+skip = 0,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/summaries/',
+			query: {
+				skip, limit
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Create Story Summary
+	 * @returns StorySummaryPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static createStorySummary(data: TDataCreateStorySummary): CancelablePromise<StorySummaryPublic> {
+		const {
+conversationId,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/summaries/',
+			query: {
+				conversation_id: conversationId
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Read Story Summary
+	 * Get story summary by ID.
+	 * @returns StorySummaryPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static readStorySummary(data: TDataReadStorySummary): CancelablePromise<StorySummaryPublic> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/summaries/{id}',
+			path: {
+				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Update Story Summary
+	 * Update a story summary.
+	 * @returns StorySummaryPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static updateStorySummary(data: TDataUpdateStorySummary): CancelablePromise<StorySummaryPublic> {
+		const {
+id,
+summaryText,
+} = data;
+		return __request(OpenAPI, {
+			method: 'PUT',
+			url: '/api/v1/summaries/{id}',
+			path: {
+				id
+			},
+			query: {
+				summary_text: summaryText
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Delete Story Summary
+	 * Delete a story summary.
+	 * @returns app__models__Message Successful Response
+	 * @throws ApiError
+	 */
+	public static deleteStorySummary(data: TDataDeleteStorySummary): CancelablePromise<app__models__Message> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'DELETE',
+			url: '/api/v1/summaries/{id}',
 			path: {
 				id
 			},

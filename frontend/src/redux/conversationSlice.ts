@@ -9,7 +9,7 @@ interface ConversationState {
 
 const initialState: ConversationState = {
   conversation: null,
-  status: 'inactive',  // Default to 'inactive'
+  status: 'inactive',
   error: null,
 };
 
@@ -38,7 +38,7 @@ const conversationSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(fetchConversationStatus.fulfilled, (state, action) => {
-        state.status = action.payload.status ?? 'inactive';  // Use default 'inactive' if status is undefined
+        state.status = action.payload.status ?? 'inactive';
         state.conversation = action.payload;
       })
       .addCase(fetchConversationStatus.rejected, (state, action) => {

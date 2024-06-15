@@ -497,6 +497,28 @@ export const $NewPassword = {
 	},
 } as const;
 
+export const $StorySummaryPublic = {
+	properties: {
+		id: {
+	type: 'number',
+	isRequired: true,
+},
+		conversation_id: {
+	type: 'number',
+	isRequired: true,
+},
+		summary_text: {
+	type: 'string',
+	isRequired: true,
+},
+		created_at: {
+	type: 'string',
+	isRequired: true,
+	format: 'date-time',
+},
+	},
+} as const;
+
 export const $Token = {
 	properties: {
 		access_token: {

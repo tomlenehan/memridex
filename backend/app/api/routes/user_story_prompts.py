@@ -1,14 +1,12 @@
 from typing import Any, Optional
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Depends
 from sqlmodel import func, select, Session
-
-from app.api.deps import CurrentUser, get_current_user, get_db
+from app.api.deps import get_current_user, get_db
 from app.models import (
     User,
     UserStoryPrompt,
     UserStoryPromptCreate,
     UserStoryPromptPublic,
-    UserStoryPromptUpdate,
     UserStoryPromptsPublic,
     Message,
     Image

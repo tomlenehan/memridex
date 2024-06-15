@@ -190,6 +190,15 @@ export type NewPassword = {
 
 
 
+export type StorySummaryPublic = {
+	id: number;
+	conversation_id: number;
+	summary_text: string;
+	created_at: string;
+};
+
+
+
 export type Token = {
 	access_token: string;
 	token_type?: string;
