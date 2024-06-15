@@ -682,6 +682,10 @@ limit?: number
 skip?: number
                 
             }
+export type TDataGetSummary = {
+                conversationId: number
+                
+            }
 export type TDataReadChatMessage = {
                 conversationId: number
 messageId: number
@@ -738,6 +742,27 @@ skip = 0,
 			},
 			query: {
 				skip, limit
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Get Summary
+	 * @returns ChatMessagePublic Successful Response
+	 * @throws ApiError
+	 */
+	public static getSummary(data: TDataGetSummary): CancelablePromise<ChatMessagePublic> {
+		const {
+conversationId,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/chat_messages/{conversation_id}/summary',
+			path: {
+				conversation_id: conversationId
 			},
 			errors: {
 				422: `Validation Error`,

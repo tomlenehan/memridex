@@ -78,7 +78,7 @@ export type ChatMessagePublic = {
 
 
 
-export type ChatMessageSender = 'user' | 'ai';
+export type ChatMessageSender = 'user' | 'ai' | 'final';
 
 
 
@@ -99,7 +99,12 @@ export type ConversationPublic = {
 	user_story_prompt_id: number;
 	id: number;
 	created_at: string;
+	status?: ConversationStatus;
 };
+
+
+
+export type ConversationStatus = 'inactive' | 'active' | 'ready_for_summary' | 'complete';
 
 
 

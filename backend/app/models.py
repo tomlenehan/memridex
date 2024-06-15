@@ -153,6 +153,7 @@ class UserStoryPromptsPublic(SQLModel):
 class ConversationStatus(str, Enum):
     INACTIVE = "inactive"
     ACTIVE = "active"
+    READY_FOR_SUMMARY = "ready_for_summary"
     COMPLETE = "complete"
 
 class Conversation(SQLModel, table=True):
@@ -165,6 +166,7 @@ class Conversation(SQLModel, table=True):
     chat_messages: List["ChatMessage"] = Relationship(back_populates="conversation")
     status: ConversationStatus = Field(default=ConversationStatus.INACTIVE)
     story_summary: Optional["StorySummary"] = Relationship(back_populates="conversation")
+    token_total: int = Field(default=0)
 
 class ChatMessageSender(str, Enum):
     USER = "user"
@@ -200,6 +202,7 @@ class ConversationCreate(SQLModel):
 class ConversationPublic(ConversationCreate):
     id: int
     created_at: datetime
+    status: ConversationStatus = Field(default=ConversationStatus.INACTIVE)
 
 class ChatMessageCreate(SQLModel):
     sender_type: ChatMessageSender

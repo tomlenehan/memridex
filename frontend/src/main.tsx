@@ -5,7 +5,7 @@ import ReactDOM from "react-dom/client"
 import {routeTree} from "./routeTree.gen"
 
 import {Provider} from 'react-redux';
-import {store} from './redux/store';
+import store from './redux/store';
 
 import {StrictMode} from "react"
 import {OpenAPI} from "./client"

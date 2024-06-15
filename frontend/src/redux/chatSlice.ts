@@ -36,7 +36,7 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<ChatMessagePublic>) => {
       state.messages.push(action.payload);
     },
-    startStreamingMessage: (state, action: PayloadAction<{ id: number }>) => {
+    startStreamingMessage: (state, action: PayloadAction<{ id: number, sender_type?: string }>) => {
       const newMessage: ChatMessagePublic = {
         id: action.payload.id,
         timestamp: new Date().toISOString(),
@@ -77,6 +77,12 @@ const chatSlice = createSlice({
   },
 });
 
-export const { clearMessages, addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } = chatSlice.actions;
+export const {
+  clearMessages,
+  addMessage,
+  startStreamingMessage,
+  addStreamingMessage,
+  endStreamingMessage,
+} = chatSlice.actions;
 
 export default chatSlice.reducer;

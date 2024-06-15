@@ -229,7 +229,7 @@ export const $ChatMessagePublic = {
 
 export const $ChatMessageSender = {
 	type: 'Enum',
-	enum: ['user','ai',],
+	enum: ['user','ai','final',],
 } as const;
 
 export const $ChatMessagesPublic = {
@@ -272,7 +272,18 @@ export const $ConversationPublic = {
 	isRequired: true,
 	format: 'date-time',
 },
+		status: {
+	type: 'all-of',
+	contains: [{
+	type: 'ConversationStatus',
+}],
+},
 	},
+} as const;
+
+export const $ConversationStatus = {
+	type: 'Enum',
+	enum: ['inactive','active','ready_for_summary','complete',],
 } as const;
 
 export const $ConversationsPublic = {

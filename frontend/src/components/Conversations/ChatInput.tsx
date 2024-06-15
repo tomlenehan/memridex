@@ -1,9 +1,13 @@
+import { useEffect } from 'react';
 import { Box, Button, Flex, Input, useColorModeValue } from "@chakra-ui/react";
+import { GiSecretBook } from "react-icons/gi";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChatMessageCreate } from "../../client";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } from "../../redux/chatSlice";
+import { RootState, AppDispatch } from "../../redux/store";
+import { fetchConversationStatus, setComplete } from "../../redux/conversationSlice";
 
 interface ChatInputProps {
   conversationId: number;
@@ -17,10 +21,16 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
     },
   });
   const queryClient = useQueryClient();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>(); // Use AppDispatch for dispatch
+  const conversationStatus = useSelector((state: RootState) => state.conversation.status);
   const bgColor = useColorModeValue("ui.light", "ui.dark");
   const textColor = useColorModeValue("ui.dark", "ui.light");
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
+
+  useEffect(() => {
+    // Fetch the conversation status on initial load
+    dispatch(fetchConversationStatus(conversationId));
+  }, [conversationId, dispatch]);
 
   const handleStream = async (newMessage: ChatMessageCreate) => {
     const token = localStorage.getItem('access_token');
@@ -54,6 +64,8 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
 
     dispatch(endStreamingMessage());
     queryClient.invalidateQueries({ queryKey: ["chatMessages", conversationId] });
+
+    dispatch(fetchConversationStatus(conversationId));
   };
 
   const onSubmit: SubmitHandler<ChatMessageCreate> = (data) => {
@@ -61,6 +73,30 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
     dispatch(addMessage(newMessage));
     handleStream(data);
     reset();
+  };
+
+  const handleGetSummary = async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      throw new Error('No access token found');
+    }
+
+    const response = await fetch(`/api/v1/chat_messages/${conversationId}/summary`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch summary');
+    }
+
+    const summaryMessage = await response.json();
+    dispatch(addMessage(summaryMessage));
+    dispatch(setComplete());
+    queryClient.invalidateQueries({ queryKey: ["chatMessages", conversationId] });
   };
 
   return (
@@ -73,9 +109,14 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
           bg={bgColor}
           color={textColor}
         />
-        <Button type="submit" colorScheme="blue" isLoading={isSubmitting}>
+        <Button type="submit" colorScheme="blue" isLoading={isSubmitting} mr={2}>
           Send
         </Button>
+        {conversationStatus === "ready_for_summary" && (
+          <Button color="ui.light" bgColor="ui.success" paddingX={6} onClick={handleGetSummary} rightIcon={<GiSecretBook />}>
+            Save Memory
+          </Button>
+        )}
       </Flex>
     </Box>
   );
