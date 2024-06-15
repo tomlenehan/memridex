@@ -22,7 +22,7 @@ import { Route as LayoutSettingsImport } from './routes/_layout/settings'
 import { Route as LayoutItemsImport } from './routes/_layout/items'
 import { Route as LayoutConversationsImport } from './routes/_layout/conversations'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
-import { Route as LayoutSummaryConversationIdImport } from './routes/_layout/summary/$conversationId'
+import { Route as LayoutSummarySummaryIdImport } from './routes/_layout/summary/$summaryId'
 import { Route as LayoutConversationConversationIdImport } from './routes/_layout/conversation/$conversationId'
 
 // Create/Update Routes
@@ -82,11 +82,10 @@ const LayoutAdminRoute = LayoutAdminImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
-const LayoutSummaryConversationIdRoute =
-  LayoutSummaryConversationIdImport.update({
-    path: '/summary/$conversationId',
-    getParentRoute: () => LayoutRoute,
-  } as any)
+const LayoutSummarySummaryIdRoute = LayoutSummarySummaryIdImport.update({
+  path: '/summary/$summaryId',
+  getParentRoute: () => LayoutRoute,
+} as any)
 
 const LayoutConversationConversationIdRoute =
   LayoutConversationConversationIdImport.update({
@@ -146,8 +145,8 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutConversationConversationIdImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/summary/$conversationId': {
-      preLoaderRoute: typeof LayoutSummaryConversationIdImport
+    '/_layout/summary/$summaryId': {
+      preLoaderRoute: typeof LayoutSummarySummaryIdImport
       parentRoute: typeof LayoutImport
     }
   }
@@ -164,7 +163,7 @@ export const routeTree = rootRoute.addChildren([
     LayoutUserstorypromptsRoute,
     LayoutIndexRoute,
     LayoutConversationConversationIdRoute,
-    LayoutSummaryConversationIdRoute,
+    LayoutSummarySummaryIdRoute,
   ]),
   LoginRoute,
   RecoverPasswordRoute,

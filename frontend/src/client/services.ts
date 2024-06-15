@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { app__models__Message,Body_login_login_access_token,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,app__llm__conversation_agent__Message,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,StorySummaryPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
+import type { app__models__Message,Body_login_login_access_token,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,app__llm__conversation_agent__Message,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_create_story_summary,StorySummaryPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -937,7 +937,7 @@ skip?: number
                 
             }
 export type TDataCreateStorySummary = {
-                conversationId: number
+                formData: Body_summaries_create_story_summary
                 
             }
 export type TDataReadStorySummary = {
@@ -986,14 +986,13 @@ skip = 0,
 	 */
 	public static createStorySummary(data: TDataCreateStorySummary): CancelablePromise<StorySummaryPublic> {
 		const {
-conversationId,
+formData,
 } = data;
 		return __request(OpenAPI, {
 			method: 'POST',
 			url: '/api/v1/summaries/',
-			query: {
-				conversation_id: conversationId
-			},
+			formData: formData,
+			mediaType: 'application/x-www-form-urlencoded',
 			errors: {
 				422: `Validation Error`,
 			},

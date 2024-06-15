@@ -1,9 +1,8 @@
 from typing import Any
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Form
 from sqlmodel import Session, select
 from app.api.deps import get_current_user, get_db
-from app.models import User, StorySummary, StorySummaryPublic, Conversation, Message, \
-    ConversationStatus
+from app.models import User, StorySummary, StorySummaryPublic, Conversation, Message, ConversationStatus
 from app.llm.utils import get_formatted_history
 from app.llm.conversation_summarize import generate_summary
 from app.models import ChatMessage
@@ -52,16 +51,13 @@ def read_story_summary(
 
 @router.post("/", response_model=StorySummaryPublic)
 async def create_story_summary(
-        conversation_id: int,
+        conversation_id: int = Form(...),
         current_user: User = Depends(get_current_user),
         db_session: Session = Depends(get_db)
 ) -> StorySummaryPublic:
     conversation = db_session.get(Conversation, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
-
-    if conversation.status != ConversationStatus.COMPLETE:
-        raise HTTPException(status_code=400, detail="Conversation is not complete yet")
 
     chat_history, _ = get_formatted_history(conversation_id, db_session)
     summary_content = ""

@@ -9,6 +9,12 @@ export type Body_login_login_access_token = {
 
 
 
+export type Body_summaries_create_story_summary = {
+	conversation_id: number;
+};
+
+
+
 export type Body_user_story_prompts_create_user_story_prompt = {
 	prompt: string;
 	category_id?: number | null;

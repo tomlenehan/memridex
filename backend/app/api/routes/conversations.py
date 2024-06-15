@@ -49,7 +49,7 @@ def create_conversation(
     )
     session.add(initial_message)
     session.commit()
-    session.refresh(conversation)  # Refresh to include the new message
+    session.refresh(conversation)
 
     return conversation
 

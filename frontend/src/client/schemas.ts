@@ -40,6 +40,15 @@ export const $Body_login_login_access_token = {
 	},
 } as const;
 
+export const $Body_summaries_create_story_summary = {
+	properties: {
+		conversation_id: {
+	type: 'number',
+	isRequired: true,
+},
+	},
+} as const;
+
 export const $Body_user_story_prompts_create_user_story_prompt = {
 	properties: {
 		prompt: {

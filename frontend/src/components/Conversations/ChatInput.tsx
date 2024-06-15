@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
-import { Box, Button, Flex, Input, useColorModeValue, Link as ChakraLink } from "@chakra-ui/react";
+import { Box, Button, Flex, Input, useColorModeValue} from "@chakra-ui/react";
 import { GiSecretBook } from "react-icons/gi";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChatMessageCreate } from "../../client";
+import { useNavigate } from '@tanstack/react-router'
+import {ChatMessageCreate} from "../../client";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "@tanstack/react-router";
 import { addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } from "../../redux/chatSlice";
 import { RootState, AppDispatch } from "../../redux/store";
 import { fetchConversationStatus } from "../../redux/conversationSlice";
+// import Conversations from "../../routes/_layout/conversations.tsx";
 
 interface ChatInputProps {
   conversationId: number;
@@ -22,6 +23,7 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
     },
   });
   const queryClient = useQueryClient();
+  const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>(); // Use AppDispatch for dispatch
   const conversationStatus = useSelector((state: RootState) => state.conversation.status);
   const bgColor = useColorModeValue("ui.light", "ui.dark");
@@ -76,6 +78,37 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
     reset();
   };
 
+  const handleGenerateSummary = async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      throw new Error('No access token found');
+    }
+
+    const response = await fetch(`/api/v1/summaries`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ conversation_id: conversationId })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate summary');
+    }
+
+    const summary = await response.json();
+    return summary.id;
+  };
+
+  const handleSaveMemory = async () => {
+    const summaryId = await handleGenerateSummary();
+    navigate({
+      to: "/summary/$summaryId",
+      params: {summaryId: summaryId},
+    });
+  };
+
   return (
     <Box as="form" onSubmit={handleSubmit(onSubmit)} p={4} bg={secBgColor} borderTop="1px" borderColor="gray.200" width="100%">
       <Flex>
@@ -90,11 +123,9 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
           Send
         </Button>
         {conversationStatus === "ready_for_summary" && (
-          <ChakraLink as={Link} to={`/summary/${conversationId}`}>
-            <Button colorScheme="green" paddingX={4} rightIcon={<GiSecretBook />}>
-              Save Memory
-            </Button>
-          </ChakraLink>
+          <Button colorScheme="green" paddingX={6} onClick={handleSaveMemory} rightIcon={<GiSecretBook />}>
+            Save Memory
+          </Button>
         )}
       </Flex>
     </Box>
