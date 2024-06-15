@@ -10,7 +10,8 @@ from app.models import (
     ChatMessagesPublic,
     Conversation,
     Message,
-    StorySummary
+    StorySummary,
+    ConversationStatus
 )
 from app.api.deps import get_current_user, get_db
 from app.models import User
@@ -55,7 +56,7 @@ async def create_chat_message(
         chat_history, total_tokens = get_formatted_history(conversation_id, db_session)
 
         if total_tokens < STORY_TOKEN_LIMIT:
-            system_message = (f"You are an AI tasked with interviewing the user "
+            system_message = (f"You are an AI ghostwriter tasked with teasing out details from the user "
                              f"about this story prompt {story_prompt}. continue to ask good follow-up "
                              f"questions based on their input.")
 
@@ -76,8 +77,8 @@ async def create_chat_message(
             db_session.refresh(ai_message)
 
         else:
-            yield ("I think that I have all I need to know about this story.<br>"
-                   "Give me a moment to process your story:<br>")
+            # yield ("I think that I have all I need to know about this story.<br>"
+            #        "Give me a moment to process your story:<br>")
 
             summary_content = ""
 
@@ -85,12 +86,22 @@ async def create_chat_message(
             chat_history.append(AIMessage(content=response_content))
 
             system_message = (f"You are an AI ghostwriter tasked with summarizing the following conversation "
-                             f"based on this story prompt {story_prompt}. Your output should be verbose"
+                             f"based on this story prompt {story_prompt}. Your output should be in "
                               f"prose, fit to be publish in a biography.")
 
             async for token in generate_summary(system_message, chat_history):
                 summary_content += token
                 yield token
+
+            final_message = ChatMessage(
+                conversation_id=conversation_id,
+                sender_id=current_user_id,
+                sender_type="final",
+                content=summary_content
+            )
+            db_session.add(final_message)
+            db_session.commit()
+            db_session.refresh(final_message)
 
             story_summary = StorySummary(
                 conversation_id=conversation_id,
@@ -99,6 +110,8 @@ async def create_chat_message(
             db_session.add(story_summary)
             db_session.commit()
             db_session.refresh(story_summary)
+
+            conversation.status = ConversationStatus.COMPLETE
 
     current_user_id = current_user.id
 

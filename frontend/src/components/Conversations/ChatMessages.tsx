@@ -17,6 +17,7 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
   const bgColor = useColorModeValue("ui.light", "ui.dark");
   const textColor = useColorModeValue("ui.dark", "ui.light");
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
+  const finalBgColor = useColorModeValue("yellow.200", "yellow.700");
 
   useEffect(() => {
     dispatch(clearMessages());
@@ -41,13 +42,23 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
         {messages.map((message) => (
           <Box
             key={message.id}
-            bg={message.sender_type === "ai" ? secBgColor : "blue.200"}
+            bg={
+              (message.sender_type as string) === "ai"
+                ? secBgColor
+                : (message.sender_type as string) === "final"
+                ? finalBgColor
+                : "blue.200"
+            }
             p={3}
             borderRadius="md"
-            alignSelf={message.sender_type === "ai" ? "start" : "end"}
+            alignSelf={
+              (message.sender_type as string) === "ai" || (message.sender_type as string) === "final"
+                ? "start"
+                : "end"
+            }
             color={textColor}
           >
-            <Text>{message.content}</Text>
+            <Text dangerouslySetInnerHTML={{ __html: message.content }} />
           </Box>
         ))}
         <div ref={messagesEndRef} />

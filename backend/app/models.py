@@ -169,6 +169,7 @@ class Conversation(SQLModel, table=True):
 class ChatMessageSender(str, Enum):
     USER = "user"
     AI = "ai"
+    FINAL = "final"
 
 class ChatMessage(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
