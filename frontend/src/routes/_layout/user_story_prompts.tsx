@@ -58,7 +58,7 @@ function UserStoryPromptsTableBody() {
     {} as CategoryMap
   );
 
-  // Use effect to refetch user story prompts periodically if any image URLs are missing
+  // refetch user story prompts periodically if any image URLs are missing
   useEffect(() => {
     const promptsMissingImages = userStoryPrompts.data.some(
       (prompt) => !prompt.image_url
@@ -150,7 +150,7 @@ function User_story_prompts() {
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-        Story Prompts
+        Add/Edit Prompts
       </Heading>
 
       <Navbar type={"UserStoryPrompt"} />

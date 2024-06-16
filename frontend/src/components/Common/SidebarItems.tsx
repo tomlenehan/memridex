@@ -9,7 +9,7 @@ import type { UserPublic } from "../../client"
 const items = [
   { icon: FiHome, title: "Dashboard", path: "/" },
   // { icon: FiBriefcase, title: "Items", path: "/items" },
-  { icon: GiConversation, title: "Story Chat", path: "/conversations" },
+  { icon: GiConversation, title: "Chat", path: "/conversations" },
   { icon: FiBook, title: "Prompts", path: "/user_story_prompts" },
   { icon: FiSettings, title: "Settings", path: "/settings" },
 ]

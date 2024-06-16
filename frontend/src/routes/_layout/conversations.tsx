@@ -8,11 +8,12 @@ import {
   Text,
   useDisclosure,
   SimpleGrid,
+  Flex,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ErrorBoundary } from "react-error-boundary";
-import { UserStoryPromptsService, UserStoryPromptPublic, ConversationsService } from "../../client";
+import { UserStoryPromptsService, UserStoryPromptPublic, ConversationsService, SummariesService } from "../../client";
 import AddConversation from "../../components/Conversations/AddConversation";
 import { useState } from "react";
 
@@ -31,6 +32,11 @@ function UserStoryPromptsList() {
     queryFn: () => ConversationsService.readConversations({}),
   });
 
+  const { data: summariesData, isLoading: summariesLoading } = useQuery({
+    queryKey: ["summaries"],
+    queryFn: () => SummariesService.readStorySummaries({}),
+  });
+
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedPrompt, setSelectedPrompt] = useState<UserStoryPromptPublic | null>(null);
 
@@ -39,7 +45,7 @@ function UserStoryPromptsList() {
     onOpen();
   };
 
-  if (isLoading || conversationsLoading) {
+  if (isLoading || conversationsLoading || summariesLoading) {
     return (
       <SimpleGrid columns={[1, 2, 3]} spacing={4}>
         {new Array(6).fill(null).map((_, index) => (
@@ -72,9 +78,20 @@ function UserStoryPromptsList() {
   }
 
   const conversations = conversationsData?.data || [];
+  const summaries = summariesData || [];
 
   const getConversationForPrompt = (promptId: number) => {
     return conversations.find(conversation => conversation.user_story_prompt_id === promptId);
+  };
+
+  const getLatestSummaryForConversation = (conversationId: number) => {
+    const conversationSummaries = summaries.filter(summary => summary.conversation_id === conversationId);
+    return conversationSummaries.sort((a, b) => {
+      if (!b.modified_at || !a.modified_at) {
+        return 0;
+      }
+      return new Date(b.modified_at).getTime() - new Date(a.modified_at).getTime();
+    })[0];
   };
 
   return (
@@ -82,6 +99,10 @@ function UserStoryPromptsList() {
       <SimpleGrid columns={[1, 2, 3]} spacing={4}>
         {userStoryPrompts?.data.map((prompt) => {
           const existingConversation = getConversationForPrompt(prompt.id);
+          const latestSummary = existingConversation && existingConversation.status === 'complete'
+            ? getLatestSummaryForConversation(existingConversation.id)
+            : null;
+
           return (
             <Box
               key={prompt.id}
@@ -106,15 +127,27 @@ function UserStoryPromptsList() {
                     Category: N/A
                   </Text>
                 )}
-                {existingConversation ? (
-                  <Button as={Link} to={`/conversation/${existingConversation.id}`} mt={4} colorScheme="blue">
-                    Continue Chat
-                  </Button>
-                ) : (
-                  <Button mt={4} colorScheme="teal" onClick={() => handleStartConversation(prompt)}>
-                    Start Chat
-                  </Button>
-                )}
+                <Flex mt={4} justifyContent="space-between" alignItems="center">
+                  {existingConversation ? (
+                    <Button as={Link} to={`/conversation/${existingConversation.id}`} colorScheme="blue">
+                      Continue Chat
+                    </Button>
+                  ) : (
+                    <Button colorScheme="teal" onClick={() => handleStartConversation(prompt)}>
+                      Start Chat
+                    </Button>
+                  )}
+                  {latestSummary && (
+                    <Button
+                      as={Link}
+                      to={`/summary/${latestSummary.id}`}
+                      colorScheme="purple"
+                      size="md"
+                    >
+                      View Memory
+                    </Button>
+                  )}
+                </Flex>
               </Box>
             </Box>
           );
@@ -129,7 +162,6 @@ function Conversations() {
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-        Story Chats
       </Heading>
 
       <ErrorBoundary
