@@ -187,14 +187,18 @@ class StorySummary(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     conversation_id: int = Field(foreign_key="conversation.id")
     conversation: Optional[Conversation] = Relationship(back_populates="story_summary")
+    title: Optional[str] = None
     summary_text: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    modified_at: Optional[datetime] = Field(default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow})
 
 class StorySummaryPublic(SQLModel):
     id: int
     conversation_id: int
+    title: Optional[str] = None
     summary_text: str
     created_at: datetime
+    modified_at: Optional[datetime]
 
 class ConversationCreate(SQLModel):
     user_story_prompt_id: int

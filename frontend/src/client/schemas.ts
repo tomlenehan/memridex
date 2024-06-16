@@ -516,6 +516,14 @@ export const $StorySummaryPublic = {
 	type: 'number',
 	isRequired: true,
 },
+		title: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
 		summary_text: {
 	type: 'string',
 	isRequired: true,
@@ -524,6 +532,16 @@ export const $StorySummaryPublic = {
 	type: 'string',
 	isRequired: true,
 	format: 'date-time',
+},
+		modified_at: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+	format: 'date-time',
+}, {
+	type: 'null',
+}],
+	isRequired: true,
 },
 	},
 } as const;

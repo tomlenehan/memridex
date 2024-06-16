@@ -199,8 +199,10 @@ export type NewPassword = {
 export type StorySummaryPublic = {
 	id: number;
 	conversation_id: number;
+	title?: string | null;
 	summary_text: string;
 	created_at: string;
+	modified_at: string | null;
 };
 
 

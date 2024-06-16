@@ -1,4 +1,5 @@
-from typing import Any
+from typing import Any, Optional
+from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Form
 from sqlmodel import Session, select
 from app.api.deps import get_current_user, get_db
@@ -90,7 +91,8 @@ def update_story_summary(
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    summary_text: str
+    title: Optional[str] = None,
+    summary_text: Optional[str] = None
 ) -> Any:
     """
     Update a story summary.
@@ -102,11 +104,16 @@ def update_story_summary(
     if not current_user.is_superuser and (conversation.user_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
-    summary.summary_text = summary_text
+    if title is not None:
+        summary.title = title
+    if summary_text is not None:
+        summary.summary_text = summary_text
+    summary.modified_at = datetime.utcnow()
     session.add(summary)
     session.commit()
     session.refresh(summary)
     return summary
+
 
 @router.delete("/{id}")
 def delete_story_summary(

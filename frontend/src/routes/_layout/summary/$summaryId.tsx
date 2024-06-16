@@ -5,19 +5,34 @@ import {
   Heading,
   Button,
   Text,
+  FormControl,
+  FormLabel,
+  Input,
+  Textarea,
 } from "@chakra-ui/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { IoChevronBackCircleOutline } from "react-icons/io5";
 import { useEffect, useState } from "react";
+import { FaRegSave } from "react-icons/fa";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { SummariesService } from "../../../client";
 
 export const Route = createFileRoute("/_layout/summary/$summaryId")({
   component: SummaryPage,
 });
 
+type Status = "idle" | "loading" | "succeeded" | "failed";
+
+interface SummaryFormInputs {
+  title: string;
+  summary: string;
+}
+
 function SummaryPage() {
   const { summaryId } = Route.useParams<{ summaryId: string }>(); // Correct type for summaryId
-  const [summary, setSummary] = useState<string>("");
-  const [status, setStatus] = useState<"idle" | "loading" | "succeeded" | "failed">("idle");
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<SummaryFormInputs>();
+  const [status, setStatus] = useState<Status>("idle");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchSummary = async (summaryId: string) => {
@@ -28,20 +43,10 @@ function SummaryPage() {
           throw new Error("No access token found");
         }
 
-        const response = await fetch(`/api/v1/summaries/${summaryId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-        });
+        const response = await SummariesService.readStorySummary({ id: Number(summaryId) });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch summary");
-        }
-
-        const data = await response.json();
-        setSummary(data.summary_text);
+        setValue("summary", response.summary_text || "");
+        setValue("title", response.title || "");
         setStatus("succeeded");
       } catch (error) {
         console.error(error);
@@ -52,7 +57,30 @@ function SummaryPage() {
     if (summaryId) {
       fetchSummary(summaryId);
     }
-  }, [summaryId]);
+  }, [summaryId, setValue]);
+
+  const onSubmit: SubmitHandler<SummaryFormInputs> = async (data) => {
+    setIsSaving(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("No access token found");
+      }
+
+      await SummariesService.updateStorySummary({
+        id: Number(summaryId),
+        title: data.title,
+        summaryText: data.summary, // use summaryText instead of summary_text
+      });
+
+      setIsSaving(false);
+      setStatus("succeeded");
+    } catch (error) {
+      console.error(error);
+      setIsSaving(false);
+      setStatus("failed");
+    }
+  };
 
   if (!summaryId) {
     return <Box>Error: No summary ID provided</Box>;
@@ -76,7 +104,34 @@ function SummaryPage() {
           ) : status === "failed" ? (
             <Text>Error loading summary</Text>
           ) : (
-            <Text>{summary}</Text>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <FormControl isInvalid={!!errors.title}>
+                <FormLabel>Title</FormLabel>
+                <Input
+                  type="text"
+                  placeholder={"Enter a meaningful title for your memory here"}
+                  {...register("title", { required: "Title is required" })}
+                />
+                {errors.title && <Text color="red.500">{errors.title.message}</Text>}
+              </FormControl>
+              <FormControl mt={4} isInvalid={!!errors.summary}>
+                <FormLabel>Summary</FormLabel>
+                <Textarea
+                  minHeight={300}
+                  {...register("summary", { required: "Summary is required" })}
+                />
+                {errors.summary && <Text color="red.500">{errors.summary.message}</Text>}
+              </FormControl>
+              <Button
+                mt={4}
+                rightIcon={<FaRegSave />}
+                colorScheme="blue"
+                type="submit"
+                isLoading={isSaving}
+              >
+                Save
+              </Button>
+            </form>
           )}
         </Box>
       </Flex>

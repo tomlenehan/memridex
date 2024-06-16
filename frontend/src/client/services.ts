@@ -946,7 +946,8 @@ export type TDataReadStorySummary = {
             }
 export type TDataUpdateStorySummary = {
                 id: number
-summaryText: string
+summaryText?: string | null
+title?: string | null
                 
             }
 export type TDataDeleteStorySummary = {
@@ -1031,6 +1032,7 @@ id,
 		const {
 id,
 summaryText,
+title,
 } = data;
 		return __request(OpenAPI, {
 			method: 'PUT',
@@ -1039,7 +1041,7 @@ summaryText,
 				id
 			},
 			query: {
-				summary_text: summaryText
+				title, summary_text: summaryText
 			},
 			errors: {
 				422: `Validation Error`,
