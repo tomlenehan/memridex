@@ -66,7 +66,6 @@ function SummaryPage() {
           Back
         </Button>
         <Heading size="lg" textAlign={{ base: "center", md: "left" }}>
-          Conversation Summary
         </Heading>
       </Flex>
 

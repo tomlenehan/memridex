@@ -1,15 +1,14 @@
-import { useEffect } from 'react';
-import { Box, Button, Flex, Input, useColorModeValue} from "@chakra-ui/react";
+import { useEffect, useState } from 'react';
+import { Box, Button, Flex, Input, useColorModeValue, Spinner, Text } from "@chakra-ui/react";
 import { GiSecretBook } from "react-icons/gi";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from '@tanstack/react-router'
-import {ChatMessageCreate} from "../../client";
+import { ChatMessageCreate } from "../../client";
 import { useDispatch, useSelector } from "react-redux";
 import { addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } from "../../redux/chatSlice";
 import { RootState, AppDispatch } from "../../redux/store";
 import { fetchConversationStatus } from "../../redux/conversationSlice";
-// import Conversations from "../../routes/_layout/conversations.tsx";
 
 interface ChatInputProps {
   conversationId: number;
@@ -23,12 +22,14 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
     },
   });
   const queryClient = useQueryClient();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>(); // Use AppDispatch for dispatch
   const conversationStatus = useSelector((state: RootState) => state.conversation.status);
   const bgColor = useColorModeValue("ui.light", "ui.dark");
   const textColor = useColorModeValue("ui.dark", "ui.light");
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
+
+  const [isLoading, setIsLoading] = useState(false); // Manage loading state
 
   useEffect(() => {
     // Fetch the conversation status on initial load
@@ -84,13 +85,15 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
       throw new Error('No access token found');
     }
 
+    const formData = new URLSearchParams();
+    formData.append('conversation_id', conversationId.toString());
+
     const response = await fetch(`/api/v1/summaries`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
       },
-      body: JSON.stringify({ conversation_id: conversationId })
+      body: formData
     });
 
     if (!response.ok) {
@@ -102,11 +105,18 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
   };
 
   const handleSaveMemory = async () => {
-    const summaryId = await handleGenerateSummary();
-    navigate({
-      to: "/summary/$summaryId",
-      params: {summaryId: summaryId},
-    });
+    setIsLoading(true);
+    try {
+      const summaryId = await handleGenerateSummary();
+      navigate({
+        to: "/summary/$summaryId",
+        params: { summaryId: summaryId },
+      });
+    } catch (error) {
+      console.error('Failed to generate summary', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -118,16 +128,23 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
           mr={2}
           bg={bgColor}
           color={textColor}
+          disabled={isLoading} // Disable input when loading
         />
-        <Button type="submit" colorScheme="blue" isLoading={isSubmitting} mr={2}>
+        <Button type="submit" colorScheme="blue" isLoading={isSubmitting || isLoading} mr={2}>
           Send
         </Button>
-        {conversationStatus === "ready_for_summary" && (
-          <Button colorScheme="green" paddingX={6} onClick={handleSaveMemory} rightIcon={<GiSecretBook />}>
+        {(conversationStatus === "ready_for_summary" || conversationStatus === "complete") && (
+          <Button colorScheme="green" paddingX={6} onClick={handleSaveMemory} rightIcon={<GiSecretBook />} isLoading={isLoading}>
             Save Memory
           </Button>
         )}
       </Flex>
+      {isLoading && (
+        <Flex justifyContent="center" mt={4}>
+          <Spinner size="lg" />
+          <Text ml={2}>Generating summary...</Text>
+        </Flex>
+      )}
     </Box>
   );
 };

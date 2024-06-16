@@ -69,16 +69,6 @@ async def create_story_summary(
     async for token in generate_summary(system_message, chat_history):
         summary_content += token
 
-    final_message = ChatMessage(
-        conversation_id=conversation_id,
-        sender_id=current_user.id,
-        sender_type="final",
-        content=summary_content
-    )
-    db_session.add(final_message)
-    db_session.commit()
-    db_session.refresh(final_message)
-
     story_summary = StorySummary(
         conversation_id=conversation_id,
         summary_text=summary_content
@@ -86,6 +76,11 @@ async def create_story_summary(
     db_session.add(story_summary)
     db_session.commit()
     db_session.refresh(story_summary)
+
+    conversation.status = 'complete'
+    db_session.add(conversation)
+    db_session.commit()
+    db_session.refresh(conversation)
 
     return story_summary
 
