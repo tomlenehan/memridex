@@ -16,7 +16,7 @@ import {
 import {Link as RouterLink, createFileRoute, redirect} from "@tanstack/react-router";
 import {type SubmitHandler, useForm} from "react-hook-form";
 
-import Logo from "../assets/images/memribox-text-logo.png";
+import Logo from "../assets/images/memridex-text-logo.png";
 import useAuth, {isLoggedIn} from "../hooks/useAuth";
 import {emailPattern} from "../utils";
 

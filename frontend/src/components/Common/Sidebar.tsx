@@ -15,7 +15,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query"
 import { FiLogOut, FiMenu } from "react-icons/fi"
 
-import Logo from "../../assets/images/memribox-text-logo.png"
+import Logo from "../../assets/images/memridex-text-logo.png"
 import type { UserPublic } from "../../client"
 import useAuth from "../../hooks/useAuth"
 import SidebarItems from "./SidebarItems"
@@ -52,7 +52,9 @@ const Sidebar = () => {
           <DrawerBody py={8}>
             <Flex flexDir="column" justify="space-between">
               <Box>
-                <Image src={Logo} alt="logo" p={2} />
+                <Flex justifyContent="flex-start">
+                  <Image src={Logo} alt="logo" p={2} />
+                </Flex>
                 <SidebarItems onClose={onClose} />
                 <Flex
                   as="button"
@@ -93,7 +95,9 @@ const Sidebar = () => {
           borderRadius={12}
         >
           <Box>
-            <Image src={Logo} alt="Logo" w="180px" maxW="2xs" p={6} />
+            <Flex justifyContent="flex-start">
+              <Image src={Logo} alt="Logo" w="150px" marginBottom={1} maxW="2xs" p={2} />
+            </Flex>
             <SidebarItems />
           </Box>
           {currentUser?.email && (

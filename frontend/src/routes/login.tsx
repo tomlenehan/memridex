@@ -20,7 +20,7 @@ import {
 } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import Logo from "../assets/images/memribox-text-logo.png"
+import Logo from "../assets/images/memridex-text-logo.png"
 import type { Body_login_login_access_token as AccessToken } from "../client"
 import useAuth, { isLoggedIn } from "../hooks/useAuth"
 import { emailPattern } from "../utils"

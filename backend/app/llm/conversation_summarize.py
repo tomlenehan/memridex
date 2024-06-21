@@ -2,7 +2,7 @@ from typing import AsyncIterable, List
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.vectorstores.faiss import FAISS
+from langchain_community.vectorstores import FAISS
 import logging
 
 logging.basicConfig(level=logging.INFO)
