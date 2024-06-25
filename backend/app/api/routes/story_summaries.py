@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Form
 from sqlmodel import Session, select
 from app.api.deps import get_current_user, get_db
-from app.models import User, StorySummary, StorySummaryPublic, Conversation, Message, ConversationStatus
+from app.models import User, StorySummary, StorySummaryPublic, Conversation, Message, StorySummaryCreate
 from app.llm.utils import get_formatted_history
 from app.llm.conversation_summarize import generate_summary
 from app.models import ChatMessage
@@ -52,38 +52,41 @@ def read_story_summary(
 
 @router.post("/", response_model=StorySummaryPublic)
 async def create_story_summary(
-        conversation_id: int = Form(...),
-        current_user: User = Depends(get_current_user),
-        db_session: Session = Depends(get_db)
+    conversation_id: int = Form(...),
+    current_user: User = Depends(get_current_user),
+    db_session: Session = Depends(get_db)
 ) -> StorySummaryPublic:
-    conversation = db_session.get(Conversation, conversation_id)
-    if not conversation:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+    try:
+        conversation = db_session.get(Conversation, conversation_id)
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
 
-    chat_history, _ = get_formatted_history(conversation_id, db_session)
-    summary_content = ""
+        chat_history, _ = get_formatted_history(conversation_id, db_session)
+        summary_content = ""
 
-    system_message = (f"You are an AI ghostwriter tasked with summarizing the following conversation "
-                      f"based on this story prompt {conversation.user_story_prompt.prompt}. Your output should be in "
-                      f"prose, fit to be published in a biography.")
+        system_message = (f"You are an AI ghostwriter tasked with summarizing the following conversation "
+                          f"based on this story prompt {conversation.user_story_prompt.prompt}. Your output should be in "
+                          f"prose, fit to be published in a biography.")
 
-    async for token in generate_summary(system_message, chat_history):
-        summary_content += token
+        async for token in generate_summary(system_message, chat_history):
+            summary_content += token
 
-    story_summary = StorySummary(
-        conversation_id=conversation_id,
-        summary_text=summary_content
-    )
-    db_session.add(story_summary)
-    db_session.commit()
-    db_session.refresh(story_summary)
-
-    conversation.status = 'complete'
-    db_session.add(conversation)
-    db_session.commit()
-    db_session.refresh(conversation)
-
-    return story_summary
+        story_summary_create = StorySummaryCreate(
+            conversation_id=conversation_id,
+            summary_text=summary_content,
+            user_id=current_user.id,
+            image_url=conversation.user_story_prompt.image_url
+        )
+        story_summary = StorySummary.from_orm(story_summary_create)
+        db_session.add(story_summary)
+        db_session.commit()
+        db_session.refresh(story_summary)
+        return story_summary
+    except Exception as e:
+        db_session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db_session.close()
 
 @router.put("/{id}", response_model=StorySummaryPublic)
 def update_story_summary(
@@ -113,7 +116,6 @@ def update_story_summary(
     session.commit()
     session.refresh(summary)
     return summary
-
 
 @router.delete("/{id}")
 def delete_story_summary(

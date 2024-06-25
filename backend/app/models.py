@@ -37,6 +37,7 @@ class User(UserBase, table=True):
     user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="user")
     conversations: List["Conversation"] = Relationship(back_populates="user")
     chat_messages: List["ChatMessage"] = Relationship(back_populates="sender")
+    story_summaries: List["StorySummary"] = Relationship(back_populates="user")
 
 class UserPublic(UserBase):
     id: int
@@ -186,11 +187,14 @@ class ChatMessage(SQLModel, table=True):
 class StorySummary(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     conversation_id: int = Field(foreign_key="conversation.id")
-    conversation: Optional[Conversation] = Relationship(back_populates="story_summary")
+    user_id: int = Field(foreign_key="user.id", nullable=False)
+    conversation: Optional["Conversation"] = Relationship(back_populates="story_summary")
+    user: Optional["User"] = Relationship(back_populates="story_summaries")
     title: Optional[str] = None
     summary_text: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     modified_at: Optional[datetime] = Field(default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow})
+    image_url: Optional[str] = None
 
 class StorySummaryPublic(SQLModel):
     id: int
@@ -199,6 +203,12 @@ class StorySummaryPublic(SQLModel):
     summary_text: str
     created_at: datetime
     modified_at: Optional[datetime]
+
+class StorySummaryCreate(SQLModel):
+    conversation_id: int
+    user_id: int
+    summary_text: str
+    image_url: Optional[str] = None
 
 class ConversationCreate(SQLModel):
     user_story_prompt_id: int
