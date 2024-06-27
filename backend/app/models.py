@@ -135,12 +135,12 @@ class UserStoryPrompt(SQLModel, table=True):
 class UserStoryPromptCreate(SQLModel):
     prompt: str
     category_id: Optional[int] = None
-    image_url: Optional[str] = None  # New field for image URL
+    image_url: Optional[str] = None
 
 class UserStoryPromptUpdate(SQLModel):
     prompt: Optional[str] = None
     category_id: Optional[int] = None
-    image_url: Optional[str] = None  # New field for image URL
+    image_url: Optional[str] = None
 
 class UserStoryPromptPublic(UserStoryPromptCreate):
     id: int
@@ -201,6 +201,7 @@ class StorySummaryPublic(SQLModel):
     conversation_id: int
     title: Optional[str] = None
     summary_text: str
+    image_url: Optional[str] = None
     created_at: datetime
     modified_at: Optional[datetime]
 

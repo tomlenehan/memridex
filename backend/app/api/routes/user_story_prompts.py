@@ -6,14 +6,17 @@ from app.models import (
     User,
     UserStoryPrompt,
     UserStoryPromptCreate,
+    UserStoryPromptUpdate,
     UserStoryPromptPublic,
     UserStoryPromptsPublic,
     Message,
     Image
 )
 from app.utils import upload_image_to_s3
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.get("/", response_model=UserStoryPromptsPublic)
 def read_user_story_prompts(
@@ -92,34 +95,47 @@ def update_user_story_prompt(
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    prompt: str = Form(...),
+    prompt: Optional[str] = Form(None),
     category_id: Optional[int] = Form(None),
     image: Optional[UploadFile] = File(None)
 ) -> Any:
     """
     Update a user story prompt.
     """
-    prompt_instance = session.get(UserStoryPrompt, id)
-    if not prompt_instance:
-        raise HTTPException(status_code=404, detail="User story prompt not found")
-    if not current_user.is_superuser and (prompt_instance.user_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+    try:
+        prompt_instance = session.get(UserStoryPrompt, id)
+        if not prompt_instance:
+            logger.error(f"User story prompt with id {id} not found.")
+            raise HTTPException(status_code=404, detail="User story prompt not found")
+        if not current_user.is_superuser and (prompt_instance.user_id != current_user.id):
+            logger.error(f"User {current_user.id} does not have permission to update prompt {id}.")
+            raise HTTPException(status_code=400, detail="Not enough permissions")
 
-    if image:
-        image_url = upload_image_to_s3(image)
-        new_image = Image(link=image_url)
-        session.add(new_image)
+        if image:
+            image_url = upload_image_to_s3(image)
+            update_data = UserStoryPromptUpdate(
+                prompt=prompt,
+                category_id=category_id,
+                image_url=image_url
+            )
+        else:
+            update_data = UserStoryPromptUpdate(
+                prompt=prompt,
+                category_id=category_id,
+            )
+
+        for key, value in update_data.dict(exclude_unset=True).items():
+            setattr(prompt_instance, key, value)
+
+        session.add(prompt_instance)
         session.commit()
-        session.refresh(new_image)
-        prompt_instance.image_id = new_image.id
+        session.refresh(prompt_instance)
+        return prompt_instance
+    except Exception as e:
+        logger.error(f"Error updating user story prompt {id}: {e}", exc_info=True)
+        session.rollback()
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
-    prompt_instance.prompt = prompt
-    prompt_instance.category_id = category_id
-
-    session.add(prompt_instance)
-    session.commit()
-    session.refresh(prompt_instance)
-    return prompt_instance
 
 @router.delete("/{id}")
 def delete_user_story_prompt(
