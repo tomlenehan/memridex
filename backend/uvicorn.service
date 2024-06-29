@@ -5,9 +5,9 @@ After=network.target
 [Service]
 User=ec2-user
 Group=nginx
-WorkingDirectory=/var/app/staging/backend
+WorkingDirectory=/var/app/current/backend
 ExecStart=/usr/local/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
-EnvironmentFile=/var/app/staging/.env
+EnvironmentFile=/var/app/current/.env
 
 [Install]
 WantedBy=multi-user.target

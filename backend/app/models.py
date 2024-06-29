@@ -131,11 +131,15 @@ class UserStoryPrompt(SQLModel, table=True):
     category: Optional[Category] = Relationship(back_populates="user_story_prompts")
     image_url: Optional[str] = None  # New field for image URL
     conversations: List["Conversation"] = Relationship(back_populates="user_story_prompt")
+    created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    modified_at: Optional[datetime] = Field(default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow})
 
 class UserStoryPromptCreate(SQLModel):
     prompt: str
     category_id: Optional[int] = None
     image_url: Optional[str] = None
+    created_at: Optional[datetime]
+    modified_at: Optional[datetime]
 
 class UserStoryPromptUpdate(SQLModel):
     prompt: Optional[str] = None
