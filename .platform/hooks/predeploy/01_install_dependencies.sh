@@ -31,5 +31,6 @@ sudo cp -r /var/app/current/frontend/dist/* /var/www/frontend/static
 
 # Ensure permissions are correct
 sudo chown -R nginx:nginx /var/www/frontend/static
+sudo chmod -R 755 /var/www/frontend/static/
 
 echo "Dependency installation completed." | sudo tee -a $LOGFILE
