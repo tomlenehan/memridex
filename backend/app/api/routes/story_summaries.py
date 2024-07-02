@@ -81,7 +81,10 @@ async def create_story_summary(
         db_session.add(story_summary)
         db_session.commit()
         db_session.refresh(story_summary)
-        return story_summary
+
+        # Convert StorySummary to StorySummaryPublic
+        story_summary_public = StorySummaryPublic.from_orm(story_summary)
+        return story_summary_public
     except Exception as e:
         db_session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
