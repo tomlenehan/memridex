@@ -9,8 +9,10 @@ WorkingDirectory=/var/app/current/backend
 ExecStart=/usr/local/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
 ExecStartPost=/bin/sh -c "systemctl show -p MainPID web.service | cut -d= -f2 > /var/pids/web.pid"
 ExecStopPost=/bin/sh -c "rm -f /var/pids/web.pid"
-EnvironmentFile=/var/app/current/.env
 Restart=always
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=uvicorn
 
 [Install]
 WantedBy=multi-user.target
