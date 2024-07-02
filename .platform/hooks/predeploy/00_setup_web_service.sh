@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Ensure the /var/pids directory exists
+mkdir -p /var/pids
+
 # Copy the web.service file to the correct location
 cp .platform/web.service /etc/systemd/system/web.service
 
