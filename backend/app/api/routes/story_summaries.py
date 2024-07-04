@@ -82,6 +82,11 @@ async def create_story_summary(
         db_session.commit()
         db_session.refresh(story_summary)
 
+        conversation.status = "complete"
+        db_session.add(conversation)
+        db_session.commit()
+        db_session.refresh(conversation)
+
         # Convert StorySummary to StorySummaryPublic
         story_summary_public = StorySummaryPublic.from_orm(story_summary)
         return story_summary_public
