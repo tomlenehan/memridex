@@ -1,12 +1,12 @@
 from typing import Any, Optional
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, Form, File
 from sqlmodel import Session, select
 from app.api.deps import get_current_user, get_db
 from app.models import User, StorySummary, StorySummaryPublic, Conversation, Message, StorySummaryCreate
 from app.llm.utils import get_formatted_history
 from app.llm.conversation_summarize import generate_summary
-from app.models import ChatMessage
+from app.utils import upload_image_to_s3
 
 router = APIRouter()
 
@@ -92,33 +92,44 @@ async def create_story_summary(
         db_session.close()
 
 @router.put("/{id}", response_model=StorySummaryPublic)
-def update_story_summary(
-    *,
+async def update_story_summary(
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    title: Optional[str] = None,
-    summary_text: Optional[str] = None
+    title: Optional[str] = Form(None),
+    summary_text: Optional[str] = Form(None),
+    image: Optional[UploadFile] = File(None)
 ) -> Any:
     """
     Update a story summary.
     """
-    summary = session.get(StorySummary, id)
-    if not summary:
-        raise HTTPException(status_code=404, detail="Story summary not found")
-    conversation = session.get(Conversation, summary.conversation_id)
-    if not current_user.is_superuser and (conversation.user_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+    try:
+        summary = session.get(StorySummary, id)
+        if not summary:
+            raise HTTPException(status_code=404, detail="Story summary not found")
+        conversation = session.get(Conversation, summary.conversation_id)
+        if not current_user.is_superuser and (conversation.user_id != current_user.id):
+            raise HTTPException(status_code=400, detail="Not enough permissions")
 
-    if title is not None:
-        summary.title = title
-    if summary_text is not None:
-        summary.summary_text = summary_text
-    summary.modified_at = datetime.utcnow()
-    session.add(summary)
-    session.commit()
-    session.refresh(summary)
-    return summary
+        if title is not None:
+            summary.title = title
+        if summary_text is not None:
+            summary.summary_text = summary_text
+
+        if image is not None:
+            image_url = upload_image_to_s3(image)
+            summary.image_url = image_url
+
+        summary.modified_at = datetime.utcnow()
+        session.add(summary)
+        session.commit()
+        session.refresh(summary)
+        return summary
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()
 
 @router.delete("/{id}")
 def delete_story_summary(
