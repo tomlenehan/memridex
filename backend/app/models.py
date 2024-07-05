@@ -215,6 +215,13 @@ class StorySummaryCreate(SQLModel):
     summary_text: str
     image_url: Optional[str] = None
 
+class StorySummaryUpdate(SQLModel):
+    id: int
+    title: Optional[str] = None
+    summary_text: str
+    image_url: Optional[str] = None
+    modified_at: Optional[datetime]
+
 class ConversationCreate(SQLModel):
     user_story_prompt_id: int
 
