@@ -26,6 +26,7 @@ from app.models import (
     StockStoryPrompt,
 )
 from app.utils import generate_new_account_email, send_email
+from app.api.deps import get_current_user
 
 router = APIRouter()
 
@@ -135,11 +136,8 @@ def update_password_me(
 
 
 @router.get("/me", response_model=UserPublic)
-def read_user_me(current_user: CurrentUser) -> Any:
-    """
-    Get current user.
-    """
-    return current_user
+def read_user_me(current_user: User = Depends(get_current_user)) -> UserPublic:
+    return UserPublic.from_orm(current_user)
 
 
 @router.delete("/me", response_model=Message)

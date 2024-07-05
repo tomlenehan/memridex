@@ -41,6 +41,10 @@ class User(UserBase, table=True):
 
 class UserPublic(UserBase):
     id: int
+    user_story_prompts: List["UserStoryPrompt"]
+    conversations: List["Conversation"]
+    chat_messages: List["ChatMessage"]
+    story_summaries: List["StorySummary"]
 
 class UsersPublic(SQLModel):
     data: List[UserPublic]
