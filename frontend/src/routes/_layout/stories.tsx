@@ -24,6 +24,7 @@ function StorySummariesList() {
     queryFn: () => SummariesService.readStorySummaries({}),
   });
 
+
   if (isLoading) {
     return (
       <SimpleGrid columns={[1, 2, 3]} spacing={4}>
