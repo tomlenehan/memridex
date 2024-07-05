@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Flex, Input, useColorModeValue, Spinner, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Input, useColorModeValue } from "@chakra-ui/react";
 import { GiSecretBook } from "react-icons/gi";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from '@tanstack/react-router'
-import { ChatMessageCreate } from "../../client";
+import {
+  Body_summaries_create_story_summary,
+  ChatMessageCreate,
+  SummariesService
+} from "../../client";
 import { useDispatch, useSelector } from "react-redux";
 import { addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } from "../../redux/chatSlice";
 import { RootState, AppDispatch } from "../../redux/store";
@@ -45,7 +49,7 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
     const tempId = Date.now() + 1;
     dispatch(startStreamingMessage({ id: tempId }));
 
-    const response = await fetch(`/api/v1/chat_messages/${conversationId}/messages`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/chat_messages/${conversationId}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -85,23 +89,17 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
       throw new Error('No access token found');
     }
 
-    const formData = new URLSearchParams();
-    formData.append('conversation_id', conversationId.toString());
+    const formData: Body_summaries_create_story_summary = {
+      conversation_id: conversationId,
+    };
 
-    const response = await fetch(`/api/v1/summaries`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      },
-      body: formData
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await SummariesService.createStorySummary({ formData });
+      return response.id;
+    } catch (error) {
+      console.error('Failed to generate summary:', error);
       throw new Error('Failed to generate summary');
     }
-
-    const summary = await response.json();
-    return summary.id;
   };
 
   const handleSaveMemory = async () => {
@@ -110,7 +108,7 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
       const summaryId = await handleGenerateSummary();
       navigate({
         to: "/summary/$summaryId",
-        params: { summaryId: summaryId },
+        params: { summaryId: summaryId.toString() },
       });
     } catch (error) {
       console.error('Failed to generate summary', error);
@@ -139,12 +137,6 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
           </Button>
         )}
       </Flex>
-      {isLoading && (
-        <Flex justifyContent="center" mt={4}>
-          <Spinner size="lg" />
-          <Text ml={2}>Generating summary...</Text>
-        </Flex>
-      )}
     </Box>
   );
 };

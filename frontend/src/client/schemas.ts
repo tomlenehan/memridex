@@ -49,6 +49,36 @@ export const $Body_summaries_create_story_summary = {
 	},
 } as const;
 
+export const $Body_summaries_update_story_summary = {
+	properties: {
+		title: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		summary_text: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		image: {
+	type: 'any-of',
+	contains: [{
+	type: 'binary',
+	format: 'binary',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
 export const $Body_user_story_prompts_create_user_story_prompt = {
 	properties: {
 		prompt: {
@@ -78,8 +108,12 @@ export const $Body_user_story_prompts_create_user_story_prompt = {
 export const $Body_user_story_prompts_update_user_story_prompt = {
 	properties: {
 		prompt: {
+	type: 'any-of',
+	contains: [{
 	type: 'string',
-	isRequired: true,
+}, {
+	type: 'null',
+}],
 },
 		category_id: {
 	type: 'any-of',
@@ -201,6 +235,41 @@ export const $CategoryUpdate = {
 	},
 } as const;
 
+export const $ChatMessage = {
+	properties: {
+		id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		conversation_id: {
+	type: 'number',
+	isRequired: true,
+},
+		sender_id: {
+	type: 'number',
+	isRequired: true,
+},
+		sender_type: {
+	type: 'all-of',
+	contains: [{
+	type: 'ChatMessageSender',
+}],
+},
+		content: {
+	type: 'string',
+	isRequired: true,
+},
+		timestamp: {
+	type: 'string',
+	format: 'date-time',
+},
+	},
+} as const;
+
 export const $ChatMessageCreate = {
 	properties: {
 		sender_type: {
@@ -253,6 +322,41 @@ export const $ChatMessagesPublic = {
 		count: {
 	type: 'number',
 	isRequired: true,
+},
+	},
+} as const;
+
+export const $Conversation = {
+	properties: {
+		id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		user_id: {
+	type: 'number',
+	isRequired: true,
+},
+		user_story_prompt_id: {
+	type: 'number',
+	isRequired: true,
+},
+		created_at: {
+	type: 'string',
+	format: 'date-time',
+},
+		status: {
+	type: 'all-of',
+	contains: [{
+	type: 'ConversationStatus',
+}],
+},
+		token_total: {
+	type: 'number',
+	default: 0,
 },
 	},
 } as const;
@@ -506,6 +610,60 @@ export const $NewPassword = {
 	},
 } as const;
 
+export const $StorySummary = {
+	properties: {
+		id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		conversation_id: {
+	type: 'number',
+	isRequired: true,
+},
+		user_id: {
+	type: 'number',
+	isRequired: true,
+},
+		title: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		summary_text: {
+	type: 'string',
+	isRequired: true,
+},
+		created_at: {
+	type: 'string',
+	format: 'date-time',
+},
+		modified_at: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+	format: 'date-time',
+}, {
+	type: 'null',
+}],
+},
+		image_url: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
 export const $StorySummaryPublic = {
 	properties: {
 		id: {
@@ -527,6 +685,14 @@ export const $StorySummaryPublic = {
 		summary_text: {
 	type: 'string',
 	isRequired: true,
+},
+		image_url: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
 },
 		created_at: {
 	type: 'string',
@@ -627,6 +793,34 @@ export const $UserPublic = {
 	type: 'number',
 	isRequired: true,
 },
+		user_story_prompts: {
+	type: 'array',
+	contains: {
+		type: 'UserStoryPrompt',
+	},
+	isRequired: true,
+},
+		conversations: {
+	type: 'array',
+	contains: {
+		type: 'Conversation',
+	},
+	isRequired: true,
+},
+		chat_messages: {
+	type: 'array',
+	contains: {
+		type: 'ChatMessage',
+	},
+	isRequired: true,
+},
+		story_summaries: {
+	type: 'array',
+	contains: {
+		type: 'StorySummary',
+	},
+	isRequired: true,
+},
 	},
 } as const;
 
@@ -644,6 +838,61 @@ export const $UserRegister = {
 	type: 'any-of',
 	contains: [{
 	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
+export const $UserStoryPrompt = {
+	properties: {
+		id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		prompt: {
+	type: 'string',
+	isRequired: true,
+},
+		user_id: {
+	type: 'number',
+	isRequired: true,
+},
+		category_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		image_url: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		created_at: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+	format: 'date-time',
+}, {
+	type: 'null',
+}],
+},
+		modified_at: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+	format: 'date-time',
 }, {
 	type: 'null',
 }],
@@ -672,6 +921,26 @@ export const $UserStoryPromptPublic = {
 }, {
 	type: 'null',
 }],
+},
+		created_at: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+	format: 'date-time',
+}, {
+	type: 'null',
+}],
+	isRequired: true,
+},
+		modified_at: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+	format: 'date-time',
+}, {
+	type: 'null',
+}],
+	isRequired: true,
 },
 		id: {
 	type: 'number',

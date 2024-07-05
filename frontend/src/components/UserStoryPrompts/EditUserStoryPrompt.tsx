@@ -84,29 +84,52 @@ const EditUserStoryPrompt = ({
       if (!token) {
         throw new Error("No access token found");
       }
-      const response = await axios.put(
-        `/api/v1/user_story_prompts/${userStoryPrompt.id}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
+
+      try {
+        const response = await axios.put(
+          `${import.meta.env.VITE_API_URL}/api/v1/user_story_prompts/${userStoryPrompt.id}`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        console.log("API response data:", response.data);  // Log the response data
+        return response.data;
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          console.error('Error in API request:', error.response || error.message);
+        } else if (error instanceof Error) {
+          console.error('Error in API request:', error.message);
+        } else {
+          console.error('Unexpected error:', error);
         }
-      );
-      return response.data;
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       showToast("Success!", "User story prompt updated successfully.", "success");
       reset();
       onClose();
-      queryClient.invalidateQueries({ queryKey: ["userStoryPrompts"] });
+      // Update specific item within cached data
+      queryClient.setQueryData(['userStoryPrompts'], (oldData: any) => {
+        return {
+          ...oldData,
+          data: oldData.data.map((prompt: any) =>
+            prompt.id === userStoryPrompt.id ? data : prompt
+          )
+        };
+      });
     },
     onError: (err: ApiError) => {
+      console.error('Mutation error:', err);  // Log the error
       const errDetail = (err.body as any)?.detail;
       showToast("Something went wrong.", `${errDetail}`, "error");
     },
   });
+
 
   const onSubmit: SubmitHandler<FormDataUserStoryPromptUpdate> = (data) => {
     const formData = new FormData();

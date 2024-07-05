@@ -1,32 +1,43 @@
-import { Box, Flex, Icon, Text, useColorModeValue } from "@chakra-ui/react"
-import { useQueryClient } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
-import { FiBook, FiHome, FiSettings, FiUsers } from "react-icons/fi"
+import { Box, Flex, Icon, Text, useColorModeValue } from "@chakra-ui/react";
+import { Link } from "@tanstack/react-router";
+import { FiBook, FiBookOpen, FiHome, FiSettings, FiUsers } from "react-icons/fi";
 import { GiConversation } from "react-icons/gi";
-
-import type { UserPublic } from "../../client"
+import useAuth from "../../hooks/useAuth";
+import type { Conversation } from "../../client";
 
 const items = [
   { icon: FiHome, title: "Dashboard", path: "/" },
-  // { icon: FiBriefcase, title: "Items", path: "/items" },
   { icon: GiConversation, title: "Chat", path: "/conversations" },
   { icon: FiBook, title: "Prompts", path: "/user_story_prompts" },
   { icon: FiSettings, title: "Settings", path: "/settings" },
-]
+];
 
 interface SidebarItemsProps {
-  onClose?: () => void
+  onClose?: () => void;
 }
 
 const SidebarItems = ({ onClose }: SidebarItemsProps) => {
-  const queryClient = useQueryClient()
-  const textColor = useColorModeValue("ui.main", "ui.light")
-  const bgActive = useColorModeValue("#E2E8F0", "#4A5568")
-  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
+  const textColor = useColorModeValue("ui.main", "ui.light");
+  const bgActive = useColorModeValue("#E2E8F0", "#4A5568");
+  const { user, isLoading } = useAuth();
 
-  const finalItems = currentUser?.is_superuser
-    ? [...items, { icon: FiUsers, title: "Admin", path: "/admin" }]
-    : items
+  if (isLoading) {
+    return <Text>Loading...</Text>;
+  }
+
+  const hasCompletedConversations = user?.conversations?.some(
+    (conversation: Conversation) => conversation.status === "complete"
+  );
+
+  const finalItems = [...items];
+
+  if (hasCompletedConversations) {
+    finalItems.splice(3, 0, { icon: FiBookOpen, title: "Stories", path: "/stories" });
+  }
+
+  if (user?.is_superuser) {
+    finalItems.push({ icon: FiUsers, title: "Admin", path: "/admin" });
+  }
 
   const listItems = finalItems.map(({ icon, title, path }) => (
     <Flex
@@ -47,13 +58,9 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
       <Icon as={icon} alignSelf="center" />
       <Text ml={2}>{title}</Text>
     </Flex>
-  ))
+  ));
 
-  return (
-    <>
-      <Box>{listItems}</Box>
-    </>
-  )
-}
+  return <Box>{listItems}</Box>;
+};
 
-export default SidebarItems
+export default SidebarItems;

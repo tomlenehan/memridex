@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="memribox@awseb-e-fcp66vtzd3-stack-awsebrdsdatabase-l9gxw7ftz3vj.cfhvy8rx7skb.us-east-1.rds.amazonaws.com" uuid="90cd5762-cc0e-4a6a-8854-09970c32e00a">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://awseb-e-fcp66vtzd3-stack-awsebrdsdatabase-l9gxw7ftz3vj.cfhvy8rx7skb.us-east-1.rds.amazonaws.com:5432/memribox</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+  </component>
+</project>

@@ -21,6 +21,7 @@
     "@tanstack/react-query-devtools": "^5.28.14",
     "@tanstack/react-router": "1.19.1",
     "axios": "1.6.2",
+    "dotenv": "^16.4.5",
     "form-data": "4.0.0",
     "framer-motion": "10.16.16",
     "react": "^18.2.0",
@@ -40,8 +41,9 @@
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@vitejs/plugin-react-swc": "^3.5.0",
+    "serve": "^14.2.3",
     "typescript": "^5.2.2",
     "vite": "^5.0.13",
-    "serve": "^14.2.0"
+    "vite-plugin-env-compatible": "^2.0.1"
   }
 }
