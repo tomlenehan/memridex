@@ -1,0 +1,5 @@
+branch-defaults:
+  main:
+    environment: lawcrawl-prod
+global:
+  profile: eb-cli

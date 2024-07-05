@@ -1,0 +1,19 @@
+[Unit]
+Description=Uvicorn FastAPI Server
+After=network.target
+
+[Service]
+User=ec2-user
+Group=nginx
+WorkingDirectory=/var/app/current/backend
+ExecStart=/usr/local/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+EnvironmentFile=/var/app/current/.env
+ExecStartPost=/bin/sh -c "systemctl show -p MainPID web.service | cut -d= -f2 > /var/pids/web.pid"
+ExecStopPost=/bin/sh -c "rm -f /var/pids/web.pid"
+Restart=always
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=uvicorn
+
+[Install]
+WantedBy=multi-user.target
