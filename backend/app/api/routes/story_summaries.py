@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from app.api.deps import get_current_user, get_db
 from app.models import User, StorySummary, StorySummaryPublic, Conversation, Message, StorySummaryCreate, StorySummaryUpdate
 from app.llm.utils import get_formatted_history
-from app.llm.conversation_summarize import generate_summary
+from app.llm.conversation_summarize import generate_summary, generate_title
 from app.utils import upload_image_to_s3
 import logging
 
@@ -75,9 +75,14 @@ async def create_story_summary(
         async for token in generate_summary(system_message, chat_history):
             summary_content += token
 
+        system_message = f"Please give a concise one sentence title based on the following story summary:"
+
+        summary_title = generate_title(system_message, summary_content)
+
         story_summary_create = StorySummaryCreate(
             conversation_id=conversation_id,
             summary_text=summary_content,
+            title=summary_title,
             user_id=current_user.id,
             image_url=conversation.user_story_prompt.image_url
         )

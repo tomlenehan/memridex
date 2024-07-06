@@ -42,12 +42,35 @@ async def generate_summary(system_prompt: str, chat_history: List[HumanMessage])
             MessagesPlaceholder("history"),
         ]
     )
-
     chain = prompt | model
 
     try:
         async for chunk in chain.astream({"system": system_prompt, "history": relevant_messages}):
             yield chunk.content
+    except Exception as e:
+        logger.error(f"Error generating summary: {e}")
+        raise e
+
+
+def generate_title(system_prompt: str, summary: str) -> str:
+
+    model = ChatOpenAI(
+        model=MODEL_NAME,
+        streaming=True,
+        verbose=True,
+    )
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", "{system}"),
+            HumanMessage(summary),
+        ]
+    )
+    chain = prompt | model
+
+    try:
+        result = chain.invoke({"system": system_prompt})
+        return result.content
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
         raise e

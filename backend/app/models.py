@@ -217,6 +217,7 @@ class StorySummaryCreate(SQLModel):
     conversation_id: int
     user_id: int
     summary_text: str
+    title: Optional[str] = None
     image_url: Optional[str] = None
 
 class StorySummaryUpdate(SQLModel):

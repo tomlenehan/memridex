@@ -61,9 +61,9 @@ function SummaryPage() {
 
       setValue("summary", response.summary_text || "");
       setValue("title", response.title || "");
-      setValue("image_url", response.image_url || "");
       setImageUrl(response.image_url || "");
       setStatus("succeeded");
+      console.log("Initial image URL:", response.image_url);
     } catch (error) {
       console.error(error);
       setStatus("failed");
@@ -90,19 +90,24 @@ function SummaryPage() {
         formData,
       });
 
-      setIsSaving(false);
       showToast("Success!", "Summary updated successfully.", "success");
       setStatus("succeeded");
 
-      if (response.image_url) {
-        setImageUrl(response.image_url);
-      }
+      // Log the response to see if the image URL is being returned
+      console.log("Update response:", response);
 
+      // Add a delay before updating the image URL state
+      setTimeout(() => {
+        setImageUrl(response.image_url || "");
+        setNewImageUploaded(false);
+      }, 2000); // 2 second delay
     } catch (error) {
       console.error(error);
       setIsSaving(false);
       showToast("Something went wrong.", `${error}`, "error");
       setStatus("failed");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -141,28 +146,13 @@ function SummaryPage() {
               <FormControl mt={4} isInvalid={!!errors.summary}>
                 <FormLabel>Summary</FormLabel>
                 <Textarea
-                  minHeight={250}
+                  minHeight={220}
                   {...register("summary", { required: "Summary is required" })}
                 />
                 {errors.summary && <Text color="red.500">{errors.summary.message}</Text>}
               </FormControl>
-              <FormControl mt={4} >
+              <FormControl mt={4}>
                 <FormLabel htmlFor="image">Upload Image</FormLabel>
-                {newImageUploaded && acceptedFiles.length > 0 ? (
-                  <VStack mt={2} align="start">
-                    {acceptedFiles.map((file) => (
-                      <Text key={file.name}>{file.name}</Text>
-                    ))}
-                  </VStack>
-                ) : (
-                  <Image
-                    src={imageUrl}
-                    alt="Current image"
-                    boxSize="50px"
-                    objectFit="cover"
-                    mb={2}
-                  />
-                )}
                 <Box
                   {...getRootProps()}
                   border="2px dashed"
@@ -176,6 +166,20 @@ function SummaryPage() {
                   <input {...getInputProps()} />
                   <Text>Drag 'n' drop an image here, or click to select one</Text>
                 </Box>
+                <VStack mt={2} align="start">
+                  <Image
+                    src={imageUrl}
+                    alt="Current image"
+                    boxSize="50px"
+                    objectFit="cover"
+                    mb={2}
+                  />
+                  {acceptedFiles.length > 0 && newImageUploaded && (
+                    acceptedFiles.map((file) => (
+                      <Text color="green" key={file.name}>{file.name}</Text>
+                    ))
+                  )}
+                </VStack>
               </FormControl>
               <Button
                 mt={4}

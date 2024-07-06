@@ -56,7 +56,8 @@ async def create_chat_message(
 
         system_message = (f"You are an AI ghostwriter tasked with teasing out details from the user "
                          f"about this story prompt {story_prompt}. continue to ask good follow-up "
-                         f"questions based on their input.")
+                         f"questions based on their input. Keep the questions interesting and engaging"
+                          f"and keeep your language fun and casual.")
 
         async for token in send_message(chat_message_in.content, system_message, chat_history):
             response_content += token
@@ -82,50 +83,6 @@ async def create_chat_message(
     current_user_id = current_user.id
 
     return StreamingResponse(message_generator(db_session, current_user_id), media_type="text/event-stream")
-
-
-@router.get("/{conversation_id}/summary", response_model=ChatMessagePublic)
-async def get_summary(
-        conversation_id: int,
-        current_user: User = Depends(get_current_user),
-        db_session: Session = Depends(get_db)
-) -> ChatMessagePublic:
-    conversation = db_session.get(Conversation, conversation_id)
-    if not conversation:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-
-    if conversation.status != ConversationStatus.COMPLETE:
-        raise HTTPException(status_code=400, detail="Conversation is not complete yet")
-
-    chat_history, _ = get_formatted_history(conversation_id, db_session)
-    summary_content = ""
-
-    system_message = (f"You are an AI ghostwriter tasked with summarizing the following conversation "
-                     f"based on this story prompt {conversation.user_story_prompt.prompt}. Your output should be in "
-                     f"prose, fit to be published in a biography.")
-
-    async for token in generate_summary(system_message, chat_history):
-        summary_content += token
-
-    final_message = ChatMessage(
-        conversation_id=conversation_id,
-        sender_id=current_user.id,
-        sender_type="final",
-        content=summary_content
-    )
-    db_session.add(final_message)
-    db_session.commit()
-    db_session.refresh(final_message)
-
-    story_summary = StorySummary(
-        conversation_id=conversation_id,
-        summary_text=summary_content
-    )
-    db_session.add(story_summary)
-    db_session.commit()
-    db_session.refresh(story_summary)
-
-    return final_message
 
 
 @router.get("/{conversation_id}/messages", response_model=ChatMessagesPublic)
