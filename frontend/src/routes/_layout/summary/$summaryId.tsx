@@ -18,8 +18,9 @@ import { useEffect, useState } from "react";
 import { FaRegSave } from "react-icons/fa";
 import { CiShare2 } from "react-icons/ci";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { useDropzone } from "react-dropzone";
-import { SummariesService, Body_summaries_update_story_summary } from "../../../client";
+import { SummariesService, ContactsService, ContactRead, Body_summaries_update_story_summary } from "../../../client";
 import useCustomToast from "../../../hooks/useCustomToast"
 
 export const Route = createFileRoute("/_layout/summary/$summaryId")({
@@ -112,13 +113,24 @@ function SummaryPage() {
     }
   };
 
+  const fetchContacts = async (): Promise<ContactRead[]> => {
+    const response = await ContactsService.readContacts();
+    return response;
+  };
+
+  const { data: contacts } = useQuery<ContactRead[]>({
+    queryKey: ["contacts"],
+    queryFn: fetchContacts,
+  });
+
   const handleEmail = () => {
     const formData = watch();
     const emailSubject = formData.title || "Story Summary";
     const emailBody = `
       ${formData.summary}\n
     `;
-    window.location.href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    const emailRecipients = contacts?.map(contact => contact.email).join(",") || "";
+    window.location.href = `mailto:${emailRecipients}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
   };
 
   if (!summaryId) {

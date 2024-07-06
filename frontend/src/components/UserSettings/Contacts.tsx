@@ -8,9 +8,11 @@ import {
   HStack,
   List,
   ListItem,
+  IconButton,
   useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import { FaTrashAlt } from "react-icons/fa";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ContactsService, ContactCreate, ContactRead } from "../../client";
 
@@ -54,6 +56,31 @@ const Contacts = () => {
     },
   });
 
+  const deleteEmailMutation = useMutation<void, Error, number>({
+    mutationFn: async (id: number) => {
+      await ContactsService.deleteContact({ id });
+    },
+    onSuccess: () => {
+      refetch();
+      toast({
+        title: "Email deleted.",
+        description: "The email address has been deleted from your address book.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error.",
+        description: "The email address could not be deleted.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    },
+  });
+
   const handleAddEmail = () => {
     if (email) {
       const newContact: ContactCreate = { email };
@@ -61,9 +88,13 @@ const Contacts = () => {
     }
   };
 
+  const handleDeleteEmail = (id: number) => {
+    deleteEmailMutation.mutate(id);
+  };
+
   return (
     <Container maxW="full">
-      <Box py={4}>
+      <Box w={{ sm: "full", md: "50%" }}>
         <FormControl>
           <FormLabel>Add New Email Address</FormLabel>
           <HStack>
@@ -79,12 +110,17 @@ const Contacts = () => {
           </HStack>
         </FormControl>
       </Box>
-      <Box py={4}>
+      <Box w={{ sm: "full", md: "50%" }}>
         <List spacing={3}>
           {emailList.map((item) => (
-            <ListItem key={item.id}>
+            <ListItem key={item.id} marginTop={4}>
               <HStack justify="space-between">
                 <Box>{item.email}</Box>
+                <IconButton
+                  aria-label="Delete email"
+                  icon={<FaTrashAlt />}
+                  onClick={() => handleDeleteEmail(item.id)}
+                />
               </HStack>
             </ListItem>
           ))}
