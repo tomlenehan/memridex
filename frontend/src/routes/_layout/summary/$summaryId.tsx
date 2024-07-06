@@ -16,6 +16,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { IoChevronBackCircleOutline } from "react-icons/io5";
 import { useEffect, useState } from "react";
 import { FaRegSave } from "react-icons/fa";
+import { CiShare2 } from "react-icons/ci";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useDropzone } from "react-dropzone";
 import { SummariesService, Body_summaries_update_story_summary } from "../../../client";
@@ -35,7 +36,7 @@ interface SummaryFormInputs {
 
 function SummaryPage() {
   const { summaryId } = Route.useParams<{ summaryId: string }>(); // Correct type for summaryId
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<SummaryFormInputs>();
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<SummaryFormInputs>();
   const [status, setStatus] = useState<Status>("idle");
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [newImageUploaded, setNewImageUploaded] = useState(false);
@@ -109,6 +110,15 @@ function SummaryPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleEmail = () => {
+    const formData = watch();
+    const emailSubject = formData.title || "Story Summary";
+    const emailBody = `
+      ${formData.summary}\n
+    `;
+    window.location.href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
   };
 
   if (!summaryId) {
@@ -189,6 +199,15 @@ function SummaryPage() {
                 isLoading={isSaving}
               >
                 Save
+              </Button>
+              <Button
+                mt={4}
+                marginLeft={2}
+                rightIcon={<CiShare2 />}
+                colorScheme="teal"
+                onClick={handleEmail}
+              >
+                Share
               </Button>
             </form>
           )}

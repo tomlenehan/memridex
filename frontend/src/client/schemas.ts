@@ -326,6 +326,58 @@ export const $ChatMessagesPublic = {
 	},
 } as const;
 
+export const $Contact = {
+	properties: {
+		email: {
+	type: 'string',
+	isRequired: true,
+},
+		id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		user_id: {
+	type: 'number',
+	isRequired: true,
+},
+		created_at: {
+	type: 'string',
+	format: 'date-time',
+},
+	},
+} as const;
+
+export const $ContactCreate = {
+	properties: {
+		email: {
+	type: 'string',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $ContactRead = {
+	properties: {
+		email: {
+	type: 'string',
+	isRequired: true,
+},
+		id: {
+	type: 'number',
+	isRequired: true,
+},
+		created_at: {
+	type: 'string',
+	isRequired: true,
+	format: 'date-time',
+},
+	},
+} as const;
+
 export const $Conversation = {
 	properties: {
 		id: {
@@ -818,6 +870,13 @@ export const $UserPublic = {
 	type: 'array',
 	contains: {
 		type: 'StorySummary',
+	},
+	isRequired: true,
+},
+		contacts: {
+	type: 'array',
+	contains: {
+		type: 'Contact',
 	},
 	isRequired: true,
 },

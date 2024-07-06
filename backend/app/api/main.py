@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.routes import (items, login, users, utils, user_story_prompts, categories, images,
-                            conversations, chat_messages, story_summaries)
+                            conversations, chat_messages, story_summaries, contacts)
 
 api_router = APIRouter()
 api_router.include_router(login.router, tags=["login"])
@@ -14,3 +14,4 @@ api_router.include_router(user_story_prompts.router, prefix="/user_story_prompts
 api_router.include_router(story_summaries.router, prefix="/summaries", tags=["summaries"])
 api_router.include_router(categories.router, prefix="/categories", tags=["categories"])
 api_router.include_router(images.router, prefix="/images", tags=["images"])
+api_router.include_router(contacts.router, prefix="/contacts", tags=["contacts"])

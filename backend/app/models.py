@@ -38,6 +38,7 @@ class User(UserBase, table=True):
     conversations: List["Conversation"] = Relationship(back_populates="user")
     chat_messages: List["ChatMessage"] = Relationship(back_populates="sender")
     story_summaries: List["StorySummary"] = Relationship(back_populates="user")
+    contacts: List["Contact"] = Relationship(back_populates="user")
 
 class UserPublic(UserBase):
     id: int
@@ -45,6 +46,7 @@ class UserPublic(UserBase):
     conversations: List["Conversation"]
     chat_messages: List["ChatMessage"]
     story_summaries: List["StorySummary"]
+    contacts: List["Contact"]
 
 class UsersPublic(SQLModel):
     data: List[UserPublic]
@@ -267,3 +269,23 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str
+
+
+class ContactBase(SQLModel):
+    email: str
+
+class Contact(ContactBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", nullable=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    user: Optional["User"] = Relationship(back_populates="contacts")
+
+class ContactCreate(ContactBase):
+    pass
+
+class ContactRead(ContactBase):
+    id: int
+    created_at: datetime
+
+class ContactUpdate(SQLModel):
+    email: Optional[str] = None
