@@ -68,10 +68,9 @@ async def create_story_summary(
         chat_history, _ = get_formatted_history(conversation_id, db_session)
         summary_content = ""
 
-        system_message = (
-            f"You are an AI ghostwriter tasked with summarizing a conversation based on the following story prompt: {conversation.user_story_prompt.prompt}. "
-            f"Write a concise and well-structured summary suitable for publication, avoiding excessive embellishment."
-        )
+        system_message = (f"You are an AI ghostwriter tasked with summarizing the following conversation "
+                          f"based on this story prompt {conversation.user_story_prompt.prompt}. Your output should be in "
+                          f"relatively concise prose told from the prospective of the user and be fit to be published in an autbiography.")
 
         async for token in generate_summary(system_message, chat_history):
             summary_content += token
