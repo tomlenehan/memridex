@@ -29,7 +29,7 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
   const finalItems = [...items];
 
   if (hasStorySummaries) {
-    finalItems.splice(3, 0, { icon: GiSecretBook, title: "Memories", path: "/stories" });
+    finalItems.splice(2, 0, { icon: GiSecretBook, title: "Memories", path: "/stories" });
   }
 
   if (user?.is_superuser) {
