@@ -55,9 +55,8 @@ async def create_chat_message(
         chat_history, total_tokens = get_formatted_history(conversation_id, db_session)
 
         system_message = (f"You are an AI ghostwriter tasked with teasing out details from the user "
-                         f"about this story prompt {story_prompt}. continue to ask good follow-up "
-                         f"questions based on their input. Keep the questions interesting and engaging"
-                          f"and keeep your language fun and casual.")
+                         f"about this story prompt {story_prompt}. continue to ask interesting and "
+                         f"engaging follow-up questions based on their input.")
 
         async for token in send_message(chat_message_in.content, system_message, chat_history):
             response_content += token
