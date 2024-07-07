@@ -91,7 +91,7 @@ def generate_new_account_email(
         context={
             "project_name": settings.PROJECT_NAME,
             "username": username,
-            "password": password,
+            # "password": password,
             "email": email_to,
             "link": settings.server_host,
         },
