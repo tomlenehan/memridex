@@ -26,14 +26,17 @@ async def get_relevant_messages(index: FAISS, query: str, k: int = 20) -> List[H
 
     return relevant_messages
 
-async def generate_summary(system_prompt: str, chat_history: List[HumanMessage]) -> AsyncIterable[str]:
+async def generate_summary(system_prompt: str, chat_history: List[str], tone: int) -> AsyncIterable[str]:
     index = await index_messages(chat_history)
     relevant_messages = await get_relevant_messages(index, "Please summarize this conversation")
+
+    temperature = tone / 100
 
     model = ChatOpenAI(
         model=MODEL_NAME,
         streaming=True,
         verbose=True,
+        temperature=temperature
     )
 
     prompt = ChatPromptTemplate.from_messages(

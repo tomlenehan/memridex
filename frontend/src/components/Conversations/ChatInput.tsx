@@ -1,18 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Box, Button, Flex, Input, useColorModeValue } from "@chakra-ui/react";
+import { useEffect } from 'react';
+import { Box, Button, Flex, Input, useColorModeValue, useDisclosure } from "@chakra-ui/react";
 import { GiSecretBook } from "react-icons/gi";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from '@tanstack/react-router'
 import {
-  Body_summaries_create_story_summary,
-  ChatMessageCreate,
-  SummariesService
+  ChatMessageCreate
 } from "../../client";
 import { useDispatch, useSelector } from "react-redux";
 import { addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } from "../../redux/chatSlice";
 import { RootState, AppDispatch } from "../../redux/store";
 import { fetchConversationStatus } from "../../redux/conversationSlice";
+import AddSummary from "../../components/Summaries/AddSummary"; // Import the new modal component
 
 interface ChatInputProps {
   conversationId: number;
@@ -26,14 +24,12 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
     },
   });
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>(); // Use AppDispatch for dispatch
+  const dispatch = useDispatch<AppDispatch>();
   const conversationStatus = useSelector((state: RootState) => state.conversation.status);
   const bgColor = useColorModeValue("ui.light", "ui.dark");
   const textColor = useColorModeValue("ui.dark", "ui.light");
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
-
-  const [isLoading, setIsLoading] = useState(false); // Manage loading state
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     // Fetch the conversation status on initial load
@@ -83,38 +79,8 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
     reset();
   };
 
-  const handleGenerateSummary = async () => {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-      throw new Error('No access token found');
-    }
-
-    const formData: Body_summaries_create_story_summary = {
-      conversation_id: conversationId,
-    };
-
-    try {
-      const response = await SummariesService.createStorySummary({ formData });
-      return response.id;
-    } catch (error) {
-      console.error('Failed to generate summary:', error);
-      throw new Error('Failed to generate summary');
-    }
-  };
-
-  const handleSaveMemory = async () => {
-    setIsLoading(true);
-    try {
-      const summaryId = await handleGenerateSummary();
-      navigate({
-        to: "/summary/$summaryId",
-        params: { summaryId: summaryId.toString() },
-      });
-    } catch (error) {
-      console.error('Failed to generate summary', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSaveMemory = () => {
+    onOpen();
   };
 
   return (
@@ -126,17 +92,22 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
           mr={2}
           bg={bgColor}
           color={textColor}
-          disabled={isLoading} // Disable input when loading
         />
-        <Button type="submit" colorScheme="blue" isLoading={isSubmitting || isLoading} mr={2}>
+        <Button type="submit" colorScheme="blue" isLoading={isSubmitting} mr={2}>
           Send
         </Button>
         {(conversationStatus === "ready_for_summary" || conversationStatus === "complete") && (
-          <Button colorScheme="green" paddingX={6} onClick={handleSaveMemory} rightIcon={<GiSecretBook />} isLoading={isLoading}>
+          <Button colorScheme="green" paddingX={6} onClick={handleSaveMemory} rightIcon={<GiSecretBook />} >
             Save Memory
           </Button>
         )}
       </Flex>
+
+      <AddSummary
+        isOpen={isOpen}
+        onClose={onClose}
+        conversationId={conversationId} // Pass conversationId to the modal
+      />
     </Box>
   );
 };

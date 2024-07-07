@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 from app.api.deps import get_current_user, get_db
 from app.models import User, StorySummary, StorySummaryPublic, Conversation, Message, StorySummaryCreate, StorySummaryUpdate
 from app.llm.utils import get_formatted_history
+from pydantic import BaseModel
 from app.llm.conversation_summarize import generate_summary, generate_title
 from app.utils import upload_image_to_s3
 import logging
@@ -13,6 +14,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+class SummaryCreateRequest(BaseModel):
+    conversation_id: int
+    tone: int
+    author_style: Optional[str] = None
 
 @router.get("/", response_model=list[StorySummaryPublic])
 def read_story_summaries(
@@ -54,25 +60,30 @@ def read_story_summary(
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return summary
 
+
 @router.post("/", response_model=StorySummaryPublic)
 async def create_story_summary(
-    conversation_id: int = Form(...),
+    request: SummaryCreateRequest,
     current_user: User = Depends(get_current_user),
     db_session: Session = Depends(get_db)
 ) -> StorySummaryPublic:
     try:
-        conversation = db_session.get(Conversation, conversation_id)
+        conversation = db_session.get(Conversation, request.conversation_id)
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
 
-        chat_history, _ = get_formatted_history(conversation_id, db_session)
+        chat_history, _ = get_formatted_history(request.conversation_id, db_session)
         summary_content = ""
 
         system_message = (f"You are an AI ghostwriter tasked with summarizing the following conversation "
-                          f"based on this story prompt {conversation.user_story_prompt.prompt}. Your output should be in "
-                          f"relatively concise prose told from the prospective of the user and be fit to be published in an autbiography.")
+                          f"based on this story prompt {conversation.user_story_prompt.prompt}. "
+                          f"Your output should be in relatively concise prose told from the perspective of the user "
+                          f"and be fit to be published in an autobiography. ")
 
-        async for token in generate_summary(system_message, chat_history):
+        if request.author_style:
+            system_message += f" Write in the style of {request.author_style}."
+
+        async for token in generate_summary(system_message, chat_history, request.tone):
             summary_content += token
 
         system_message = f"Please give a concise one sentence title based on the following story summary:"
@@ -80,7 +91,7 @@ async def create_story_summary(
         summary_title = generate_title(system_message, summary_content)
 
         story_summary_create = StorySummaryCreate(
-            conversation_id=conversation_id,
+            conversation_id=request.conversation_id,
             summary_text=summary_content,
             title=summary_title,
             user_id=current_user.id,
@@ -104,7 +115,6 @@ async def create_story_summary(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db_session.close()
-
 
 @router.put("/{id}", response_model=StorySummaryPublic)
 def update_story_summary(
