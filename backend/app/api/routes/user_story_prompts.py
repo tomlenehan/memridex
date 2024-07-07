@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Optional
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Depends
 from sqlmodel import func, select, Session
@@ -82,12 +83,19 @@ def create_user_story_prompt(
     if image:
         image_url = upload_image_to_s3(image)
 
-    prompt_data = UserStoryPromptCreate(prompt=prompt, category_id=category_id, image_url=image_url)
+    prompt_data = UserStoryPromptCreate(
+        prompt=prompt,
+        category_id=category_id,
+        image_url=image_url,
+        created_at=datetime.utcnow(),
+        modified_at=datetime.utcnow()
+    )
     prompt = UserStoryPrompt(**prompt_data.dict(), user_id=current_user.id)
     session.add(prompt)
     session.commit()
     session.refresh(prompt)
     return prompt
+
 
 @router.put("/{id}", response_model=UserStoryPromptPublic)
 def update_user_story_prompt(
