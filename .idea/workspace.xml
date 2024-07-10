@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="test" />
+    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="updating conversation with Complete status when a summary is saved" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -31,13 +31,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_BRANCH_BY_REPOSITORY">
-      <map>
-        <entry key="$PROJECT_DIR$" value="master" />
-      </map>
-    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-    <option name="SWAP_SIDES_IN_COMPARE_BRANCHES" value="true" />
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/frontend/.env" root0="FORCE_HIGHLIGHTING" />
@@ -77,13 +71,13 @@
     "Python.localhost2.executor": "Debug",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "/Users/tomlenehan/Dev/memribox/frontend",
+    "last_opened_file_path": "/Users/tomlenehan/Dev/memribox copy",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
     "ts.external.directory.path": "/Users/tomlenehan/Dev/memribox/frontend/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   },
@@ -108,7 +102,7 @@
       <recent name="$PROJECT_DIR$/app" />
     </key>
   </component>
-  <component name="RunManager" selected="Docker.docker debugpy">
+  <component name="RunManager" selected="FastAPI.fastAPI">
     <configuration name="remote debugger" type="PyRemoteDebugConfigurationType" factoryName="Python Remote Debug">
       <module name="memribox" />
       <option name="PORT" value="0" />
@@ -122,6 +116,120 @@
       </PathMappingSettings>
       <option name="REDIRECT_OUTPUT" value="true" />
       <option name="SUSPEND_AFTER_CONNECT" value="true" />
+      <method v="2" />
+    </configuration>
+    <configuration name="localhost" type="PythonConfigurationType" factoryName="Python" activateToolWindowBeforeRun="false">
+      <module name="memribox" />
+      <selectedOptions>
+        <option name="envPaths" visible="false" />
+      </selectedOptions>
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="PYTHONPATH" value="/app" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend/app" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="false" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+        </ENTRIES>
+      </EXTENSION>
+      <PathMappingSettings>
+        <option name="pathMappings">
+          <list>
+            <mapping local-root="$PROJECT_DIR$/backend" remote-root="/app" />
+            <mapping local-root="$PROJECT_DIR$/backend/app" remote-root="/app/app" />
+            <mapping local-root="$PROJECT_DIR$/backend/app/api" remote-root="/app/app/api" />
+          </list>
+        </option>
+      </PathMappingSettings>
+      <option name="SCRIPT_NAME" value="/app/app/run.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="fastAPI" type="Python.FastAPI">
+      <option name="additionalOptions" value="--reload --host localhost --port 8000" />
+      <option name="file" value="$PROJECT_DIR$/backend/app/main.py" />
+      <module name="memribox copy" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="AWS_ACCESS_KEY_ID" value="AKIAY5HP6L27LHWPCD7R" />
+        <env name="AWS_DEFAULT_REGION" value="us-east-1" />
+        <env name="AWS_SECRET_ACCESS_KEY" value="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" />
+        <env name="AWS_UPLOAD_BUCKET_NAME" value="memribox-uploads" />
+        <env name="BACKEND_CORS_ORIGINS" value="&quot;http://localhost,http://localhost:3000,http://localhost:5173,http://localhost:8567,https://localhost,https://localhost:5173,http://54.174.173.202,http://54.174.173.202:8000,https://54.174.173.202,https://54.174.173.202:8000&quot;" />
+        <env name="DOCKER_IMAGE_BACKEND" value="backend" />
+        <env name="DOCKER_IMAGE_FRONTEND" value="frontend" />
+        <env name="DOMAIN" value="localhost" />
+        <env name="EMAIL" value="lenehan3@gmail.com" />
+        <env name="EMAILS_FROM_EMAIL" value="support@lawcrawl.com" />
+        <env name="ENVIRONMENT" value="local" />
+        <env name="FIRST_SUPERUSER" value="lenehan3@gmail.com" />
+        <env name="FIRST_SUPERUSER_PASSWORD" value="Restrepo22" />
+        <env name="GITHUB_ACCESS_TOKEN" value="'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'" />
+        <env name="HASHED_PASSWORD" value="'$2b$12$gyRKyaA3zrYGt6rv8WejueI3UxabR0YWew/P/hBL/43MLqWvfdZbq'" />
+        <env name="LANGCHAIN_API_KEY" value="ls__96c5a072b60446bd95e1ad3ebcafca59" />
+        <env name="LANGCHAIN_ENDPOINT" value="&quot;https://api.smith.langchain.com&quot;" />
+        <env name="LANGCHAIN_PROJECT" value="&quot;lawcrawl&quot;" />
+        <env name="LANGCHAIN_TRACING_V2" value="true" />
+        <env name="OPENAI_API_KEY" value="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" />
+        <env name="PINECONE_API_KEY" value="5892884a-5fd2-4863-bc33-ced74b4f5053" />
+        <env name="PINECONE_ENV" value="us-west-2" />
+        <env name="POSTGRES_DB" value="memribox" />
+        <env name="POSTGRES_PASSWORD" value="qpdb1949" />
+        <env name="POSTGRES_PORT" value="5432" />
+        <env name="POSTGRES_SERVER" value="awseb-e-fcp66vtzd3-stack-awsebrdsdatabase-l9gxw7ftz3vj.cfhvy8rx7skb.us-east-1.rds.amazonaws.com" />
+        <env name="POSTGRES_USER" value="qproot" />
+        <env name="PROJECT_NAME" value="&quot;MemriBox&quot;" />
+        <env name="SECRET_KEY" value="TsDJHQx-Y2WlJ-wSpP0qwz756xACyv7HPdKQIn8d9as" />
+        <env name="SENTRY_DSN" value="" />
+        <env name="SMTP_HOST" value="smtp.gmail.com" />
+        <env name="SMTP_PASSWORD" value="kpnefqlvbakyfoiv" />
+        <env name="SMTP_PORT" value="587" />
+        <env name="SMTP_SSL" value="False" />
+        <env name="SMTP_TLS" value="True" />
+        <env name="SMTP_USER" value="support@lawcrawl.com" />
+        <env name="STACK_NAME" value="memribox-stack" />
+        <env name="USERNAME" value="admin" />
+        <env name="USERS_OPEN_REGISTRATION" value="True" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/.venv/bin/python" />
+      <option name="SDK_NAME" value="Python 3.11 (memribox)" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend/app" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="false" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+        </ENTRIES>
+      </EXTENSION>
+      <option name="launchJavascriptDebuger" value="false" />
       <method v="2" />
     </configuration>
     <configuration name="docker debugpy" type="docker-deploy" factoryName="docker-compose.yml" server-name="Docker">
@@ -169,10 +277,12 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python Debug Server.remote debugger" />
       <item itemvalue="Docker.docker debugpy" />
       <item itemvalue="Docker.docker-backend" />
       <item itemvalue="Docker.memribox-docker" />
+      <item itemvalue="FastAPI.fastAPI" />
+      <item itemvalue="Python.localhost" />
+      <item itemvalue="Python Debug Server.remote debugger" />
     </list>
   </component>
   <component name="SharedIndexes">
@@ -235,12 +345,23 @@
       <workItem from="1719264296943" duration="11505000" />
       <workItem from="1719278943077" duration="51219000" />
       <workItem from="1719532277763" duration="106278000" />
-      <workItem from="1720463472850" duration="72000" />
-      <workItem from="1720463559536" duration="28000" />
-      <workItem from="1720463590904" duration="10643000" />
-      <workItem from="1720567311161" duration="1210000" />
-      <workItem from="1720568822636" duration="2994000" />
-      <workItem from="1720574631180" duration="179000" />
+      <workItem from="1720463946016" duration="771000" />
+    </task>
+    <task id="LOCAL-00029" summary="added chat history and prompt templates to chat">
+      <option name="closed" value="true" />
+      <created>1717856050157</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1717856050157</updated>
+    </task>
+    <task id="LOCAL-00030" summary="added tiktoken to count token length of the chat history">
+      <option name="closed" value="true" />
+      <created>1717860834079</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1717860834079</updated>
     </task>
     <task id="LOCAL-00031" summary="change chain to async">
       <option name="closed" value="true" />
@@ -618,23 +739,7 @@
       <option name="project" value="LOCAL" />
       <updated>1720124142734</updated>
     </task>
-    <task id="LOCAL-00078" summary="removing .idea">
-      <option name="closed" value="true" />
-      <created>1720468065074</created>
-      <option name="number" value="00078" />
-      <option name="presentableId" value="LOCAL-00078" />
-      <option name="project" value="LOCAL" />
-      <updated>1720468065074</updated>
-    </task>
-    <task id="LOCAL-00079" summary="test">
-      <option name="closed" value="true" />
-      <created>1720564052482</created>
-      <option name="number" value="00079" />
-      <option name="presentableId" value="LOCAL-00079" />
-      <option name="project" value="LOCAL" />
-      <updated>1720564052483</updated>
-    </task>
-    <option name="localTasksCounter" value="80" />
+    <option name="localTasksCounter" value="78" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -683,7 +788,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="origin/master" />
+                        <option value="origin/main" />
                       </list>
                     </value>
                   </entry>
@@ -707,6 +812,8 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$/frontend" />
     </ignored-roots>
+    <MESSAGE value="changed prompts and styles for final chat message" />
+    <MESSAGE value="added conversation to redux state. added button from &quot;save memory&quot;/summary" />
     <MESSAGE value="added story summary page." />
     <MESSAGE value="simplified the summary generation flow" />
     <MESSAGE value="make chat summary an editable form" />
@@ -730,9 +837,7 @@
     <MESSAGE value="Adding envCompatible plugin" />
     <MESSAGE value="story summary update with image" />
     <MESSAGE value="updating conversation with Complete status when a summary is saved" />
-    <MESSAGE value="removing .idea" />
-    <MESSAGE value="test" />
-    <option name="LAST_COMMIT_MESSAGE" value="test" />
+    <option name="LAST_COMMIT_MESSAGE" value="updating conversation with Complete status when a summary is saved" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -743,14 +848,34 @@
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/backend/app/api/routes/user_story_prompts.py</url>
+          <line>61</line>
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/backend/app/api/routes/user_story_prompts.py</url>
+          <line>31</line>
+          <option name="timeStamp" value="27" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/backend/app/api/routes/chat_messages.py</url>
+          <line>35</line>
+          <option name="timeStamp" value="70" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/backend/app/utils.py</url>
+          <line>144</line>
+          <option name="timeStamp" value="76" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/backend/app/alembic/env.py</url>
           <line>6</line>
           <option name="timeStamp" value="89" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/backend/app/alembic/env.py</url>
-          <line>33</line>
-          <option name="timeStamp" value="109" />
+          <url>file://$PROJECT_DIR$/backend/app/api/routes/story_summaries.py</url>
+          <line>88</line>
+          <option name="timeStamp" value="96" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -763,9 +888,8 @@
     </breakpoint-manager>
     <watches-manager>
       <configuration name="Python.FastAPI">
-        <watch expression="result" language="Python" />
-        <watch expression="result.content" language="Python" />
-        <watch expression="temperature" language="Python" />
+        <watch expression="title" language="Python" />
+        <watch expression="e" language="Python" />
       </configuration>
       <configuration name="PythonConfigurationType">
         <watch expression="api_router" />
@@ -779,8 +903,9 @@
     <SUITE FILE_PATH="coverage/memribox$memribox.coverage" NAME="memribox Coverage Results" MODIFIED="1715043929766" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/memribox$debug_app.coverage" NAME="debug app Coverage Results" MODIFIED="1718338220374" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
     <SUITE FILE_PATH="coverage/memribox$localhost2.coverage" NAME="localhost2 Coverage Results" MODIFIED="1718339644027" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
-    <SUITE FILE_PATH="coverage/memribox$fastAPI.coverage" NAME="fastAPI Coverage Results" MODIFIED="1720465052762" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
+    <SUITE FILE_PATH="coverage/memribox$fastAPI.coverage" NAME="fastAPI Coverage Results" MODIFIED="1720120687133" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
     <SUITE FILE_PATH="coverage/memribox$localhost.coverage" NAME="localhost Coverage Results" MODIFIED="1716328598902" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
+    <SUITE FILE_PATH="coverage/memribox_copy$fastAPI.coverage" NAME="fastAPI Coverage Results" MODIFIED="1720463979363" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
     <SUITE FILE_PATH="coverage/memribox$MemriBox_Debug.coverage" NAME="MemriBox Debug Coverage Results" MODIFIED="1716324977411" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
     <SUITE FILE_PATH="coverage/memribox$memoribox.coverage" NAME="memoribox Coverage Results" MODIFIED="1718883660712" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
   </component>
