@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="test" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="FastAPI main" />
+        <option value="FastAPI test_main" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="SWAP_SIDES_IN_COMPARE_BRANCHES" value="true" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/frontend/.env" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="2ftqSXRMKVm8rt0mV35CZVfLrN0" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Docker.docker debugpy.executor": "Run",
+    "Docker.docker-backend.executor": "Run",
+    "Docker.memribox-docker.executor": "Run",
+    "FastAPI.fastAPI.executor": "Debug",
+    "FastAPI.memoribox.executor": "Run",
+    "FastAPI.memribox.executor": "Debug",
+    "Python Debug Server.remote debugger.executor": "Debug",
+    "Python.Langchain.executor": "Debug",
+    "Python.MemriBox Debug.executor": "Debug",
+    "Python.debug app.executor": "Debug",
+    "Python.localhost.executor": "Debug",
+    "Python.localhost2.executor": "Debug",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "/Users/tomlenehan/Dev/memribox/frontend",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
+    "ts.external.directory.path": "/Users/tomlenehan/Dev/memribox/frontend/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/frontend" />
+      <recent name="$PROJECT_DIR$/services" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/backend" />
+      <recent name="$PROJECT_DIR$/frontend/src/assets/images" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/frontend/src/routes/_layout" />
+      <recent name="$PROJECT_DIR$/frontend" />
+      <recent name="$PROJECT_DIR$/frontend/src/components/Admin" />
+      <recent name="$PROJECT_DIR$/app" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Docker.docker debugpy">
+    <configuration name="remote debugger" type="PyRemoteDebugConfigurationType" factoryName="Python Remote Debug">
+      <module name="memribox" />
+      <option name="PORT" value="0" />
+      <option name="HOST" value="localhost" />
+      <PathMappingSettings>
+        <option name="pathMappings">
+          <list>
+            <mapping local-root="$PROJECT_DIR$/backend/app" remote-root="/app" />
+          </list>
+        </option>
+      </PathMappingSettings>
+      <option name="REDIRECT_OUTPUT" value="true" />
+      <option name="SUSPEND_AFTER_CONNECT" value="true" />
+      <method v="2" />
+    </configuration>
+    <configuration name="docker debugpy" type="docker-deploy" factoryName="docker-compose.yml" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="envFilePath" value="" />
+          <option name="secondarySourceFiles">
+            <list>
+              <option value="docker-compose.override.yml" />
+              <option value="docker-compose.traefik.yml" />
+            </list>
+          </option>
+          <option name="services">
+            <list>
+              <option value="backend" />
+            </list>
+          </option>
+          <option name="sourceFilePath" value="docker-compose.yml" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <configuration name="docker-backend" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+      <deployment type="dockerfile">
+        <settings>
+          <option name="containerName" value="backend" />
+          <option name="sourceFilePath" value="backend/Dockerfile" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <configuration name="memribox-docker" type="docker-deploy" factoryName="docker-compose.yml" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="envFilePath" value="" />
+          <option name="services">
+            <list>
+              <option value="backend" />
+            </list>
+          </option>
+          <option name="sourceFilePath" value="docker-compose.yml" />
+          <option name="upDetach" value="false" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python Debug Server.remote debugger" />
+      <item itemvalue="Docker.docker debugpy" />
+      <item itemvalue="Docker.docker-backend" />
+      <item itemvalue="Docker.memribox-docker" />
+    </list>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-1d06a55b98c1-91d5c284f522-JavaScript-PY-241.15989.155" />
+        <option value="bundled-python-sdk-babbdf50b680-7c6932dee5e4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.15989.155" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="53042a54-8890-4727-9dc3-4b2693e7dcb4" name="Changes" comment="" />
+      <created>1714630721516</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1714630721516</updated>
+      <workItem from="1714630745740" duration="2694000" />
+      <workItem from="1715047863024" duration="6906000" />
+      <workItem from="1715651019591" duration="44402000" />
+      <workItem from="1715812580176" duration="56393000" />
+      <workItem from="1716008251887" duration="5591000" />
+      <workItem from="1716016524025" duration="29572000" />
+      <workItem from="1716180873489" duration="3991000" />
+      <workItem from="1716185453239" duration="13317000" />
+      <workItem from="1716254474485" duration="492000" />
+      <workItem from="1716255303726" duration="26979000" />
+      <workItem from="1716325187677" duration="1447000" />
+      <workItem from="1716326645449" duration="65680000" />
+      <workItem from="1716907935340" duration="692000" />
+      <workItem from="1716949892058" duration="171000" />
+      <workItem from="1716951875840" duration="280000" />
+      <workItem from="1716952180663" duration="19000" />
+      <workItem from="1716952217917" duration="101000" />
+      <workItem from="1716952325991" duration="7333000" />
+      <workItem from="1717030403414" duration="60490000" />
+      <workItem from="1717621002157" duration="99985000" />
+      <workItem from="1718320179162" duration="18838000" />
+      <workItem from="1718347196225" duration="72337000" />
+      <workItem from="1718507637687" duration="18813000" />
+      <workItem from="1718642332416" duration="8155000" />
+      <workItem from="1718744147046" duration="647000" />
+      <workItem from="1718749061029" duration="997000" />
+      <workItem from="1718751358379" duration="3644000" />
+      <workItem from="1718755339438" duration="2167000" />
+      <workItem from="1718760349139" duration="6409000" />
+      <workItem from="1718767588749" duration="29934000" />
+      <workItem from="1718875411892" duration="510000" />
+      <workItem from="1718876765860" duration="42000" />
+      <workItem from="1718876822290" duration="77000" />
+      <workItem from="1718876915865" duration="8659000" />
+      <workItem from="1718910830183" duration="2181000" />
+      <workItem from="1718913359500" duration="8777000" />
+      <workItem from="1718934618913" duration="63751000" />
+      <workItem from="1719183347132" duration="665000" />
+      <workItem from="1719184060508" duration="309000" />
+      <workItem from="1719184388921" duration="555000" />
+      <workItem from="1719184962134" duration="20604000" />
+      <workItem from="1719264296943" duration="11505000" />
+      <workItem from="1719278943077" duration="51219000" />
+      <workItem from="1719532277763" duration="106278000" />
+      <workItem from="1720463472850" duration="72000" />
+      <workItem from="1720463559536" duration="28000" />
+      <workItem from="1720463590904" duration="10643000" />
+      <workItem from="1720567311161" duration="1210000" />
+      <workItem from="1720568822636" duration="2994000" />
+      <workItem from="1720574631180" duration="179000" />
+    </task>
+    <task id="LOCAL-00031" summary="change chain to async">
+      <option name="closed" value="true" />
+      <created>1717861882389</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1717861882389</updated>
+    </task>
+    <task id="LOCAL-00032" summary="Unlinked Image from Prompt models">
+      <option name="closed" value="true" />
+      <created>1717907852947</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1717907852947</updated>
+    </task>
+    <task id="LOCAL-00033" summary="fixing Image model relation issues">
+      <option name="closed" value="true" />
+      <created>1717958949666</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1717958949667</updated>
+    </task>
+    <task id="LOCAL-00034" summary="remove .env">
+      <option name="closed" value="true" />
+      <created>1717961190199</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1717961190199</updated>
+    </task>
+    <task id="LOCAL-00035" summary="Added &quot;continue chat&quot; button to the conversations page, and populated default story prompts with images.">
+      <option name="closed" value="true" />
+      <created>1718053320226</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1718053320227</updated>
+    </task>
+    <task id="LOCAL-00036" summary="added dark/light mode to the chat page.">
+      <option name="closed" value="true" />
+      <created>1718054233892</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1718054233892</updated>
+    </task>
+    <task id="LOCAL-00037" summary="slight style changes to the chat page">
+      <option name="closed" value="true" />
+      <created>1718055002356</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1718055002356</updated>
+    </task>
+    <task id="LOCAL-00038" summary="added back button to chat page.">
+      <option name="closed" value="true" />
+      <created>1718056860902</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1718056860902</updated>
+    </task>
+    <task id="LOCAL-00039" summary="style changes to chat">
+      <option name="closed" value="true" />
+      <created>1718059339777</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1718059339777</updated>
+    </task>
+    <task id="LOCAL-00040" summary="fixed user_story_prompt page continuously fetching in the useEffect">
+      <option name="closed" value="true" />
+      <created>1718086561174</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1718086561174</updated>
+    </task>
+    <task id="LOCAL-00041" summary="added StorySummary model">
+      <option name="closed" value="true" />
+      <created>1718095405789</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1718095405790</updated>
+    </task>
+    <task id="LOCAL-00042" summary="added conversation summary script">
+      <option name="closed" value="true" />
+      <created>1718099234457</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1718099234457</updated>
+    </task>
+    <task id="LOCAL-00043" summary="abstracted reusable LLM function to utils file.">
+      <option name="closed" value="true" />
+      <created>1718344633656</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1718344633656</updated>
+    </task>
+    <task id="LOCAL-00044" summary="refactoring chat message code">
+      <option name="closed" value="true" />
+      <created>1718348645422</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1718348645422</updated>
+    </task>
+    <task id="LOCAL-00045" summary="summarize story chat after (x) messages.">
+      <option name="closed" value="true" />
+      <created>1718351321353</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1718351321353</updated>
+    </task>
+    <task id="LOCAL-00046" summary="chat summarize working.">
+      <option name="closed" value="true" />
+      <created>1718353159726</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1718353159726</updated>
+    </task>
+    <task id="LOCAL-00047" summary="fix for story summary using FAISS">
+      <option name="closed" value="true" />
+      <created>1718385031784</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1718385031784</updated>
+    </task>
+    <task id="LOCAL-00048" summary="messing with prompts">
+      <option name="closed" value="true" />
+      <created>1718393272656</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1718393272656</updated>
+    </task>
+    <task id="LOCAL-00049" summary="changed prompts and styles for final chat message">
+      <option name="closed" value="true" />
+      <created>1718412449879</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1718412449880</updated>
+    </task>
+    <task id="LOCAL-00050" summary="added conversation to redux state. added button from &quot;save memory&quot;/summary">
+      <option name="closed" value="true" />
+      <created>1718435644118</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1718435644120</updated>
+    </task>
+    <task id="LOCAL-00051" summary="added story summary page.">
+      <option name="closed" value="true" />
+      <created>1718480979441</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1718480979441</updated>
+    </task>
+    <task id="LOCAL-00052" summary="simplified the summary generation flow">
+      <option name="closed" value="true" />
+      <created>1718495318104</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1718495318104</updated>
+    </task>
+    <task id="LOCAL-00053" summary="simplified the summary generation flow">
+      <option name="closed" value="true" />
+      <created>1718502315155</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1718502315156</updated>
+    </task>
+    <task id="LOCAL-00054" summary="make chat summary an editable form">
+      <option name="closed" value="true" />
+      <created>1718511223595</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1718511223595</updated>
+    </task>
+    <task id="LOCAL-00055" summary="added view memory button to the conversations page">
+      <option name="closed" value="true" />
+      <created>1718513232099</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1718513232099</updated>
+    </task>
+    <task id="LOCAL-00056" summary="get FastAPI working locally">
+      <option name="closed" value="true" />
+      <created>1718939841733</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1718939841736</updated>
+    </task>
+    <task id="LOCAL-00057" summary="Deployment to aws working properly">
+      <option name="closed" value="true" />
+      <created>1719184434424</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1719184434424</updated>
+    </task>
+    <task id="LOCAL-00058" summary="fixing story summary">
+      <option name="closed" value="true" />
+      <created>1719192976817</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1719192976817</updated>
+    </task>
+    <task id="LOCAL-00059" summary="fix for generating chat summary in production">
+      <option name="closed" value="true" />
+      <created>1719260044001</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1719260044001</updated>
+    </task>
+    <task id="LOCAL-00060" summary="added user and image to storysummary">
+      <option name="closed" value="true" />
+      <created>1719334185307</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1719334185308</updated>
+    </task>
+    <task id="LOCAL-00061" summary="Fixed editing image/upload to S3 in the edit userStoryPrompt">
+      <option name="closed" value="true" />
+      <created>1719529898314</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1719529898315</updated>
+    </task>
+    <task id="LOCAL-00062" summary="EBS deployment simplification">
+      <option name="closed" value="true" />
+      <created>1719640924966</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1719640924967</updated>
+    </task>
+    <task id="LOCAL-00063" summary="testing story summaries.">
+      <option name="closed" value="true" />
+      <created>1719939969589</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1719939969590</updated>
+    </task>
+    <task id="LOCAL-00064" summary="frontend .env">
+      <option name="closed" value="true" />
+      <created>1719940077244</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1719940077244</updated>
+    </task>
+    <task id="LOCAL-00065" summary="changing procfile config">
+      <option name="closed" value="true" />
+      <created>1719944765897</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1719944765898</updated>
+    </task>
+    <task id="LOCAL-00066" summary="added uvicorn to eb deploy">
+      <option name="closed" value="true" />
+      <created>1719947101379</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1719947101380</updated>
+    </task>
+    <task id="LOCAL-00067" summary="added uvicorn to eb deploy">
+      <option name="closed" value="true" />
+      <created>1719947676571</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1719947676572</updated>
+    </task>
+    <task id="LOCAL-00068" summary="increased max type hash size for nginx">
+      <option name="closed" value="true" />
+      <created>1719952926550</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1719952926551</updated>
+    </task>
+    <task id="LOCAL-00069" summary="changed uvicorn service to web service">
+      <option name="closed" value="true" />
+      <created>1719956253030</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1719956253030</updated>
+    </task>
+    <task id="LOCAL-00070" summary="increase nginx type_hash_max_size">
+      <option name="closed" value="true" />
+      <created>1719956654871</created>
+      <option name="number" value="00070" />
+      <option name="presentableId" value="LOCAL-00070" />
+      <option name="project" value="LOCAL" />
+      <updated>1719956654871</updated>
+    </task>
+    <task id="LOCAL-00071" summary="uvicorn config (env stuff)">
+      <option name="closed" value="true" />
+      <created>1719958082567</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1719958082567</updated>
+    </task>
+    <task id="LOCAL-00072" summary="manually fetch summary">
+      <option name="closed" value="true" />
+      <created>1719982736447</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1719982736448</updated>
+    </task>
+    <task id="LOCAL-00073" summary="Adding envCompatible plugin">
+      <option name="closed" value="true" />
+      <created>1720048142541</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1720048142541</updated>
+    </task>
+    <task id="LOCAL-00074" summary="Adding envCompatible plugin">
+      <option name="closed" value="true" />
+      <created>1720052501563</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1720052501563</updated>
+    </task>
+    <task id="LOCAL-00075" summary="Adding envCompatible plugin">
+      <option name="closed" value="true" />
+      <created>1720052563536</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1720052563536</updated>
+    </task>
+    <task id="LOCAL-00076" summary="story summary update with image">
+      <option name="closed" value="true" />
+      <created>1720121411776</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1720121411777</updated>
+    </task>
+    <task id="LOCAL-00077" summary="updating conversation with Complete status when a summary is saved">
+      <option name="closed" value="true" />
+      <created>1720124142733</created>
+      <option name="number" value="00077" />
+      <option name="presentableId" value="LOCAL-00077" />
+      <option name="project" value="LOCAL" />
+      <updated>1720124142734</updated>
+    </task>
+    <task id="LOCAL-00078" summary="removing .idea">
+      <option name="closed" value="true" />
+      <created>1720468065074</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1720468065074</updated>
+    </task>
+    <task id="LOCAL-00079" summary="test">
+      <option name="closed" value="true" />
+      <created>1720564052482</created>
+      <option name="number" value="00079" />
+      <option name="presentableId" value="LOCAL-00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1720564052483</updated>
+    </task>
+    <option name="localTasksCounter" value="80" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+        <option value="GitHub.CommitStatus" />
+      </list>
+    </option>
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="User">
+          <value>
+            <list>
+              <RecentGroup>
+                <option name="FILTER_VALUES">
+                  <option value="*" />
+                </option>
+              </RecentGroup>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="CUSTOM_BOOLEAN_PROPERTIES">
+                <map>
+                  <entry key="Show.Git.Branches" value="true" />
+                </map>
+              </option>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/master" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="user">
+                    <value>
+                      <list>
+                        <option value="*" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/frontend" />
+    </ignored-roots>
+    <MESSAGE value="added story summary page." />
+    <MESSAGE value="simplified the summary generation flow" />
+    <MESSAGE value="make chat summary an editable form" />
+    <MESSAGE value="added view memory button to the conversations page" />
+    <MESSAGE value="get FastAPI working locally" />
+    <MESSAGE value="Deployment to aws working properly" />
+    <MESSAGE value="fixing story summary" />
+    <MESSAGE value="fix for generating chat summary in production" />
+    <MESSAGE value="added user and image to storysummary" />
+    <MESSAGE value="Fixed editing image/upload to S3 in the edit userStoryPrompt" />
+    <MESSAGE value="EBS deployment simplification" />
+    <MESSAGE value="testing story summaries." />
+    <MESSAGE value="frontend .env" />
+    <MESSAGE value="changing procfile config" />
+    <MESSAGE value="added uvicorn to eb deploy" />
+    <MESSAGE value="increased max type hash size for nginx" />
+    <MESSAGE value="changed uvicorn service to web service" />
+    <MESSAGE value="increase nginx type_hash_max_size" />
+    <MESSAGE value="uvicorn config (env stuff)" />
+    <MESSAGE value="manually fetch summary" />
+    <MESSAGE value="Adding envCompatible plugin" />
+    <MESSAGE value="story summary update with image" />
+    <MESSAGE value="updating conversation with Complete status when a summary is saved" />
+    <MESSAGE value="removing .idea" />
+    <MESSAGE value="test" />
+    <option name="LAST_COMMIT_MESSAGE" value="test" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/app/main.py</url>
+          <line>12</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/backend/app/alembic/env.py</url>
+          <line>6</line>
+          <option name="timeStamp" value="89" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/backend/app/alembic/env.py</url>
+          <line>33</line>
+          <option name="timeStamp" value="109" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="Python.FastAPI">
+        <watch expression="result" language="Python" />
+        <watch expression="result.content" language="Python" />
+        <watch expression="temperature" language="Python" />
+      </configuration>
+      <configuration name="PythonConfigurationType">
+        <watch expression="api_router" />
+        <watch expression="app" language="Python" />
+        <watch expression="users.router" language="Python" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/memribox$Langchain.coverage" NAME="Langchain Coverage Results" MODIFIED="1717735999740" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/memribox$memribox.coverage" NAME="memribox Coverage Results" MODIFIED="1715043929766" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/memribox$debug_app.coverage" NAME="debug app Coverage Results" MODIFIED="1718338220374" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
+    <SUITE FILE_PATH="coverage/memribox$localhost2.coverage" NAME="localhost2 Coverage Results" MODIFIED="1718339644027" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
+    <SUITE FILE_PATH="coverage/memribox$fastAPI.coverage" NAME="fastAPI Coverage Results" MODIFIED="1720465052762" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
+    <SUITE FILE_PATH="coverage/memribox$localhost.coverage" NAME="localhost Coverage Results" MODIFIED="1716328598902" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
+    <SUITE FILE_PATH="coverage/memribox$MemriBox_Debug.coverage" NAME="MemriBox Debug Coverage Results" MODIFIED="1716324977411" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
+    <SUITE FILE_PATH="coverage/memribox$memoribox.coverage" NAME="memoribox Coverage Results" MODIFIED="1718883660712" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/backend/app" />
+  </component>
+</project>

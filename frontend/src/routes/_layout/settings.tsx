@@ -15,10 +15,18 @@ import Appearance from "../../components/UserSettings/Appearance"
 import ChangePassword from "../../components/UserSettings/ChangePassword"
 import DeleteAccount from "../../components/UserSettings/DeleteAccount"
 import UserInformation from "../../components/UserSettings/UserInformation"
+<<<<<<< HEAD
+=======
+import Contacts from "../../components/UserSettings/Contacts" // Import Contacts component
+>>>>>>> master
 
 const tabsConfig = [
   { title: "My profile", component: UserInformation },
   { title: "Password", component: ChangePassword },
+<<<<<<< HEAD
+=======
+  { title: "Address Book", component: Contacts },
+>>>>>>> master
   { title: "Appearance", component: Appearance },
   { title: "Danger zone", component: DeleteAccount },
 ]
@@ -56,3 +64,8 @@ function UserSettings() {
     </Container>
   )
 }
+<<<<<<< HEAD
+=======
+
+export default UserSettings
+>>>>>>> master

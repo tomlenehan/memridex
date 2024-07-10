@@ -2,7 +2,11 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
+<<<<<<< HEAD
 import type { app__models__Message,Body_login_login_access_token,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,app__llm__conversation_agent__Message,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_create_story_summary,Body_summaries_update_story_summary,StorySummaryPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate } from './models';
+=======
+import type { app__models__Message,Body_login_login_access_token,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,app__llm__conversation_agent__Message,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_create_story_summary,Body_summaries_update_story_summary,StorySummaryPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate,ContactCreate,ContactRead } from './models';
+>>>>>>> master
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -207,7 +211,10 @@ requestBody,
 
 	/**
 	 * Read User Me
+<<<<<<< HEAD
 	 * Get current user.
+=======
+>>>>>>> master
 	 * @returns UserPublic Successful Response
 	 * @throws ApiError
 	 */
@@ -682,10 +689,13 @@ limit?: number
 skip?: number
                 
             }
+<<<<<<< HEAD
 export type TDataGetSummary = {
                 conversationId: number
                 
             }
+=======
+>>>>>>> master
 export type TDataReadChatMessage = {
                 conversationId: number
 messageId: number
@@ -750,6 +760,7 @@ skip = 0,
 	}
 
 	/**
+<<<<<<< HEAD
 	 * Get Summary
 	 * @returns ChatMessagePublic Successful Response
 	 * @throws ApiError
@@ -771,6 +782,8 @@ conversationId,
 	}
 
 	/**
+=======
+>>>>>>> master
 	 * Read Chat Message
 	 * @returns ChatMessagePublic Successful Response
 	 * @throws ApiError
@@ -1373,4 +1386,91 @@ id,
 		});
 	}
 
+<<<<<<< HEAD
+=======
+}
+
+export type TDataReadContacts = {
+                limit?: number
+skip?: number
+                
+            }
+export type TDataCreateContact = {
+                requestBody: ContactCreate
+                
+            }
+export type TDataDeleteContact = {
+                id: number
+                
+            }
+
+export class ContactsService {
+
+	/**
+	 * Read Contacts
+	 * Retrieve contacts.
+	 * @returns ContactRead Successful Response
+	 * @throws ApiError
+	 */
+	public static readContacts(data: TDataReadContacts = {}): CancelablePromise<Array<ContactRead>> {
+		const {
+limit = 100,
+skip = 0,
+} = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/contacts/',
+			query: {
+				skip, limit
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Create Contact
+	 * Create new contact.
+	 * @returns ContactRead Successful Response
+	 * @throws ApiError
+	 */
+	public static createContact(data: TDataCreateContact): CancelablePromise<ContactRead> {
+		const {
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/contacts/',
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Delete Contact
+	 * Delete a contact.
+	 * @returns app__models__Message Successful Response
+	 * @throws ApiError
+	 */
+	public static deleteContact(data: TDataDeleteContact): CancelablePromise<app__models__Message> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'DELETE',
+			url: '/api/v1/contacts/{id}',
+			path: {
+				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+>>>>>>> master
 }

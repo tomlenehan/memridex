@@ -77,7 +77,11 @@ function UserStoryPromptsTableBody() {
     <Tbody>
       {userStoryPrompts.data.map((prompt) => (
         <Tr key={prompt.id}>
+<<<<<<< HEAD
           <Td>{prompt.prompt}</Td>
+=======
+          <Td>{prompt.prompt.substring(0, 60)}...</Td>
+>>>>>>> master
           <Td>{categoryMap[prompt.category_id || 0] || "N/A"}</Td>
           <Td>
             {prompt.image_url ? (

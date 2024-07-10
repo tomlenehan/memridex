@@ -16,9 +16,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { IoChevronBackCircleOutline } from "react-icons/io5";
 import { useEffect, useState } from "react";
 import { FaRegSave } from "react-icons/fa";
+<<<<<<< HEAD
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useDropzone } from "react-dropzone";
 import { SummariesService, Body_summaries_update_story_summary } from "../../../client";
+=======
+import { CiShare2 } from "react-icons/ci";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import { useDropzone } from "react-dropzone";
+import { SummariesService, ContactsService, ContactRead, Body_summaries_update_story_summary } from "../../../client";
+>>>>>>> master
 import useCustomToast from "../../../hooks/useCustomToast"
 
 export const Route = createFileRoute("/_layout/summary/$summaryId")({
@@ -35,7 +43,11 @@ interface SummaryFormInputs {
 
 function SummaryPage() {
   const { summaryId } = Route.useParams<{ summaryId: string }>(); // Correct type for summaryId
+<<<<<<< HEAD
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<SummaryFormInputs>();
+=======
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<SummaryFormInputs>();
+>>>>>>> master
   const [status, setStatus] = useState<Status>("idle");
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [newImageUploaded, setNewImageUploaded] = useState(false);
@@ -61,9 +73,15 @@ function SummaryPage() {
 
       setValue("summary", response.summary_text || "");
       setValue("title", response.title || "");
+<<<<<<< HEAD
       setValue("image_url", response.image_url || "");
       setImageUrl(response.image_url || "");
       setStatus("succeeded");
+=======
+      setImageUrl(response.image_url || "");
+      setStatus("succeeded");
+      console.log("Initial image URL:", response.image_url);
+>>>>>>> master
     } catch (error) {
       console.error(error);
       setStatus("failed");
@@ -90,6 +108,7 @@ function SummaryPage() {
         formData,
       });
 
+<<<<<<< HEAD
       setIsSaving(false);
       showToast("Success!", "Summary updated successfully.", "success");
       setStatus("succeeded");
@@ -98,14 +117,55 @@ function SummaryPage() {
         setImageUrl(response.image_url);
       }
 
+=======
+      showToast("Success!", "Summary updated successfully.", "success");
+      setStatus("succeeded");
+
+      // Log the response to see if the image URL is being returned
+      console.log("Update response:", response);
+
+      // Add a delay before updating the image URL state
+      setTimeout(() => {
+        setImageUrl(response.image_url || "");
+        setNewImageUploaded(false);
+      }, 2000); // 2 second delay
+>>>>>>> master
     } catch (error) {
       console.error(error);
       setIsSaving(false);
       showToast("Something went wrong.", `${error}`, "error");
       setStatus("failed");
+<<<<<<< HEAD
     }
   };
 
+=======
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const fetchContacts = async (): Promise<ContactRead[]> => {
+    const response = await ContactsService.readContacts();
+    return response;
+  };
+
+  const { data: contacts } = useQuery<ContactRead[]>({
+    queryKey: ["contacts"],
+    queryFn: fetchContacts,
+  });
+
+  const handleEmail = () => {
+    const formData = watch();
+    const emailSubject = formData.title || "Story Summary";
+    const emailBody = `
+      ${formData.summary}\n
+    `;
+    const emailRecipients = contacts?.map(contact => contact.email).join(",") || "";
+    window.location.href = `mailto:${emailRecipients}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+  };
+
+>>>>>>> master
   if (!summaryId) {
     return <Box>Error: No summary ID provided</Box>;
   }
@@ -141,11 +201,16 @@ function SummaryPage() {
               <FormControl mt={4} isInvalid={!!errors.summary}>
                 <FormLabel>Summary</FormLabel>
                 <Textarea
+<<<<<<< HEAD
                   minHeight={250}
+=======
+                  minHeight={220}
+>>>>>>> master
                   {...register("summary", { required: "Summary is required" })}
                 />
                 {errors.summary && <Text color="red.500">{errors.summary.message}</Text>}
               </FormControl>
+<<<<<<< HEAD
               <FormControl mt={4} >
                 <FormLabel htmlFor="image">Upload Image</FormLabel>
                 {newImageUploaded && acceptedFiles.length > 0 ? (
@@ -163,6 +228,10 @@ function SummaryPage() {
                     mb={2}
                   />
                 )}
+=======
+              <FormControl mt={4}>
+                <FormLabel htmlFor="image">Upload Image</FormLabel>
+>>>>>>> master
                 <Box
                   {...getRootProps()}
                   border="2px dashed"
@@ -176,6 +245,23 @@ function SummaryPage() {
                   <input {...getInputProps()} />
                   <Text>Drag 'n' drop an image here, or click to select one</Text>
                 </Box>
+<<<<<<< HEAD
+=======
+                <VStack mt={2} align="start">
+                  <Image
+                    src={imageUrl}
+                    alt="Current image"
+                    boxSize="50px"
+                    objectFit="cover"
+                    mb={2}
+                  />
+                  {acceptedFiles.length > 0 && newImageUploaded && (
+                    acceptedFiles.map((file) => (
+                      <Text color="green" key={file.name}>{file.name}</Text>
+                    ))
+                  )}
+                </VStack>
+>>>>>>> master
               </FormControl>
               <Button
                 mt={4}
@@ -186,6 +272,18 @@ function SummaryPage() {
               >
                 Save
               </Button>
+<<<<<<< HEAD
+=======
+              <Button
+                mt={4}
+                marginLeft={2}
+                rightIcon={<CiShare2 />}
+                colorScheme="teal"
+                onClick={handleEmail}
+              >
+                Share
+              </Button>
+>>>>>>> master
             </form>
           )}
         </Box>

@@ -8,6 +8,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MODEL_NAME = "gpt-4-turbo"
+<<<<<<< HEAD
+=======
+# MODEL_NAME = "gpt-3.5-turbo"
+>>>>>>> master
 STORY_TOKEN_LIMIT = 40
 
 def num_tokens_from_string(string: str) -> int:

@@ -1,5 +1,6 @@
 import { Box, Flex, Icon, Text, useColorModeValue } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
+<<<<<<< HEAD
 import { FiBook, FiBookOpen, FiHome, FiSettings, FiUsers } from "react-icons/fi";
 import { GiConversation } from "react-icons/gi";
 import useAuth from "../../hooks/useAuth";
@@ -9,6 +10,16 @@ const items = [
   { icon: FiHome, title: "Dashboard", path: "/" },
   { icon: GiConversation, title: "Chat", path: "/conversations" },
   { icon: FiBook, title: "Prompts", path: "/user_story_prompts" },
+=======
+import { FiHome, FiSettings, FiUsers } from "react-icons/fi";
+import { GiConversation, GiSecretBook, GiQuillInk } from "react-icons/gi";
+import useAuth from "../../hooks/useAuth";
+
+const items = [
+  { icon: FiHome, title: "Home", path: "/" },
+  { icon: GiConversation, title: "Chat", path: "/conversations" },
+  { icon: GiQuillInk, title: "Prompts", path: "/user_story_prompts" },
+>>>>>>> master
   { icon: FiSettings, title: "Settings", path: "/settings" },
 ];
 
@@ -25,6 +36,7 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
     return <Text>Loading...</Text>;
   }
 
+<<<<<<< HEAD
   const hasCompletedConversations = user?.conversations?.some(
     (conversation: Conversation) => conversation.status === "complete"
   );
@@ -33,6 +45,14 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
 
   if (hasCompletedConversations) {
     finalItems.splice(3, 0, { icon: FiBookOpen, title: "Stories", path: "/stories" });
+=======
+  const hasStorySummaries = (user?.story_summaries?.length ?? 0) > 0;
+
+  const finalItems = [...items];
+
+  if (hasStorySummaries) {
+    finalItems.splice(2, 0, { icon: GiSecretBook, title: "Memories", path: "/stories" });
+>>>>>>> master
   }
 
   if (user?.is_superuser) {

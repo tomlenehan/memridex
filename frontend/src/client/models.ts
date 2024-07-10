@@ -114,6 +114,32 @@ export type ChatMessagesPublic = {
 
 
 
+<<<<<<< HEAD
+=======
+export type Contact = {
+	email: string;
+	id?: number | null;
+	user_id: number;
+	created_at?: string;
+};
+
+
+
+export type ContactCreate = {
+	email: string;
+};
+
+
+
+export type ContactRead = {
+	email: string;
+	id: number;
+	created_at: string;
+};
+
+
+
+>>>>>>> master
 export type Conversation = {
 	id?: number | null;
 	user_id: number;
@@ -285,6 +311,10 @@ export type UserPublic = {
 	conversations: Array<Conversation>;
 	chat_messages: Array<ChatMessage>;
 	story_summaries: Array<StorySummary>;
+<<<<<<< HEAD
+=======
+	contacts: Array<Contact>;
+>>>>>>> master
 };
 
 

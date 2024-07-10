@@ -55,8 +55,13 @@ async def create_chat_message(
         chat_history, total_tokens = get_formatted_history(conversation_id, db_session)
 
         system_message = (f"You are an AI ghostwriter tasked with teasing out details from the user "
+<<<<<<< HEAD
                          f"about this story prompt {story_prompt}. continue to ask good follow-up "
                          f"questions based on their input.")
+=======
+                         f"about this story prompt {story_prompt}. continue to ask interesting and "
+                         f"engaging follow-up questions based on their input.")
+>>>>>>> master
 
         async for token in send_message(chat_message_in.content, system_message, chat_history):
             response_content += token
@@ -84,6 +89,7 @@ async def create_chat_message(
     return StreamingResponse(message_generator(db_session, current_user_id), media_type="text/event-stream")
 
 
+<<<<<<< HEAD
 @router.get("/{conversation_id}/summary", response_model=ChatMessagePublic)
 async def get_summary(
         conversation_id: int,
@@ -128,6 +134,8 @@ async def get_summary(
     return final_message
 
 
+=======
+>>>>>>> master
 @router.get("/{conversation_id}/messages", response_model=ChatMessagesPublic)
 def read_chat_messages(
         conversation_id: int,

@@ -18,6 +18,10 @@ import { Route as LoginImport } from './routes/login'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as LayoutIndexImport } from './routes/_layout/index'
 import { Route as LayoutUserstorypromptsImport } from './routes/_layout/user_story_prompts'
+<<<<<<< HEAD
+=======
+import { Route as LayoutStoriesImport } from './routes/_layout/stories'
+>>>>>>> master
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
 import { Route as LayoutItemsImport } from './routes/_layout/items'
 import { Route as LayoutConversationsImport } from './routes/_layout/conversations'
@@ -62,6 +66,14 @@ const LayoutUserstorypromptsRoute = LayoutUserstorypromptsImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+<<<<<<< HEAD
+=======
+const LayoutStoriesRoute = LayoutStoriesImport.update({
+  path: '/stories',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+>>>>>>> master
 const LayoutSettingsRoute = LayoutSettingsImport.update({
   path: '/settings',
   getParentRoute: () => LayoutRoute,
@@ -133,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsImport
       parentRoute: typeof LayoutImport
     }
+<<<<<<< HEAD
+=======
+    '/_layout/stories': {
+      preLoaderRoute: typeof LayoutStoriesImport
+      parentRoute: typeof LayoutImport
+    }
+>>>>>>> master
     '/_layout/user_story_prompts': {
       preLoaderRoute: typeof LayoutUserstorypromptsImport
       parentRoute: typeof LayoutImport
@@ -160,6 +179,10 @@ export const routeTree = rootRoute.addChildren([
     LayoutConversationsRoute,
     LayoutItemsRoute,
     LayoutSettingsRoute,
+<<<<<<< HEAD
+=======
+    LayoutStoriesRoute,
+>>>>>>> master
     LayoutUserstorypromptsRoute,
     LayoutIndexRoute,
     LayoutConversationConversationIdRoute,

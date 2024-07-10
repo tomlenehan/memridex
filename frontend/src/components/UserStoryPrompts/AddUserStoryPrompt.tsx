@@ -74,7 +74,11 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
       }
       console.error("test");
       // return UserStoryPromptsService.createUserStoryPrompt({ formData: formData as unknown as Body_user_story_prompts_create_user_story_prompt });
+<<<<<<< HEAD
       const response = await axios.post('/api/v1/user_story_prompts/', formData, {
+=======
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/user_story_prompts/`, formData, {
+>>>>>>> master
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

@@ -26,10 +26,44 @@ async def get_relevant_messages(index: FAISS, query: str, k: int = 20) -> List[H
 
     return relevant_messages
 
+<<<<<<< HEAD
 async def generate_summary(system_prompt: str, chat_history: List[HumanMessage]) -> AsyncIterable[str]:
     index = await index_messages(chat_history)
     relevant_messages = await get_relevant_messages(index, "Please summarize this conversation")
 
+=======
+async def generate_summary(system_prompt: str, chat_history: List[str], tone: int) -> AsyncIterable[str]:
+    index = await index_messages(chat_history)
+    relevant_messages = await get_relevant_messages(index, "Please summarize this conversation")
+
+    temperature = tone / 100
+
+    model = ChatOpenAI(
+        model=MODEL_NAME,
+        streaming=True,
+        verbose=True,
+        temperature=temperature
+    )
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", "{system}"),
+            MessagesPlaceholder("history"),
+        ]
+    )
+    chain = prompt | model
+
+    try:
+        async for chunk in chain.astream({"system": system_prompt, "history": relevant_messages}):
+            yield chunk.content
+    except Exception as e:
+        logger.error(f"Error generating summary: {e}")
+        raise e
+
+
+def generate_title(system_prompt: str, summary: str) -> str:
+
+>>>>>>> master
     model = ChatOpenAI(
         model=MODEL_NAME,
         streaming=True,
@@ -39,6 +73,7 @@ async def generate_summary(system_prompt: str, chat_history: List[HumanMessage])
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", "{system}"),
+<<<<<<< HEAD
             MessagesPlaceholder("history"),
         ]
     )
@@ -51,3 +86,16 @@ async def generate_summary(system_prompt: str, chat_history: List[HumanMessage])
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
         raise e
+=======
+            HumanMessage(summary),
+        ]
+    )
+    chain = prompt | model
+
+    try:
+        result = chain.invoke({"system": system_prompt})
+        return result.content
+    except Exception as e:
+        logger.error(f"Error generating summary: {e}")
+        raise e
+>>>>>>> master
