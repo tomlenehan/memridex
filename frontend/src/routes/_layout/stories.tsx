@@ -87,7 +87,7 @@ function StorySummariesList() {
                 colorScheme="purple"
                 size="md"
               >
-                View Memory
+                View
               </Button>
             </Flex>
           </Box>

@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { app__models__Message,Body_login_login_access_token,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,app__llm__conversation_agent__Message,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_create_story_summary,Body_summaries_update_story_summary,StorySummaryPublic,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate,ContactCreate,ContactRead } from './models';
+import type { app__models__Message,Body_login_login_access_token,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ContactEmailSchema,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,app__llm__conversation_agent__Message,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_update_story_summary,StorySummaryPublic,SummaryCreateRequest,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate,ContactCreate,ContactRead } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -368,6 +368,10 @@ export type TDataTestEmail = {
                 emailTo: string
                 
             }
+export type TDataSendContactEmail = {
+                requestBody: ContactEmailSchema
+                
+            }
 
 export class UtilsService {
 
@@ -387,6 +391,26 @@ emailTo,
 			query: {
 				email_to: emailTo
 			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Send Contact Email
+	 * @returns app__models__Message Successful Response
+	 * @throws ApiError
+	 */
+	public static sendContactEmail(data: TDataSendContactEmail): CancelablePromise<app__models__Message> {
+		const {
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/utils/send-contact-email/',
+			body: requestBody,
+			mediaType: 'application/json',
 			errors: {
 				422: `Validation Error`,
 			},
@@ -936,7 +960,7 @@ skip?: number
                 
             }
 export type TDataCreateStorySummary = {
-                formData: Body_summaries_create_story_summary
+                requestBody: SummaryCreateRequest
                 
             }
 export type TDataReadStorySummary = {
@@ -985,13 +1009,13 @@ skip = 0,
 	 */
 	public static createStorySummary(data: TDataCreateStorySummary): CancelablePromise<StorySummaryPublic> {
 		const {
-formData,
+requestBody,
 } = data;
 		return __request(OpenAPI, {
 			method: 'POST',
 			url: '/api/v1/summaries/',
-			formData: formData,
-			mediaType: 'application/x-www-form-urlencoded',
+			body: requestBody,
+			mediaType: 'application/json',
 			errors: {
 				422: `Validation Error`,
 			},

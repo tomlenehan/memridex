@@ -40,15 +40,6 @@ export const $Body_login_login_access_token = {
 	},
 } as const;
 
-export const $Body_summaries_create_story_summary = {
-	properties: {
-		conversation_id: {
-	type: 'number',
-	isRequired: true,
-},
-	},
-} as const;
-
 export const $Body_summaries_update_story_summary = {
 	properties: {
 		title: {
@@ -354,6 +345,20 @@ export const $Contact = {
 export const $ContactCreate = {
 	properties: {
 		email: {
+	type: 'string',
+	isRequired: true,
+},
+	},
+} as const;
+
+export const $ContactEmailSchema = {
+	properties: {
+		email: {
+	type: 'string',
+	isRequired: true,
+	format: 'email',
+},
+		message: {
 	type: 'string',
 	isRequired: true,
 },
@@ -760,6 +765,27 @@ export const $StorySummaryPublic = {
 	type: 'null',
 }],
 	isRequired: true,
+},
+	},
+} as const;
+
+export const $SummaryCreateRequest = {
+	properties: {
+		conversation_id: {
+	type: 'number',
+	isRequired: true,
+},
+		tone: {
+	type: 'number',
+	isRequired: true,
+},
+		author_style: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
 },
 	},
 } as const;

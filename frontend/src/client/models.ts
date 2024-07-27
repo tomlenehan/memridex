@@ -9,12 +9,6 @@ export type Body_login_login_access_token = {
 
 
 
-export type Body_summaries_create_story_summary = {
-	conversation_id: number;
-};
-
-
-
 export type Body_summaries_update_story_summary = {
 	title?: string | null;
 	summary_text?: string | null;
@@ -125,6 +119,13 @@ export type Contact = {
 
 export type ContactCreate = {
 	email: string;
+};
+
+
+
+export type ContactEmailSchema = {
+	email: string;
+	message: string;
 };
 
 
@@ -270,6 +271,14 @@ export type StorySummaryPublic = {
 	image_url?: string | null;
 	created_at: string;
 	modified_at: string | null;
+};
+
+
+
+export type SummaryCreateRequest = {
+	conversation_id: number;
+	tone: number;
+	author_style?: string | null;
 };
 
 

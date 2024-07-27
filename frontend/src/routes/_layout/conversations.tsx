@@ -9,6 +9,7 @@ import {
   useDisclosure,
   SimpleGrid,
   Flex,
+  Spacer
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -94,68 +95,73 @@ function UserStoryPromptsList() {
     })[0];
   };
 
-  return (
-    <>
-      <SimpleGrid columns={[1, 2, 3]} spacing={4}>
-        {userStoryPrompts?.data.map((prompt) => {
-          const existingConversation = getConversationForPrompt(prompt.id);
-          const latestSummary = existingConversation && existingConversation.status === 'complete'
-            ? getLatestSummaryForConversation(existingConversation.id)
-            : null;
+return (
+  <>
+    <SimpleGrid columns={[1, 2, 3]} spacing={4}>
+      {userStoryPrompts?.data.map((prompt) => {
+        const existingConversation = getConversationForPrompt(prompt.id);
+        const latestSummary = existingConversation && existingConversation.status === 'complete'
+          ? getLatestSummaryForConversation(existingConversation.id)
+          : null;
 
-          return (
-            <Box
-              key={prompt.id}
-              maxW="sm"
-              borderWidth="1px"
-              borderRadius="lg"
-              overflow="hidden"
-            >
-              {prompt.image_url ? (
-                <Image src={prompt.image_url} alt={prompt.prompt} />
+        return (
+          <Box
+            key={prompt.id}
+            maxW="sm"
+            borderWidth="1px"
+            borderRadius="lg"
+            overflow="hidden"
+            display="flex"
+            flexDirection="column"
+            justifyContent="space-between"
+          >
+            {prompt.image_url ? (
+              <Image src={prompt.image_url} alt={prompt.prompt} />
+            ) : (
+              <Skeleton height="200px" />
+            )}
+            <Box p={6} flex="1" display="flex" flexDirection="column">
+              <Heading size="md">{prompt.prompt}</Heading>
+              {prompt.category ? (
+                <Text mt={2} color="gray.600">
+                  Category: {prompt.category.name}
+                </Text>
               ) : (
-                <Skeleton height="200px" />
+                <Text mt={2} color="gray.600">
+                  Category: N/A
+                </Text>
               )}
-              <Box p={6}>
-                <Heading size="md">{prompt.prompt}</Heading>
-                {prompt.category ? (
-                  <Text mt={2} color="gray.600">
-                    Category: {prompt.category.name}
-                  </Text>
+              <Spacer />
+              <Flex mt={4} justifyContent="space-between" alignItems="center">
+                {existingConversation ? (
+                  <Button as={Link} to={`/conversation/${existingConversation.id}`} colorScheme="blue">
+                    Continue
+                  </Button>
                 ) : (
-                  <Text mt={2} color="gray.600">
-                    Category: N/A
-                  </Text>
+                  <Button colorScheme="teal" onClick={() => handleStartConversation(prompt)}>
+                    Start Chat
+                  </Button>
                 )}
-                <Flex mt={4} justifyContent="space-between" alignItems="center">
-                  {existingConversation ? (
-                    <Button as={Link} to={`/conversation/${existingConversation.id}`} colorScheme="blue">
-                      Continue Chat
-                    </Button>
-                  ) : (
-                    <Button colorScheme="teal" onClick={() => handleStartConversation(prompt)}>
-                      Start Chat
-                    </Button>
-                  )}
-                  {latestSummary && (
-                    <Button
-                      as={Link}
-                      to={`/summary/${latestSummary.id}`}
-                      colorScheme="purple"
-                      size="md"
-                    >
-                      View Memory
-                    </Button>
-                  )}
-                </Flex>
-              </Box>
+                {latestSummary && (
+                  <Button
+                    as={Link}
+                    to={`/summary/${latestSummary.id}`}
+                    colorScheme="purple"
+                    size="md"
+                  >
+                    View
+                  </Button>
+                )}
+              </Flex>
             </Box>
-          );
-        })}
-      </SimpleGrid>
-      <AddConversation isOpen={isOpen} onClose={onClose} prompt={selectedPrompt} />
-    </>
-  );
+          </Box>
+        );
+      })}
+    </SimpleGrid>
+    <AddConversation isOpen={isOpen} onClose={onClose} prompt={selectedPrompt} />
+  </>
+);
+
 }
 
 function Conversations() {
