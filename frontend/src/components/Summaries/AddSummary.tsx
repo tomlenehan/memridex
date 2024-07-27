@@ -18,7 +18,7 @@ import {
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { useNavigate } from '@tanstack/react-router';
-// import { Body_summaries_create_story_summary } from "../../client";
+import { SummaryCreateRequest, SummariesService } from "../../client";
 
 interface AddSummaryProps {
   isOpen: boolean;
@@ -50,35 +50,17 @@ const AddSummary: React.FC<AddSummaryProps> = ({ isOpen, onClose, conversationId
   const handleFormSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        throw new Error('No access token found');
-      }
-
-      const formData = {
+      const formData: SummaryCreateRequest = {
         conversation_id: conversationId,
         tone: toneValue,
         author_style: data.author
       };
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/summaries`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(responseData.detail || 'Failed to generate summary');
-      }
+      const response = await SummariesService.createStorySummary({ requestBody: formData });
 
       navigate({
         to: "/summary/$summaryId",
-        params: { summaryId: responseData.id.toString() },
+        params: { summaryId: response.id.toString() },
       });
       onClose();
     } catch (error) {

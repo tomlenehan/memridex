@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addMessage, startStreamingMessage, addStreamingMessage, endStreamingMessage } from "../../redux/chatSlice";
 import { RootState, AppDispatch } from "../../redux/store";
 import { fetchConversationStatus } from "../../redux/conversationSlice";
-import AddSummary from "../../components/Summaries/AddSummary"; // Import the new modal component
+import AddSummary from "../../components/Summaries/AddSummary";
 
 interface ChatInputProps {
   conversationId: number;
