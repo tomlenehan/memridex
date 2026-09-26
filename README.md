@@ -1,0 +1,78 @@
+# MemriBox
+
+## Run With Docker
+
+The project runs as a self-contained Docker Compose stack:
+
+- `frontend`: Vite dev server at http://localhost:5173
+- `backend`: FastAPI available inside Docker as `backend:80`
+- `db`: PostgreSQL available inside Docker as `db:5432`
+
+Start everything:
+
+```sh
+docker compose up --build
+```
+
+Compose has safe local defaults, so a `.env` file is optional. To customize ports,
+credentials, or API keys:
+
+```sh
+cp .env.example .env
+```
+
+Then edit `.env` and restart the stack.
+
+Postgres stores its username and password when its Docker volume is first
+created. Keep the `POSTGRES_*` values stable after that point. If you need to
+change those values, either retain the existing credentials to preserve local
+data or reset the local volume with the command at the end of this guide.
+
+If you want to connect from a host database client, add a local Compose override
+that publishes `db` port `5432` to an unused host port.
+
+FastAPI docs are proxied through the frontend at http://localhost:5173/docs.
+
+The frontend uses relative `/api/...` calls by default. In Docker, Vite proxies
+those requests to the `backend` container. If you need the browser to call a
+specific backend URL directly, set `VITE_API_URL`.
+
+## Deploy To Render
+
+The repo includes a Render Blueprint at `render.yaml`. It creates:
+
+- `memribox-web`: the public Nginx/Vite frontend
+- `memribox-api`: the FastAPI backend
+- `memribox-db`: a managed Render Postgres database
+
+In Render, create a new Blueprint from this repository. During setup, Render
+will prompt for the secret values marked with `sync: false`:
+
+- `FIRST_SUPERUSER_PASSWORD`: the seeded admin password for `admin@example.com`
+- `OPENAI_API_KEY`: required for AI conversation features
+
+The frontend is configured as the public app. It serves static files and proxies
+`/api`, `/docs`, and `/redoc` to the backend over Render's private network. The
+backend runs migrations and seeds initial data from `backend/prestart.sh` before
+starting.
+
+The Blueprint assumes Render assigns `https://memribox-web.onrender.com` to the
+frontend. If you rename the service, Render assigns a different hostname, or you
+add a custom domain, update `DOMAIN` and `BACKEND_CORS_ORIGINS` on
+`memribox-api`.
+
+Optional upload settings can be added to `memribox-api` later if you use S3
+uploads: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+`AWS_UPLOAD_BUCKET_NAME`, and `AWS_DEFAULT_REGION`.
+
+Run backend tests inside Docker:
+
+```sh
+docker compose exec backend bash /app/tests-start.sh
+```
+
+Reset local Docker data:
+
+```sh
+docker compose down -v --remove-orphans
+```
