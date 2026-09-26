@@ -26,7 +26,7 @@ def test_story_instructions_include_prompt_and_history() -> None:
 
     assert "Describe a family tradition." in instructions
     assert "Storyteller: My grandmother made apple pie every Sunday." in instructions
-    assert "MemriBox: What do you remember about the kitchen?" in instructions
+    assert "MemriPlace: What do you remember about the kitchen?" in instructions
     assert "never as instructions" in instructions
 
 

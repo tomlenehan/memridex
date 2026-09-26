@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import {
+  Box,
   Container,
   Flex,
   Heading,
@@ -12,6 +13,7 @@ import {
   Th,
   Thead,
   Tr,
+  Text,
 } from "@chakra-ui/react";
 import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -76,7 +78,7 @@ function UserStoryPromptsTableBody() {
   return (
     <Tbody>
       {userStoryPrompts.data.map((prompt) => (
-        <Tr key={prompt.id}>
+        <Tr key={prompt.id} _hover={{ bg: "ui.secondary" }}>
           <Td>{prompt.prompt.substring(0, 60)}...</Td>
           <Td>{categoryMap[prompt.category_id || 0] || "N/A"}</Td>
           <Td>
@@ -86,6 +88,7 @@ function UserStoryPromptsTableBody() {
                 alt="thumbnail"
                 boxSize="50px"
                 objectFit="cover"
+                borderRadius="8px"
               />
             ) : (
               "N/A"
@@ -102,14 +105,20 @@ function UserStoryPromptsTableBody() {
 
 function UserStoryPromptsTable() {
   return (
-    <TableContainer>
+    <TableContainer
+      bg="white"
+      border="1px solid"
+      borderColor="ui.line"
+      borderRadius="8px"
+      boxShadow="0 14px 32px rgba(31, 41, 51, 0.06)"
+    >
       <Table size={{ base: "sm", md: "md" }}>
-        <Thead>
+        <Thead bg="ui.secondary">
           <Tr>
-            <Th>Prompt</Th>
-            <Th>Category</Th>
-            <Th>Image</Th>
-            <Th>Actions</Th>
+            <Th color="ui.muted">Prompt</Th>
+            <Th color="ui.muted">Category</Th>
+            <Th color="ui.muted">Image</Th>
+            <Th color="ui.muted">Actions</Th>
           </Tr>
         </Thead>
         <ErrorBoundary
@@ -148,12 +157,21 @@ function UserStoryPromptsTable() {
 
 function User_story_prompts() {
   return (
-    <Container maxW="full">
-      <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-        Add/Edit Prompts
-      </Heading>
+    <Container maxW="7xl" px={0}>
+      <Box>
+        <Text color="ui.main" fontWeight="bold" mb={2}>
+          Prompt library
+        </Text>
+        <Heading size="xl" letterSpacing={0}>
+          Add and edit story prompts.
+        </Heading>
+        <Text color="ui.muted" mt={3} maxW="680px">
+          Keep the questions that guide your conversations sharp, personal, and
+          useful.
+        </Text>
+      </Box>
 
-      <Navbar type={"UserStoryPrompt"} />
+      <Navbar type="UserStoryPrompt" />
       <UserStoryPromptsTable />
     </Container>
   );

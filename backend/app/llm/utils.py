@@ -1,8 +1,10 @@
-import tiktoken
-from sqlmodel import Session, select
-from langchain.schema import HumanMessage, AIMessage, SystemMessage
-from app.models import ChatMessage
 import logging
+
+import tiktoken
+from langchain.schema import AIMessage, HumanMessage, SystemMessage
+from sqlmodel import Session, select
+
+from app.models import ChatMessage, Conversation, ConversationStatus
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,8 +41,17 @@ def get_formatted_history(conversation_id: int, session: Session) -> tuple[
             messages.append(ai_message)
             total_tokens += num_tokens_from_string(ai_message.content)
 
-    logger.error(f"Formatted messages: {messages}")
-    logger.info(f"Total token count for conversation {conversation_id}: {total_tokens}")
+    logger.debug("Formatted %s messages for conversation %s", len(messages), conversation_id)
+    logger.info("Total token count for conversation %s: %s", conversation_id, total_tokens)
 
     return messages, total_tokens
 
+
+def refresh_story_status(conversation: Conversation, session: Session) -> None:
+    if conversation.id is None:
+        return
+    _, total_tokens = get_formatted_history(conversation.id, session)
+    conversation.token_total = total_tokens
+    if total_tokens >= STORY_TOKEN_LIMIT:
+        conversation.status = ConversationStatus.READY_FOR_SUMMARY
+    session.add(conversation)

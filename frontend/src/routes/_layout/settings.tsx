@@ -1,11 +1,14 @@
 import {
+  Box,
   Container,
   Heading,
+  Stack,
   Tab,
   TabList,
   TabPanel,
   TabPanels,
   Tabs,
+  Text,
 } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
@@ -37,24 +40,50 @@ function UserSettings() {
     : tabsConfig
 
   return (
-    <Container maxW="full">
-      <Heading size="lg" textAlign={{ base: "center", md: "left" }} py={12}>
-        Settings
-      </Heading>
-      <Tabs variant="enclosed">
-        <TabList>
-          {finalTabs.map((tab, index) => (
-            <Tab key={index}>{tab.title}</Tab>
-          ))}
-        </TabList>
-        <TabPanels>
-          {finalTabs.map((tab, index) => (
-            <TabPanel key={index}>
-              <tab.component />
-            </TabPanel>
-          ))}
-        </TabPanels>
-      </Tabs>
+    <Container maxW="7xl" px={0}>
+      <Stack spacing={6}>
+        <Box>
+          <Text color="ui.main" fontWeight="bold" mb={2}>
+            Account
+          </Text>
+          <Heading size="xl" letterSpacing={0}>
+            Settings
+          </Heading>
+          <Text color="ui.muted" mt={3} maxW="680px">
+            Manage profile details, saved contacts, appearance, and account
+            preferences.
+          </Text>
+        </Box>
+        <Box
+          bg="white"
+          border="1px solid"
+          borderColor="ui.line"
+          borderRadius="8px"
+          boxShadow="0 14px 32px rgba(31, 41, 51, 0.06)"
+          overflow="hidden"
+        >
+          <Tabs variant="enclosed">
+            <TabList bg="ui.secondary" px={4} pt={4}>
+              {finalTabs.map((tab, index) => (
+                <Tab
+                  key={index}
+                  borderTopRadius="8px"
+                  _selected={{ color: "ui.mainDark", bg: "white" }}
+                >
+                  {tab.title}
+                </Tab>
+              ))}
+            </TabList>
+            <TabPanels>
+              {finalTabs.map((tab, index) => (
+                <TabPanel key={index} p={{ base: 4, md: 6 }}>
+                  <tab.component />
+                </TabPanel>
+              ))}
+            </TabPanels>
+          </Tabs>
+        </Box>
+      </Stack>
     </Container>
   )
 }

@@ -1,194 +1,264 @@
 import {
-    Box,
-    Button,
-    Container,
-    Heading,
-    Image,
-    Skeleton,
-    Text,
-    useDisclosure,
-    SimpleGrid,
-    Flex,
-    Spacer
+  Badge,
+  Box,
+  Button,
+  Container,
+  Flex,
+  Heading,
+  Icon,
+  Image,
+  SimpleGrid,
+  Skeleton,
+  Stack,
+  Text,
+  useDisclosure,
 } from "@chakra-ui/react";
-import {useQuery} from "@tanstack/react-query";
-import {createFileRoute, Link} from "@tanstack/react-router";
-import {ErrorBoundary} from "react-error-boundary";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { FiArrowRight, FiBookOpen, FiMessageCircle } from "react-icons/fi";
+
 import {
-    UserStoryPromptsService,
-    UserStoryPromptPublic,
-    ConversationsService,
-    SummariesService
+  ConversationsService,
+  SummariesService,
+  UserStoryPromptPublic,
+  UserStoryPromptsService,
 } from "../../client";
 import AddConversation from "../../components/Conversations/AddConversation";
-import {useState} from "react";
 
 export const Route = createFileRoute("/_layout/conversations")({
-    component: Conversations,
+  component: Conversations,
 });
 
+function LoadingGrid() {
+  return (
+    <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={5}>
+      {new Array(6).fill(null).map((_, index) => (
+        <Box
+          key={index}
+          bg="white"
+          border="1px solid"
+          borderColor="ui.line"
+          borderRadius="8px"
+          overflow="hidden"
+        >
+          <Skeleton height="210px" />
+          <Stack p={5} spacing={3}>
+            <Skeleton height="22px" width="80%" />
+            <Skeleton height="18px" width="45%" />
+            <Skeleton height="42px" width="100%" />
+          </Stack>
+        </Box>
+      ))}
+    </SimpleGrid>
+  );
+}
+
 function UserStoryPromptsList() {
-    const {data: userStoryPrompts, isLoading, error} = useQuery({
-        queryKey: ["userStoryPrompts"],
-        queryFn: () => UserStoryPromptsService.readUserStoryPrompts({}),
-    });
+  const { data: userStoryPrompts, isLoading, error } = useQuery({
+    queryKey: ["userStoryPrompts"],
+    queryFn: () => UserStoryPromptsService.readUserStoryPrompts({}),
+  });
 
-    const {data: conversationsData, isLoading: conversationsLoading} = useQuery({
-        queryKey: ["conversations"],
-        queryFn: () => ConversationsService.readConversations({}),
-    });
+  const { data: conversationsData, isLoading: conversationsLoading } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: () => ConversationsService.readConversations({}),
+  });
 
-    const {data: summariesData, isLoading: summariesLoading} = useQuery({
-        queryKey: ["summaries"],
-        queryFn: () => SummariesService.readStorySummaries({}),
-    });
+  const { data: summariesData, isLoading: summariesLoading } = useQuery({
+    queryKey: ["summaries"],
+    queryFn: () => SummariesService.readStorySummaries({}),
+  });
 
-    const {isOpen, onOpen, onClose} = useDisclosure();
-    const [selectedPrompt, setSelectedPrompt] = useState<UserStoryPromptPublic | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedPrompt, setSelectedPrompt] =
+    useState<UserStoryPromptPublic | null>(null);
 
-    const handleStartConversation = (prompt: UserStoryPromptPublic) => {
-        setSelectedPrompt(prompt);
-        onOpen();
-    };
+  const handleStartConversation = (prompt: UserStoryPromptPublic) => {
+    setSelectedPrompt(prompt);
+    onOpen();
+  };
 
-    if (isLoading || conversationsLoading || summariesLoading) {
-        return (
-            <SimpleGrid columns={[1, 2, 3]} spacing={4}>
-                {new Array(6).fill(null).map((_, index) => (
-                    <Box
-                        key={index}
-                        maxW="sm"
-                        borderWidth="1px"
-                        borderRadius="lg"
-                        overflow="hidden"
-                    >
-                        <Skeleton height="200px"/>
-                        <Box p={6}>
-                            <Skeleton height="20px" width="70%"/>
-                            <Skeleton height="20px" width="50%" mt={2}/>
-                            <Skeleton height="20px" width="60%" mt={2}/>
-                            <Skeleton height="40px" width="100%" mt={4}/>
-                        </Box>
-                    </Box>
-                ))}
-            </SimpleGrid>
-        );
-    }
+  if (isLoading || conversationsLoading || summariesLoading) {
+    return <LoadingGrid />;
+  }
 
-    if (error) {
-        return (
-            <Box textAlign="center" color="red.500">
-                Something went wrong: {error.message}
-            </Box>
-        );
-    }
-
-    const conversations = conversationsData?.data || [];
-    const summaries = summariesData || [];
-
-    const getConversationForPrompt = (promptId: number) => {
-        return conversations.find(conversation => conversation.user_story_prompt_id === promptId);
-    };
-
-    const getLatestSummaryForConversation = (conversationId: number) => {
-        const conversationSummaries = summaries.filter(summary => summary.conversation_id === conversationId);
-        return conversationSummaries.sort((a, b) => {
-            if (!b.modified_at || !a.modified_at) {
-                return 0;
-            }
-            return new Date(b.modified_at).getTime() - new Date(a.modified_at).getTime();
-        })[0];
-    };
-
+  if (error) {
     return (
-        <>
-            <SimpleGrid columns={[1, 2, 3]} spacing={4}>
-                {userStoryPrompts?.data.map((prompt) => {
-                    const existingConversation = getConversationForPrompt(prompt.id);
-                    const latestSummary = existingConversation && existingConversation.status === 'complete'
-                        ? getLatestSummaryForConversation(existingConversation.id)
-                        : null;
-
-                    return (
-                        <Box
-                            key={prompt.id}
-                            maxW="sm"
-                            borderWidth="1px"
-                            borderRadius="lg"
-                            overflow="hidden"
-                            display="flex"
-                            flexDirection="column"
-                            justifyContent="space-between"
-                        >
-                            {prompt.image_url ? (
-                                <Image src={prompt.image_url} alt={prompt.prompt}/>
-                            ) : (
-                                <Skeleton height="200px"/>
-                            )}
-                            <Box p={6} flex="1" display="flex" flexDirection="column">
-                                <Heading size="md">{prompt.prompt}</Heading>
-                                {prompt.category ? (
-                                    <Text mt={2} color="gray.600">
-                                        Category: {prompt.category.name}
-                                    </Text>
-                                ) : (
-                                    <Text mt={2} color="gray.600">
-                                        Category: N/A
-                                    </Text>
-                                )}
-                                <Spacer/>
-                                <Flex mt={4} justifyContent="space-between" alignItems="center">
-                                    {existingConversation ? (
-                                        <Button as={Link}
-                                                to={`/conversation/${existingConversation.id}`}
-                                                colorScheme="blue">
-                                            Continue
-                                        </Button>
-                                    ) : (
-                                        <Button colorScheme="teal"
-                                                onClick={() => handleStartConversation(prompt)}>
-                                            Start Chat
-                                        </Button>
-                                    )}
-                                    {latestSummary && (
-                                        <Button
-                                            as={Link}
-                                            to={`/summary/${latestSummary.id}`}
-                                            colorScheme="purple"
-                                            size="md"
-                                        >
-                                            View
-                                        </Button>
-                                    )}
-                                </Flex>
-                            </Box>
-                        </Box>
-                    );
-                })}
-            </SimpleGrid>
-            <AddConversation isOpen={isOpen} onClose={onClose} prompt={selectedPrompt}/>
-        </>
+      <Box
+        textAlign="center"
+        color="ui.danger"
+        bg="white"
+        border="1px solid"
+        borderColor="ui.line"
+        borderRadius="8px"
+        p={8}
+      >
+        Something went wrong: {error.message}
+      </Box>
     );
+  }
 
+  const conversations = conversationsData?.data || [];
+  const summaries = summariesData || [];
+
+  const getConversationForPrompt = (promptId: number) => {
+    return conversations.find(
+      (conversation) => conversation.user_story_prompt_id === promptId,
+    );
+  };
+
+  const getLatestSummaryForConversation = (conversationId: number) => {
+    const conversationSummaries = summaries.filter(
+      (summary) => summary.conversation_id === conversationId,
+    );
+    return conversationSummaries.sort((a, b) => {
+      if (!b.modified_at || !a.modified_at) {
+        return 0;
+      }
+      return new Date(b.modified_at).getTime() - new Date(a.modified_at).getTime();
+    })[0];
+  };
+
+  if (!userStoryPrompts?.data.length) {
+    return (
+      <Box
+        bg="white"
+        border="1px solid"
+        borderColor="ui.line"
+        borderRadius="8px"
+        p={8}
+      >
+        <Heading size="md" mb={2}>
+          No prompts yet
+        </Heading>
+        <Text color="ui.muted">Create a prompt to start your first story.</Text>
+      </Box>
+    );
+  }
+
+  return (
+    <>
+      <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={5}>
+        {userStoryPrompts.data.map((prompt) => {
+          const existingConversation = getConversationForPrompt(prompt.id);
+          const latestSummary =
+            existingConversation && existingConversation.status === "complete"
+              ? getLatestSummaryForConversation(existingConversation.id)
+              : null;
+
+          return (
+            <Box
+              key={prompt.id}
+              bg="white"
+              border="1px solid"
+              borderColor="ui.line"
+              borderRadius="8px"
+              overflow="hidden"
+              display="flex"
+              flexDirection="column"
+              boxShadow="0 14px 32px rgba(31, 41, 51, 0.06)"
+            >
+              {prompt.image_url ? (
+                <Image
+                  src={prompt.image_url}
+                  alt={prompt.prompt}
+                  h="210px"
+                  w="full"
+                  objectFit="cover"
+                />
+              ) : (
+                <Skeleton height="210px" />
+              )}
+              <Stack p={5} spacing={4} flex="1">
+                <Flex align="center" justify="space-between" gap={3}>
+                  <Badge
+                    borderRadius="8px"
+                    px={3}
+                    py={1}
+                    colorScheme="teal"
+                    variant="subtle"
+                  >
+                    {prompt.category?.name || "Uncategorized"}
+                  </Badge>
+                  {existingConversation && (
+                    <Icon as={FiMessageCircle} color="ui.main" boxSize={5} />
+                  )}
+                </Flex>
+                <Heading as="h2" size="md" lineHeight="1.35">
+                  {prompt.prompt}
+                </Heading>
+                <Flex gap={3} flexWrap="wrap" mt="auto">
+                  {existingConversation ? (
+                    <Button
+                      as={Link}
+                      to={`/conversation/${existingConversation.id}`}
+                      variant="primary"
+                      rightIcon={<FiArrowRight />}
+                    >
+                      Continue
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      onClick={() => handleStartConversation(prompt)}
+                      rightIcon={<FiMessageCircle />}
+                    >
+                      Start chat
+                    </Button>
+                  )}
+                  {latestSummary && (
+                    <Button
+                      as={Link}
+                      to={`/summary/${latestSummary.id}`}
+                      variant="outline"
+                      colorScheme="teal"
+                      leftIcon={<FiBookOpen />}
+                    >
+                      View memory
+                    </Button>
+                  )}
+                </Flex>
+              </Stack>
+            </Box>
+          );
+        })}
+      </SimpleGrid>
+      <AddConversation isOpen={isOpen} onClose={onClose} prompt={selectedPrompt} />
+    </>
+  );
 }
 
 function Conversations() {
-    return (
-        <Container maxW="full">
-            <Heading size="lg" textAlign={{base: "center", md: "left"}} pt={12}>
-            </Heading>
+  return (
+    <Container maxW="7xl" px={0}>
+      <Stack spacing={6}>
+        <Box>
+          <Text color="ui.main" fontWeight="bold" mb={2}>
+            Story prompts
+          </Text>
+          <Heading size="xl" letterSpacing={0}>
+            Choose a memory to begin with.
+          </Heading>
+          <Text color="ui.muted" mt={3} maxW="680px">
+            Pick a prompt, continue an existing conversation, or open a finished
+            memory when a story is ready.
+          </Text>
+        </Box>
 
-            <ErrorBoundary
-                fallbackRender={({error}) => (
-                    <Box textAlign="center" color="red.500">
-                        Something went wrong: {error.message}
-                    </Box>
-                )}
-            >
-                <UserStoryPromptsList/>
-            </ErrorBoundary>
-        </Container>
-    );
+        <ErrorBoundary
+          fallbackRender={({ error }) => (
+            <Box textAlign="center" color="ui.danger">
+              Something went wrong: {error.message}
+            </Box>
+          )}
+        >
+          <UserStoryPromptsList />
+        </ErrorBoundary>
+      </Stack>
+    </Container>
+  );
 }
 
 export default Conversations;

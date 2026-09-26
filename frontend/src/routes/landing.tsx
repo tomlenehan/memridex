@@ -1,231 +1,581 @@
 import {
   Box,
-  Container,
-  Text,
-  Heading,
   Button,
-  Image,
   Flex,
-  Card,
-  CardBody,
-  Input,
-  Textarea,
-  VStack,
-  Highlight,
+  HStack,
+  Heading,
+  Icon,
+  Image,
   SimpleGrid,
-} from "@chakra-ui/react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import LogoText from "../assets/images/memridex-text-logo.png";
-import useCustomToast from "../hooks/useCustomToast";
-import { useForm, SubmitHandler } from "react-hook-form";
-import {ContactEmailSchema, UtilsService} from "../client";
+  Stack,
+  Text,
+} from "@chakra-ui/react"
+import { Link, createFileRoute } from "@tanstack/react-router"
+import { useEffect, useRef } from "react"
+import { FiArrowRight, FiBookOpen, FiMic, FiPenTool } from "react-icons/fi"
+
+import background from "../assets/images/homepage_parallax/background.png"
+import foreground from "../assets/images/homepage_parallax/foreground.png"
+import midground from "../assets/images/homepage_parallax/midground.png"
+import star from "../assets/images/homepage_parallax/star.png"
+import starscape from "../assets/images/homepage_parallax/starscape.png"
 
 export const Route = createFileRoute("/landing")({
   component: LandingPage,
-});
+})
 
-interface ContactFormInputs {
-  email: string;
-  message: string;
+const storybookHeading = {
+  fontFamily:
+    '"Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif',
+  fontWeight: 600,
+  letterSpacing: 0,
 }
 
-function LandingPage() {
-  const showToast = useCustomToast();
-  const { register, handleSubmit, reset } = useForm<ContactFormInputs>();
+const storySteps = [
+  {
+    icon: FiBookOpen,
+    index: "01",
+    text: "Start with a prompt or a moment already on your mind.",
+    title: "Begin anywhere",
+  },
+  {
+    icon: FiMic,
+    index: "02",
+    text: "Speak or type as the details come back to you.",
+    title: "Follow the memory",
+  },
+  {
+    icon: FiPenTool,
+    index: "03",
+    text: "Keep a story you can return to and share in your own time.",
+    title: "Make it lasting",
+  },
+]
 
-  const handleEmail: SubmitHandler<ContactEmailSchema> = async (data) => {
-    try {
-      const response = await UtilsService.sendContactEmail({ requestBody: data });
-      if (response) {
-        showToast("Success!", "Message sent.", "success");
-        reset();
-      } else {
-        showToast("Error", "Failed to send message.", "error");
-      }
-    } catch (error) {
-      console.error("Error sending email:", error);
-      showToast("Error", "Failed to send message.", "error");
+function LandingPage() {
+  const parallaxTrackRef = useRef<HTMLDivElement>(null)
+  const storyStepsRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
+    const track = parallaxTrackRef.current
+    if (!track) return
+
+    let frame: number | null = null
+    const layerDistances: Record<string, number> = {
+      background: -15,
+      starscape: -58,
+      midground: -102,
+      foreground: -168,
     }
-  };
+
+    const updateProgress = () => {
+      frame = null
+      const scene = track.querySelector<HTMLElement>("[data-parallax-scene]")
+      if (!scene) return
+
+      const trackTop = track.getBoundingClientRect().top + window.scrollY
+      const scrollDistance = Math.max(
+        track.offsetHeight - scene.offsetHeight,
+        1,
+      )
+      const progress = Math.min(
+        1,
+        Math.max(0, (window.scrollY - trackTop) / scrollDistance),
+      )
+
+      for (const layer of track.querySelectorAll<HTMLElement>(
+        "[data-parallax-layer]",
+      )) {
+        const depth = layerDistances[layer.dataset.parallaxLayer ?? ""] ?? 0
+        const offset = depth * progress
+        layer.style.setProperty("--parallax-offset", `${offset}px`)
+        layer.style.setProperty(
+          "--parallax-fade-size",
+          `${Math.abs(offset) + 24}px`,
+        )
+      }
+
+      const copy = track.querySelector<HTMLElement>("[data-parallax-copy]")
+      copy?.style.setProperty("--copy-offset", `${-24 * progress}px`)
+      copy?.style.setProperty("--copy-opacity", `${1 - progress * 0.12}`)
+    }
+
+    const scheduleUpdate = () => {
+      if (frame === null) frame = window.requestAnimationFrame(updateProgress)
+    }
+
+    scheduleUpdate()
+    window.addEventListener("scroll", scheduleUpdate, { passive: true })
+    window.addEventListener("resize", scheduleUpdate)
+
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame)
+      window.removeEventListener("scroll", scheduleUpdate)
+      window.removeEventListener("resize", scheduleUpdate)
+    }
+  }, [])
+
+  useEffect(() => {
+    const steps = storyStepsRef.current?.querySelectorAll<HTMLElement>(
+      "[data-scroll-reveal]",
+    )
+    if (!steps?.length) return
+
+    if (
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !("IntersectionObserver" in window)
+    ) {
+      for (const step of steps) step.dataset.revealed = "true"
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          const step = entry.target as HTMLElement
+          step.dataset.revealed = "true"
+          observer.unobserve(step)
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
+    )
+
+    steps.forEach((step, index) => {
+      step.style.setProperty("--scroll-reveal-delay", `${index * 120}ms`)
+      observer.observe(step)
+    })
+
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <>
-      <Container maxW="full" p={0} position="relative">
-        {/* Top Left Logo */}
-        {/*<Box position="absolute" top={4} left={4} zIndex={2}>*/}
-        {/*  <Image src={LogoIcon} alt="MemriBox Logo" height="40px" />*/}
-        {/*</Box>*/}
-
-        {/* Hero Section */}
+    <Box bg="#F8F4E9" color="#12313A" minH="100vh">
+      <Box as="main">
         <Box
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
-          height="72vh"
-          textAlign="center"
-          bg="white"
-          mt={20}
-          zIndex={1}
-        >
-          <Image src={LogoText} alt="Memridex Logo" mb={4} />
-          <Heading as="h1" fontSize="3.0vw" mb={4} color="#64a8a8">
-            <Highlight
-              query={["Everyone"]}
-              styles={{ color: "#347387", textDecoration: "underline" }}
-            >
-              Everyone has a story to tell.
-            </Highlight>
-          </Heading>
-
-          <Heading as="h1" fontSize="4.0vw" mb={4} color="#64a8a8">
-            <Highlight
-              query={["yours"]}
-              styles={{ color: "#347387", fontWeight: "bold" }}
-            >
-              What's Yours?
-            </Highlight>
-          </Heading>
-          <Flex>
-            <Link to="/signup">
-              <Button
-                size="lg"
-                colorScheme="teal"
-                variant="solid"
-                _hover={{ bg: "#81c4c4", color: "teal" }}
-                mt={4}
-                boxShadow="md"
-                mr={4}
-              >
-                Sign Up
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button
-                size="lg"
-                colorScheme="gray"
-                color="#347387"
-                variant="outline"
-                _hover={{ bg: "#81c4c4", color: "teal" }}
-                mt={4}
-                boxShadow="md"
-              >
-                Log In
-              </Button>
-            </Link>
-          </Flex>
-        </Box>
-
-        {/* Cards Section */}
-        <Box
+          ref={parallaxTrackRef}
+          as="section"
+          h={{ base: "160svh", md: "175svh" }}
           position="relative"
-          width="100%"
-          paddingTop="100vh"
-          bgGradient="linear(to-b, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0))"
+          sx={{
+            "@media (prefers-reduced-motion: reduce)": {
+              height: "100svh",
+              "& [data-parallax-scene]": {
+                position: "relative",
+                top: "auto",
+              },
+            },
+          }}
         >
           <Box
-            backgroundImage="url('https://memribox-defaults.s3.amazonaws.com/site_assets/homepage_bg.png')"
-            backgroundPosition="center"
-            backgroundSize="cover"
-            width="100%"
-            height="100%"
-            position="absolute"
+            data-parallax-scene="true"
+            bg="#071F27"
+            color="#FFF8E8"
+            h="100svh"
+            minH="600px"
+            overflow="hidden"
+            position="sticky"
             top={0}
-            left={0}
-            zIndex={-1}
-          />
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="flex-start"
-            zIndex={1}
           >
-            <SimpleGrid columns={[1, 2]} spacing={10}
-                        justifyContent="flex-start"
-                        // height="auto"
-                        width="75vw">
-              <Card maxW="sm" maxH="80" mt={-600} mr={10} zIndex={1} bg="transparent" boxShadow="md">
-                <CardBody>
-                  <Image
-                    src="https://memribox-defaults.s3.amazonaws.com/site_assets/story-prompts.jpg"
-                    alt="Card 1"
-                    borderRadius="lg"
-                  />
-                  <Text fontSize="18px" color="#347387" fontWeight="bold" mt={4}>Choose from our list of story prompts.</Text>
-                </CardBody>
-              </Card>
-              <Card maxW="sm" maxH="80" mt={-400} ml={10} zIndex={1} bg="transparent" boxShadow="md">
-                <CardBody>
-                  <Image
-                    src="https://memribox-defaults.s3.amazonaws.com/site_assets/chat.jpg"
-                    alt="Card 2"
-                    borderRadius="lg"
-                  />
-                  <Text fontSize="18px" color="#347387" fontWeight="bold" mt={4}>Chat with our AI about it.</Text>
-                </CardBody>
-              </Card>
-              <Card maxW="sm" maxH="80" mt={-200} mr={10} zIndex={1} bg="transparent" boxShadow="md">
-                <CardBody>
-                  <Image
-                    src="https://memribox-defaults.s3.amazonaws.com/site_assets/ai-writer.jpg"
-                    alt="Card 3"
-                    borderRadius="lg"
-                  />
-                  <Text fontSize="18px" color="#347387" fontWeight="bold" mt={4}>Let our AI compile the chat into a story.</Text>
-                </CardBody>
-              </Card>
-              <Card maxW="sm" maxH="80" mb={200} ml={10} zIndex={1} bg="transparent" boxShadow="md">
-                <CardBody>
-                  <Image
-                    src="https://memribox-defaults.s3.amazonaws.com/site_assets/send.jpg"
-                    alt="Card 4"
-                    borderRadius="lg"
-                  />
-                  <Text fontSize="18px" color="#347387" fontWeight="bold" mt={4}>Send your story to friends and family.</Text>
-                </CardBody>
-              </Card>
-            </SimpleGrid>
+            <Image
+              alt=""
+              aria-hidden="true"
+              data-parallax-layer="background"
+              h="100%"
+              maxW="none"
+              objectFit="cover"
+              position="absolute"
+              src={background}
+              top={0}
+              transform="translate3d(0, var(--parallax-offset, 0px), 0) scale(1.08)"
+              transformOrigin="center"
+              w="100%"
+              zIndex={0}
+            />
+            <Image
+              alt=""
+              aria-hidden="true"
+              data-parallax-layer="starscape"
+              h="100%"
+              inset={0}
+              maxW="none"
+              objectFit="cover"
+              opacity={0.76}
+              position="absolute"
+              src={starscape}
+              sx={{
+                maskImage:
+                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+              }}
+              transform="translate3d(0, var(--parallax-offset, 0px), 0) scale(1.06)"
+              w="100%"
+              zIndex={1}
+            />
+            <Image
+              alt=""
+              aria-hidden="true"
+              data-parallax-layer="midground"
+              h="100%"
+              inset={0}
+              maxW="none"
+              objectFit="cover"
+              opacity={0.96}
+              position="absolute"
+              src={midground}
+              sx={{
+                maskImage:
+                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+              }}
+              transform="translate3d(0, var(--parallax-offset, 0px), 0) scale(1.08)"
+              w="100%"
+              zIndex={2}
+            />
+
+            <Box
+              aria-hidden="true"
+              bg="linear-gradient(90deg, rgba(3, 19, 24, 0.86) 0%, rgba(3, 19, 24, 0.58) 44%, rgba(3, 19, 24, 0.10) 78%, rgba(3, 19, 24, 0.02) 100%)"
+              inset={0}
+              position="absolute"
+              zIndex={3}
+            />
+
+            <Flex
+              align="center"
+              justify="space-between"
+              maxW="7xl"
+              mx="auto"
+              px={{ base: 5, md: 8 }}
+              py={{ base: 5, md: 7 }}
+              position="relative"
+              zIndex={6}
+            >
+              <Text
+                fontFamily={storybookHeading.fontFamily}
+                fontSize={{ base: "2xl", md: "3xl" }}
+                fontWeight="semibold"
+                letterSpacing="-0.04em"
+              >
+                MemriPlace
+              </Text>
+              <HStack spacing={{ base: 1, md: 3 }}>
+                <Button
+                  _hover={{ bg: "whiteAlpha.200" }}
+                  as={Link}
+                  color="#FFF8E8"
+                  size={{ base: "sm", md: "md" }}
+                  to="/login"
+                  variant="ghost"
+                >
+                  Log in
+                </Button>
+                <Button
+                  _hover={{ bg: "#FFE5A5", transform: "translateY(-1px)" }}
+                  as={Link}
+                  bg="#F1CC77"
+                  borderRadius="6px"
+                  color="#0C2830"
+                  rightIcon={<FiArrowRight />}
+                  size={{ base: "sm", md: "md" }}
+                  to="/signup"
+                >
+                  Start
+                </Button>
+              </HStack>
+            </Flex>
+
+            <Flex
+              align={{ base: "flex-start", md: "center" }}
+              h="calc(100% - 84px)"
+              mx="auto"
+              pb={{ base: 16, md: 20 }}
+              pt={{ base: 16, md: 10 }}
+              px={{ base: 5, md: 8 }}
+              position="relative"
+              w="full"
+              zIndex={4}
+            >
+              <Stack
+                data-parallax-copy="true"
+                maxW={{ base: "340px", sm: "420px", md: "760px" }}
+                mx={{ base: 0, md: "max(5vw, calc((100vw - 1280px) / 2))" }}
+                spacing={{ base: 4, md: 5 }}
+                sx={{
+                  opacity: "var(--copy-opacity, 1)",
+                  transform: "translate3d(0, var(--copy-offset, 0px), 0)",
+                  willChange: "transform, opacity",
+                }}
+              >
+                <Text color="#F4D98D" fontSize="sm" fontWeight="bold">
+                  Stories worth keeping
+                </Text>
+                <Heading
+                  as="h1"
+                  fontSize={{
+                    base: "47px",
+                    sm: "68px",
+                    md: "104px",
+                    xl: "124px",
+                  }}
+                  lineHeight="0.9"
+                  sx={storybookHeading}
+                >
+                  MemriPlace
+                </Heading>
+                <Text
+                  color="rgba(255, 248, 232, 0.92)"
+                  fontSize={{ base: "lg", md: "2xl" }}
+                  lineHeight="1.35"
+                  maxW="520px"
+                  sx={storybookHeading}
+                >
+                  A home for the stories only you can tell.
+                </Text>
+                <Text
+                  color="rgba(255, 248, 232, 0.78)"
+                  lineHeight="1.7"
+                  maxW="460px"
+                >
+                  Turn a remembered moment into a story you can revisit, share,
+                  and keep close.
+                </Text>
+                <HStack flexWrap="wrap" pt={2} spacing={3}>
+                  <Button
+                    _hover={{ bg: "#FFE5A5", transform: "translateY(-1px)" }}
+                    as={Link}
+                    bg="#F1CC77"
+                    borderRadius="6px"
+                    color="#0C2830"
+                    rightIcon={<FiArrowRight />}
+                    size="lg"
+                    to="/signup"
+                  >
+                    Start a story
+                  </Button>
+                  <Button
+                    _hover={{ bg: "whiteAlpha.200" }}
+                    as={Link}
+                    borderColor="rgba(255, 248, 232, 0.62)"
+                    borderRadius="6px"
+                    color="#FFF8E8"
+                    size="lg"
+                    to="/login"
+                    variant="outline"
+                  >
+                    Continue writing
+                  </Button>
+                </HStack>
+              </Stack>
+            </Flex>
+
+            <Image
+              alt=""
+              aria-hidden="true"
+              data-parallax-layer="foreground"
+              h="100%"
+              inset={0}
+              maxW="none"
+              objectFit="cover"
+              objectPosition={{ base: "56% center", md: "center" }}
+              pointerEvents="none"
+              position="absolute"
+              src={foreground}
+              sx={{
+                maskImage:
+                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+              }}
+              transform="translate3d(0, var(--parallax-offset, 0px), 0) scale(1.1)"
+              w="100%"
+              zIndex={5}
+            />
           </Box>
         </Box>
 
-        {/* Contact Us Section */}
+        <Box bg="#F8F4E9" pb={{ base: 16, md: 24 }} pt={{ base: 14, md: 12 }}>
+          <Stack
+            maxW="7xl"
+            mx="auto"
+            px={{ base: 5, md: 8 }}
+            spacing={{ base: 10, md: 14 }}
+          >
+            <Stack maxW="610px" spacing={3}>
+              <Text color="#2E7A78" fontSize="sm" fontWeight="bold">
+                A simple place to begin
+              </Text>
+              <Heading
+                as="h2"
+                fontSize={{ base: "38px", md: "58px" }}
+                lineHeight="1"
+                sx={storybookHeading}
+              >
+                From a small spark to a story.
+              </Heading>
+              <Text
+                color="#526A70"
+                fontSize={{ base: "md", md: "lg" }}
+                lineHeight="1.7"
+              >
+                Nothing complicated. Just room to remember, in the way that
+                feels natural to you.
+              </Text>
+            </Stack>
+
+            <SimpleGrid
+              columns={{ base: 1, md: 3 }}
+              ref={storyStepsRef}
+              spacing={{ base: 8, md: 10 }}
+              sx={{
+                "@media (prefers-reduced-motion: no-preference)": {
+                  "& [data-scroll-reveal]": {
+                    opacity: 0,
+                    transform: "translate3d(0, 18px, 0)",
+                    transition:
+                      "opacity 650ms ease, transform 650ms cubic-bezier(0.22, 1, 0.36, 1)",
+                    transitionDelay: "var(--scroll-reveal-delay, 0ms)",
+                  },
+                  '& [data-scroll-reveal][data-revealed="true"]': {
+                    opacity: 1,
+                    transform: "translate3d(0, 0, 0)",
+                  },
+                },
+              }}
+            >
+              {storySteps.map((step) => (
+                <Stack
+                  borderColor="#D7CFAF"
+                  borderTop="1px solid"
+                  data-revealed="false"
+                  data-scroll-reveal="true"
+                  key={step.index}
+                  pt={5}
+                  spacing={4}
+                >
+                  <Flex align="center" color="#2E7A78" gap={3}>
+                    <Text fontSize="sm" fontWeight="bold">
+                      {step.index}
+                    </Text>
+                    <Flex
+                      align="center"
+                      bg="#E7EEE8"
+                      boxSize="38px"
+                      justify="center"
+                    >
+                      <Icon as={step.icon} boxSize={5} />
+                    </Flex>
+                  </Flex>
+                  <Heading
+                    as="h3"
+                    fontSize={{ base: "28px", md: "32px" }}
+                    lineHeight="1.05"
+                    sx={storybookHeading}
+                  >
+                    {step.title}
+                  </Heading>
+                  <Text color="#526A70" lineHeight="1.7" maxW="330px">
+                    {step.text}
+                  </Text>
+                </Stack>
+              ))}
+            </SimpleGrid>
+          </Stack>
+        </Box>
+
         <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          bg="#102C48"
-          p={8}
-          zIndex={1}
-          height="60vh"
+          bg="#12313A"
+          color="#FFF8E8"
+          overflow="hidden"
+          position="relative"
+          py={{ base: 16, md: 22 }}
         >
-          <VStack spacing={16} align="center" width="100%" maxW="lg" p={4} bg="white"
-                  borderRadius="lg">
-            <Heading as="h2" size="lg" color="#64a8a8">
-              Contact Us
-            </Heading>
-            <form onSubmit={handleSubmit(handleEmail)}>
-              <VStack spacing={4} width="350px" mt={-8}>
-                <Input placeholder="Your Email"
-                       size="md" {...register("email", {required: true})} />
-                <Textarea placeholder="Your Message"
-                          size="md" {...register("message", {required: true})} />
-                <Button colorScheme="teal" variant="solid" type="submit">
-                  Send Message
-                </Button>
-              </VStack>
-            </form>
-          </VStack>
+          <Image
+            alt=""
+            aria-hidden="true"
+            opacity={0.24}
+            position="absolute"
+            right={{ base: "-86px", md: "8%" }}
+            src={star}
+            top={{ base: "-20px", md: "-55px" }}
+            w={{ base: "220px", md: "330px" }}
+            sx={{
+              "@keyframes memory-star-drift": {
+                from: { transform: "translate3d(0, 0, 0) rotate(-3deg)" },
+                to: { transform: "translate3d(-12px, 14px, 0) rotate(2deg)" },
+              },
+              animation: "memory-star-drift 24s ease-in-out infinite alternate",
+              "@media (prefers-reduced-motion: reduce)": {
+                animation: "none",
+              },
+            }}
+          />
+          <Flex
+            align={{ base: "flex-start", md: "flex-end" }}
+            direction={{ base: "column", md: "row" }}
+            gap={8}
+            justify="space-between"
+            maxW="7xl"
+            mx="auto"
+            px={{ base: 5, md: 8 }}
+            position="relative"
+          >
+            <Stack maxW="660px" spacing={4}>
+              <Text color="#F1CC77" fontSize="sm" fontWeight="bold">
+                Your words, your way
+              </Text>
+              <Heading
+                as="h2"
+                fontSize={{ base: "40px", md: "64px" }}
+                lineHeight="1"
+                sx={storybookHeading}
+              >
+                Every story starts with one small moment.
+              </Heading>
+              <Text
+                color="rgba(255, 248, 232, 0.78)"
+                fontSize={{ base: "md", md: "lg" }}
+                lineHeight="1.7"
+              >
+                Give it a place to land.
+              </Text>
+            </Stack>
+            <Button
+              _hover={{ bg: "#FFE5A5", transform: "translateY(-1px)" }}
+              as={Link}
+              bg="#F1CC77"
+              borderRadius="6px"
+              color="#0C2830"
+              flexShrink={0}
+              rightIcon={<FiArrowRight />}
+              size="lg"
+              to="/signup"
+            >
+              Begin yours
+            </Button>
+          </Flex>
         </Box>
+      </Box>
 
-        {/* Footer */}
-        <Box textAlign="center" p={4} bg="#102C48" color="white">
-          &copy; {new Date().getFullYear()} Memridex. All rights reserved.
-        </Box>
-
-      </Container>
-    </>
-  );
+      <Flex
+        align="center"
+        bg="#0B252D"
+        color="rgba(255, 248, 232, 0.7)"
+        direction={{ base: "column", sm: "row" }}
+        gap={2}
+        justify="space-between"
+        px={{ base: 5, md: 8 }}
+        py={5}
+      >
+        <Text fontSize="sm">MemriPlace. Stories worth keeping.</Text>
+        <Text fontSize="sm">© {new Date().getFullYear()}</Text>
+      </Flex>
+    </Box>
+  )
 }
 
-export default LandingPage;
+export default LandingPage

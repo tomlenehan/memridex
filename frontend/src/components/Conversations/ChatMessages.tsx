@@ -58,7 +58,7 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
             }
             color={textColor}
           >
-            <Text dangerouslySetInnerHTML={{ __html: message.content }} />
+            <Text whiteSpace="pre-wrap">{message.content}</Text>
           </Box>
         ))}
         <div ref={messagesEndRef} />

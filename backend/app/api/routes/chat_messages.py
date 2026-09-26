@@ -1,23 +1,22 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from sqlmodel import func, Session, select
-from app.llm.utils import get_formatted_history
+from sqlmodel import Session, func, select
+
+from app.api.deps import get_current_user, get_db
+from app.llm.conversation_agent import send_message
+from app.llm.utils import get_formatted_history, refresh_story_status
 from app.models import (
     ChatMessage,
     ChatMessageCreate,
     ChatMessagePublic,
+    ChatMessageSender,
     ChatMessagesPublic,
     Conversation,
     Message,
-    StorySummary,
-    ConversationStatus
+    User,
 )
-from app.api.deps import get_current_user, get_db
-from app.models import User
-from app.llm.conversation_agent import send_message, Message
-from app.llm.conversation_summarize import generate_summary
-from app.llm.utils import STORY_TOKEN_LIMIT
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,6 +35,10 @@ async def create_chat_message(
     conversation = db_session.get(Conversation, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
+    if conversation.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    if chat_message_in.sender_type != ChatMessageSender.USER:
+        raise HTTPException(status_code=422, detail="Only user messages can start a response")
 
     chat_message = ChatMessage(
         conversation_id=conversation_id,
@@ -52,7 +55,7 @@ async def create_chat_message(
 
         conversation = db_session.get(Conversation, conversation_id)
         story_prompt = conversation.user_story_prompt.prompt
-        chat_history, total_tokens = get_formatted_history(conversation_id, db_session)
+        chat_history, _ = get_formatted_history(conversation_id, db_session)
 
         system_message = (f"You are an AI ghostwriter tasked with teasing out details from the user "
                          f"about this story prompt {story_prompt}. continue to ask interesting and "
@@ -60,7 +63,6 @@ async def create_chat_message(
 
         async for token in send_message(chat_message_in.content, system_message, chat_history):
             response_content += token
-            total_tokens += 1
             yield token
 
         # Save the AI message after streaming is complete
@@ -73,15 +75,46 @@ async def create_chat_message(
         db_session.add(ai_message)
         db_session.commit()
         db_session.refresh(ai_message)
-
-        if total_tokens > STORY_TOKEN_LIMIT:
-            conversation.status = "ready_for_summary"
-            db_session.add(conversation)
-            db_session.commit()
+        refresh_story_status(conversation, db_session)
+        db_session.commit()
 
     current_user_id = current_user.id
 
     return StreamingResponse(message_generator(db_session, current_user_id), media_type="text/event-stream")
+
+
+@router.post("/{conversation_id}/messages/persist", response_model=ChatMessagePublic)
+def persist_realtime_message(
+        *,
+        conversation_id: int,
+        chat_message_in: ChatMessageCreate,
+        current_user: User = Depends(get_current_user),
+        db_session: Session = Depends(get_db),
+) -> ChatMessage:
+    """Persist a finalized Realtime transcript without generating a second reply."""
+    conversation = db_session.get(Conversation, conversation_id)
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    if conversation.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    if chat_message_in.sender_type not in {ChatMessageSender.USER, ChatMessageSender.AI}:
+        raise HTTPException(status_code=422, detail="Only user or AI transcripts can be stored")
+    if not chat_message_in.content.strip():
+        raise HTTPException(status_code=422, detail="Message content cannot be empty")
+
+    chat_message = ChatMessage(
+        conversation_id=conversation_id,
+        sender_id=current_user.id,
+        sender_type=chat_message_in.sender_type,
+        content=chat_message_in.content.strip(),
+    )
+    db_session.add(chat_message)
+    db_session.commit()
+    db_session.refresh(chat_message)
+
+    refresh_story_status(conversation, db_session)
+    db_session.commit()
+    return chat_message
 
 
 @router.get("/{conversation_id}/messages", response_model=ChatMessagesPublic)

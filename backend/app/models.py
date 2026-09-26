@@ -241,6 +241,11 @@ class ChatMessageCreate(SQLModel):
     sender_type: ChatMessageSender
     content: str
 
+
+class RealtimeSessionOffer(SQLModel):
+    sdp: str = Field(min_length=1)
+
+
 class ChatMessagePublic(ChatMessageCreate):
     id: int
     timestamp: datetime

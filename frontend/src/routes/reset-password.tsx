@@ -13,7 +13,7 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
 import { type ApiError, LoginService, type NewPassword } from "../client"
-import { isLoggedIn } from "../hooks/useAuth"
+import { hasValidSession } from "../hooks/useAuth"
 import useCustomToast from "../hooks/useCustomToast"
 import { confirmPasswordRules, passwordRules } from "../utils"
 
@@ -24,7 +24,7 @@ interface NewPasswordForm extends NewPassword {
 export const Route = createFileRoute("/reset-password")({
   component: ResetPassword,
   beforeLoad: async () => {
-    if (isLoggedIn()) {
+    if (await hasValidSession()) {
       throw redirect({
         to: "/",
       })

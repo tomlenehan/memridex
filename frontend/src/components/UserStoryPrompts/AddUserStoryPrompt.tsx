@@ -24,6 +24,7 @@ import {
   CategoriesService,
   CategoriesPublic,
 } from "../../client";
+import { API_BASE_URL } from "../../config";
 import useCustomToast from "../../hooks/useCustomToast";
 import axios from 'axios';
 
@@ -74,7 +75,7 @@ const AddUserStoryPrompt = ({ isOpen, onClose }: AddUserStoryPromptProps) => {
       }
       console.error("test");
       // return UserStoryPromptsService.createUserStoryPrompt({ formData: formData as unknown as Body_user_story_prompts_create_user_story_prompt });
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/user_story_prompts/`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/v1/user_story_prompts/`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

@@ -27,16 +27,16 @@ app = FastAPI(
     generate_unique_id_function=custom_generate_unique_id,
 )
 
-# Define the path to your static files directory
-static_files_path = os.path.join(os.path.dirname(__file__), "../../frontend/dist")
+static_files_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../frontend/dist")
+)
 
-# Serve static files
-app.mount("/static", StaticFiles(directory=static_files_path), name="static")
+if os.path.isdir(static_files_path):
+    app.mount("/static", StaticFiles(directory=static_files_path), name="static")
 
-# Serve the index.html for the root path
-@app.get("/", include_in_schema=False)
-async def serve_root():
-    return FileResponse(os.path.join(static_files_path, "index.html"))
+    @app.get("/", include_in_schema=False)
+    async def serve_root():
+        return FileResponse(os.path.join(static_files_path, "index.html"))
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:

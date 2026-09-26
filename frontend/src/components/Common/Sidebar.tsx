@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Drawer,
   DrawerBody,
   DrawerCloseButton,
@@ -7,7 +8,6 @@ import {
   DrawerOverlay,
   Flex,
   IconButton,
-  Image,
   Text,
   useColorModeValue,
   useDisclosure,
@@ -15,16 +15,16 @@ import {
 import { useQueryClient } from "@tanstack/react-query"
 import { FiLogOut, FiMenu } from "react-icons/fi"
 
-import Logo from "../../assets/images/memridex-text-logo.png"
 import type { UserPublic } from "../../client"
 import useAuth from "../../hooks/useAuth"
 import SidebarItems from "./SidebarItems"
 
 const Sidebar = () => {
   const queryClient = useQueryClient()
-  const bgColor = useColorModeValue("ui.light", "ui.dark")
-  const textColor = useColorModeValue("ui.dark", "ui.light")
-  const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate")
+  const bgColor = useColorModeValue("rgba(251, 252, 250, 0.92)", "ui.dark")
+  const textColor = useColorModeValue("ui.ink", "ui.light")
+  const panelBg = useColorModeValue("white", "ui.darkSlate")
+  const borderColor = useColorModeValue("ui.line", "whiteAlpha.200")
   const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { logout } = useAuth()
@@ -40,38 +40,51 @@ const Sidebar = () => {
         onClick={onOpen}
         display={{ base: "flex", md: "none" }}
         aria-label="Open Menu"
-        position="absolute"
+        position="fixed"
         fontSize="20px"
-        m={4}
+        top={4}
+        left={4}
+        zIndex={10}
+        bg="white"
+        border="1px solid"
+        borderColor="ui.line"
+        boxShadow="0 12px 24px rgba(31, 41, 51, 0.08)"
         icon={<FiMenu />}
       />
       <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
         <DrawerOverlay />
-        <DrawerContent maxW="250px">
+        <DrawerContent maxW="280px">
           <DrawerCloseButton />
           <DrawerBody py={8}>
-            <Flex flexDir="column" justify="space-between">
+            <Flex flexDir="column" justify="space-between" minH="full">
               <Box>
-                <Flex justifyContent="flex-start">
-                  <Image src={Logo} alt="logo" p={2} />
+                <Flex justifyContent="flex-start" mb={6}>
+                  <Text color="ui.main" fontSize="2xl" fontWeight="bold">
+                    MemriPlace
+                  </Text>
                 </Flex>
                 <SidebarItems onClose={onClose} />
-                <Flex
-                  as="button"
+                <Button
                   onClick={handleLogout}
-                  p={2}
+                  mt={4}
+                  variant="ghost"
                   color="ui.danger"
-                  fontWeight="bold"
-                  alignItems="center"
+                  leftIcon={<FiLogOut />}
+                  justifyContent="flex-start"
+                  w="full"
                 >
-                  <FiLogOut />
-                  <Text ml={2}>Log out</Text>
-                </Flex>
+                  Log out
+                </Button>
               </Box>
               {currentUser?.email && (
-                <Text color={textColor} noOfLines={2} fontSize="sm" p={2}>
-                  Logged in as: {currentUser.email}
-                </Text>
+                <Box borderTop="1px solid" borderColor={borderColor} pt={4}>
+                  <Text color="ui.muted" fontSize="xs" fontWeight="bold" mb={1}>
+                    Signed in
+                  </Text>
+                  <Text color={textColor} noOfLines={2} fontSize="sm">
+                    {currentUser.email}
+                  </Text>
+                </Box>
               )}
             </Flex>
           </DrawerBody>
@@ -81,35 +94,44 @@ const Sidebar = () => {
       {/* Desktop */}
       <Box
         bg={bgColor}
-        p={3}
+        p={4}
         h="100vh"
         position="sticky"
         top="0"
+        flexShrink={0}
         display={{ base: "none", md: "flex" }}
+        borderRight="1px solid"
+        borderColor={borderColor}
+        backdropFilter="blur(14px)"
       >
         <Flex
           flexDir="column"
           justify="space-between"
-          bg={secBgColor}
+          bg={panelBg}
           p={4}
-          borderRadius={12}
+          borderRadius="8px"
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="0 18px 45px rgba(31, 41, 51, 0.07)"
+          minW="232px"
         >
           <Box>
-            <Flex justifyContent="flex-start">
-              <Image src={Logo} alt="Logo" w="150px" marginBottom={1} maxW="2xs" p={2} />
+            <Flex justifyContent="flex-start" mb={6}>
+              <Text color="ui.main" fontSize="2xl" fontWeight="bold">
+                MemriPlace
+              </Text>
             </Flex>
             <SidebarItems />
           </Box>
           {currentUser?.email && (
-            <Text
-              color={textColor}
-              noOfLines={2}
-              fontSize="sm"
-              p={2}
-              maxW="180px"
-            >
-              Logged in as: {currentUser.email}
-            </Text>
+            <Box borderTop="1px solid" borderColor={borderColor} pt={4}>
+              <Text color="ui.muted" fontSize="xs" fontWeight="bold" mb={1}>
+                Signed in
+              </Text>
+              <Text color={textColor} noOfLines={2} fontSize="sm" maxW="190px">
+                {currentUser.email}
+              </Text>
+            </Box>
           )}
         </Flex>
       </Box>

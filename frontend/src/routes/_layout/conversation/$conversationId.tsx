@@ -4,6 +4,7 @@ import {
   Flex,
   Heading,
   Button,
+  Text,
 } from "@chakra-ui/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import ChatMessages from "../../../components/Conversations/ChatMessages";
@@ -23,19 +24,23 @@ function ConversationPage() {
 
   const conversationIdNumber = Number(conversationId);
 
-  if (isNaN(conversationIdNumber)) {
+  if (Number.isNaN(conversationIdNumber)) {
     return <Box>Error: Invalid conversation ID provided</Box>;
   }
 
   return (
     <Container maxW="full" height="100vh" display="flex" flexDirection="column">
-      <Flex justifyContent="space-between" alignItems="center" pt={12}>
+      <Flex justifyContent="space-between" alignItems="flex-start" pt={12} gap={4}>
         <Button as={Link} to="/conversations" marginTop={-6} colorScheme="teal" variant="outline">
           <Box as={IoChevronBackCircleOutline} size="20px" mr={2} />
           Back
         </Button>
-        <Heading size="lg" textAlign={{ base: "center", md: "left" }}>
-        </Heading>
+        <Box flex="1" textAlign={{ base: "right", md: "left" }}>
+          <Heading size="lg">Tell the story your way</Heading>
+          <Text color="ui.muted" mt={1}>
+            Type when it is easier. Start a voice conversation when it is time to talk it through.
+          </Text>
+        </Box>
       </Flex>
 
       <Flex flex="1" direction="column" overflow="hidden" mt={4}>

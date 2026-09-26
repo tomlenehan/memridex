@@ -12,7 +12,7 @@ def create_safety_identifier(user_id: int) -> str:
     """Create a stable identifier without exposing the application's user ID."""
     return hmac.new(
         settings.SECRET_KEY.encode(),
-        f"memribox:{user_id}".encode(),
+        f"memriplace:{user_id}".encode(),
         hashlib.sha256,
     ).hexdigest()
 
@@ -24,7 +24,7 @@ def build_story_instructions(
     history_length = 0
 
     for message in reversed(chat_messages):
-        speaker = "Storyteller" if message.sender_type == "user" else "MemriBox"
+        speaker = "Storyteller" if message.sender_type == "user" else "MemriPlace"
         line = f"{speaker}: {message.content.strip()}"
         if not message.content.strip() or history_length + len(line) > MAX_HISTORY_CHARS:
             continue
@@ -32,7 +32,7 @@ def build_story_instructions(
         history_length += len(line)
 
     history = "\n".join(reversed(history_lines)) or "No previous turns yet."
-    return f"""You are MemriBox, a warm and curious oral-history interviewer.
+    return f"""You are MemriPlace, a warm and curious oral-history interviewer.
 Help the storyteller preserve a meaningful memory in their own words.
 
 Story prompt:

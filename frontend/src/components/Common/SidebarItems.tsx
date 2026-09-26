@@ -1,13 +1,13 @@
 import { Box, Flex, Icon, Text, useColorModeValue } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
 import {
-  // FiHome,
+  FiHome,
   FiSettings, FiUsers } from "react-icons/fi";
 import { GiConversation, GiSecretBook, GiQuillInk } from "react-icons/gi";
 import useAuth from "../../hooks/useAuth";
 
 const items = [
-  // { icon: FiHome, title: "Home", path: "/" },
+  { icon: FiHome, title: "Home", path: "/" },
   { icon: GiConversation, title: "Chat", path: "/conversations" },
   { icon: GiQuillInk, title: "Prompts", path: "/user_story_prompts" },
   { icon: FiSettings, title: "Settings", path: "/settings" },
@@ -18,8 +18,10 @@ interface SidebarItemsProps {
 }
 
 const SidebarItems = ({ onClose }: SidebarItemsProps) => {
-  const textColor = useColorModeValue("ui.main", "ui.light");
-  const bgActive = useColorModeValue("#E2E8F0", "#4A5568");
+  const textColor = useColorModeValue("ui.ink", "ui.light");
+  const mutedColor = useColorModeValue("ui.muted", "gray.400");
+  const bgActive = useColorModeValue("#EAF3F1", "#34424A");
+  const activeColor = useColorModeValue("ui.mainDark", "white");
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -43,19 +45,28 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
       as={Link}
       to={path}
       w="100%"
-      p={2}
+      minH="44px"
+      px={3}
+      py={2}
+      mb={1}
       key={title}
       activeProps={{
         style: {
           background: bgActive,
-          borderRadius: "12px",
+          borderRadius: "8px",
+          color: activeColor,
+          fontWeight: 700,
         },
       }}
       color={textColor}
       onClick={onClose}
+      align="center"
+      borderRadius="8px"
+      transition="background 0.2s ease, color 0.2s ease"
+      _hover={{ bg: "ui.secondary", color: "ui.mainDark" }}
     >
-      <Icon as={icon} alignSelf="center" />
-      <Text ml={2}>{title}</Text>
+      <Icon as={icon} alignSelf="center" color={mutedColor} boxSize={5} />
+      <Text ml={3}>{title}</Text>
     </Flex>
   ));
 

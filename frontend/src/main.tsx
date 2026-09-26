@@ -9,9 +9,10 @@ import store from './redux/store';
 
 import {StrictMode} from "react"
 import {OpenAPI} from "./client"
+import { API_BASE_URL } from "./config"
 import theme from "./theme"
 
-OpenAPI.BASE = import.meta.env.VITE_API_URL
+OpenAPI.BASE = API_BASE_URL
 OpenAPI.TOKEN = async () => {
     return localStorage.getItem("access_token") || ""
 }

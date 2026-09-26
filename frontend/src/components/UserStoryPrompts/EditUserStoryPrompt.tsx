@@ -26,6 +26,7 @@ import {
   CategoriesPublic,
   type UserStoryPromptPublic,
 } from "../../client";
+import { API_BASE_URL } from "../../config";
 import useCustomToast from "../../hooks/useCustomToast";
 import axios from "axios";
 
@@ -87,7 +88,7 @@ const EditUserStoryPrompt = ({
 
       try {
         const response = await axios.put(
-          `${import.meta.env.VITE_API_URL}/api/v1/user_story_prompts/${userStoryPrompt.id}`,
+          `${API_BASE_URL}/api/v1/user_story_prompts/${userStoryPrompt.id}`,
           formData,
           {
             headers: {

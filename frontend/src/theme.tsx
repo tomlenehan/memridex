@@ -9,24 +9,44 @@ const disabledStyles = {
 const theme = extendTheme({
   colors: {
     ui: {
-      main: "#009688",
-      secondary: "#EDF2F7",
+      main: "#2F7D7A",
+      mainDark: "#1F5E5C",
+      secondary: "#F1F5F2",
+      accent: "#D9954C",
+      ink: "#1F2933",
+      muted: "#667085",
+      line: "#DDE5E1",
       success: "#48BB78",
       danger: "#E53E3E",
-      light: "#FAFAFA",
-      dark: "#1A202C",
-      darkSlate: "#252D3D",
-      dim: "#A0AEC0",
+      light: "#FBFCFA",
+      dark: "#18212B",
+      darkSlate: "#25313A",
+      dim: "#98A2B3",
+    },
+  },
+  styles: {
+    global: {
+      body: {
+        bg: "ui.light",
+        color: "ui.ink",
+      },
+      "::selection": {
+        bg: "rgba(47, 125, 122, 0.18)",
+      },
     },
   },
   components: {
     Button: {
+      baseStyle: {
+        borderRadius: "8px",
+        fontWeight: 700,
+      },
       variants: {
         primary: {
           backgroundColor: "ui.main",
           color: "ui.light",
           _hover: {
-            backgroundColor: "#00766C",
+            backgroundColor: "ui.mainDark",
           },
           _disabled: {
             ...disabledStyles,
@@ -42,6 +62,16 @@ const theme = extendTheme({
             backgroundColor: "#E32727",
           },
         },
+      },
+    },
+    Input: {
+      defaultProps: {
+        focusBorderColor: "ui.main",
+      },
+    },
+    Textarea: {
+      defaultProps: {
+        focusBorderColor: "ui.main",
       },
     },
     Tabs: {

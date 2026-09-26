@@ -1,4 +1,4 @@
-# MemriBox
+# MemriPlace
 
 ## Run With Docker
 

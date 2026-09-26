@@ -1,74 +1,168 @@
-import { Box, Container, Text, Heading, Button, Image } from "@chakra-ui/react";
+import {
+  Badge,
+  Box,
+  Button,
+  Container,
+  Flex,
+  Heading,
+  Icon,
+  SimpleGrid,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { FiArrowRight, FiBookOpen, FiMessageCircle, FiPenTool } from "react-icons/fi";
+
+import homepageBg from "../../assets/images/homepage_parallax/background.png";
 import type { UserPublic } from "../../client";
-// import girlBookImage from "../../assets/images/girl_book.png";
 
 export const Route = createFileRoute("/_layout/")({
   component: Dashboard,
 });
 
+const actions = [
+  {
+    title: "Start a conversation",
+    text: "Choose a prompt and talk through a memory while the details are fresh.",
+    icon: FiMessageCircle,
+    path: "/conversations",
+    cta: "Open prompts",
+  },
+  {
+    title: "Edit prompts",
+    text: "Add your own cues or adjust the prompts you already use.",
+    icon: FiPenTool,
+    path: "/user_story_prompts",
+    cta: "Manage prompts",
+  },
+  {
+    title: "Read memories",
+    text: "Return to completed stories and keep polishing what matters.",
+    icon: FiBookOpen,
+    path: "/stories",
+    cta: "View memories",
+  },
+];
+
 function Dashboard() {
   const queryClient = useQueryClient();
   const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"]);
+  const displayName = currentUser?.full_name || currentUser?.email || "there";
 
   return (
-    <>
-      <Container maxW="full" p={0} position="relative">
+    <Container maxW="7xl" px={0}>
+      <Stack spacing={{ base: 6, md: 8 }}>
         <Box
-          position="absolute"
-          top={0}
-          left={0}
-          width="100%"
-          height="100vh"
-          bgGradient="linear(to-b, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0))"
-          zIndex={-2}
-        />
-        <Image
-          src="https://memribox-defaults.s3.amazonaws.com/site_assets/homepage_bg.png"
-          alt="Engaging Visual"
-          objectFit="cover"
-          width="100%"
-          height="100vh"
-          position="absolute"
-          top={0}
-          left={0}
-          zIndex={-3}
-          box-shadow="0 30px 40px rgba(0,0,0,.1)"
-        />
-        <Box
-          position="absolute"
-          top="50%"
-          left="50%"
-          transform="translate(-50%, -50%)"
-          textAlign="center"
+          bg="#17232B"
           color="white"
-          p={4}
+          borderRadius="8px"
+          p={{ base: 6, md: 10 }}
+          position="relative"
+          overflow="hidden"
+          minH={{ base: "360px", md: "420px" }}
+          bgImage={`linear-gradient(90deg, rgba(23, 35, 43, 0.95), rgba(23, 35, 43, 0.70)), url(${homepageBg})`}
+          bgSize="cover"
+          bgPosition="center"
         >
-          <Heading as="h1" size="2xl" mb={4} color="#64a8a8">
-            Hi, {currentUser?.full_name || currentUser?.email} 👋🏼
-          </Heading>
-          <Text fontSize="xl" mb={4} color="#329393">
-            Welcome back, nice to see you again!
-          </Text>
-          <Text fontSize="2xl" fontWeight="bold" mb={10} color="#109393">
-            Everyone has a story to tell. What's yours?
-          </Text>
-          <Link to="/conversations">
-            <Button
-              size="lg"
-              colorScheme="teal"
-              variant="solid"
-              _hover={{ bg: "#81c4c4", color: "teal" }}
-              mt={0}
-              boxShadow="md"
+          <Stack spacing={5} maxW="700px" h="full" justify="center">
+            <Badge
+              alignSelf="flex-start"
+              bg="whiteAlpha.200"
+              color="white"
+              border="1px solid"
+              borderColor="whiteAlpha.300"
+              borderRadius="8px"
+              px={3}
+              py={1}
             >
-              Let's Tell a Story
-            </Button>
-          </Link>
+              Welcome back
+            </Badge>
+            <Heading
+              as="h1"
+              fontSize={{ base: "36px", md: "56px" }}
+              lineHeight="1.05"
+              letterSpacing={0}
+            >
+              Hi, {displayName}
+            </Heading>
+            <Text color="whiteAlpha.800" fontSize={{ base: "lg", md: "xl" }} lineHeight="1.7">
+              Keep gathering the moments, details, and voices that make a memory
+              worth saving.
+            </Text>
+            <Flex gap={3} flexWrap="wrap" pt={2}>
+              <Button
+                as={Link}
+                to="/conversations"
+                variant="primary"
+                size="lg"
+                rightIcon={<FiArrowRight />}
+              >
+                Tell a story
+              </Button>
+              <Button
+                as={Link}
+                to="/user_story_prompts"
+                size="lg"
+                bg="whiteAlpha.200"
+                color="white"
+                border="1px solid"
+                borderColor="whiteAlpha.300"
+                _hover={{ bg: "whiteAlpha.300" }}
+              >
+                Browse prompts
+              </Button>
+            </Flex>
+          </Stack>
         </Box>
-      </Container>
-    </>
+
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5}>
+          {actions.map((action) => (
+            <Box
+              key={action.title}
+              bg="white"
+              border="1px solid"
+              borderColor="ui.line"
+              borderRadius="8px"
+              p={6}
+              boxShadow="0 14px 32px rgba(31, 41, 51, 0.06)"
+            >
+              <Stack spacing={4} h="full">
+                <Flex
+                  align="center"
+                  justify="center"
+                  boxSize="44px"
+                  borderRadius="8px"
+                  bg="ui.secondary"
+                  color="ui.mainDark"
+                >
+                  <Icon as={action.icon} boxSize={5} />
+                </Flex>
+                <Box>
+                  <Heading as="h2" size="md" mb={2}>
+                    {action.title}
+                  </Heading>
+                  <Text color="ui.muted" lineHeight="1.7">
+                    {action.text}
+                  </Text>
+                </Box>
+                <Button
+                  as={Link}
+                  to={action.path}
+                  variant="ghost"
+                  color="ui.mainDark"
+                  rightIcon={<FiArrowRight />}
+                  alignSelf="flex-start"
+                  mt="auto"
+                >
+                  {action.cta}
+                </Button>
+              </Stack>
+            </Box>
+          ))}
+        </SimpleGrid>
+      </Stack>
+    </Container>
   );
 }
 

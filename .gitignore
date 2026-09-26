@@ -1,6 +1,18 @@
 .vscode
-!/.env
+# Local environment files
 .env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+
+# Backend generated files
+backend/.coverage
+backend/htmlcov/
+
+# Frontend generated files
+frontend/dist/
+frontend/node_modules/
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

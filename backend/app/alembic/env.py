@@ -30,7 +30,19 @@ target_metadata = SQLModel.metadata
 # ... etc.
 
 
+def normalize_database_url(url: str) -> str:
+    if url.startswith("postgres://"):
+        return f"postgresql+psycopg://{url.removeprefix('postgres://')}"
+    if url.startswith("postgresql://"):
+        return f"postgresql+psycopg://{url.removeprefix('postgresql://')}"
+    return url
+
+
 def get_url():
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return normalize_database_url(database_url)
+
     user = os.getenv("POSTGRES_USER", "postgres")
     password = os.getenv("POSTGRES_PASSWORD", "")
     server = os.getenv("POSTGRES_SERVER", "db")
