@@ -26,7 +26,8 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDropzone } from "react-dropzone";
 import { SummariesService, ContactsService, ContactRead, Body_summaries_update_story_summary, type RelatedStorySuggestion, type StorySummaryPublic } from "../../../client";
-import { FiArrowRight, FiGitBranch, FiLink, FiX } from "react-icons/fi";
+import { FiArrowRight, FiGitBranch, FiImage, FiLink, FiX } from "react-icons/fi";
+import ConstellationStar from "../../../components/Common/ConstellationStar"
 import useCustomToast from "../../../hooks/useCustomToast"
 
 export const Route = createFileRoute("/_layout/summary/$summaryId")({
@@ -48,6 +49,8 @@ function SummaryPage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [newImageUploaded, setNewImageUploaded] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | undefined>();
   const [conversationId, setConversationId] = useState<number | undefined>(undefined);
   const showToast = useCustomToast()
   const queryClient = useQueryClient()
@@ -58,6 +61,24 @@ function SummaryPage() {
       setNewImageUploaded(true);
     },
   });
+
+  useEffect(() => {
+    const file = acceptedFiles[0]
+    if (!file) {
+      setPendingImageUrl(undefined)
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(file)
+    setPendingImageUrl(objectUrl)
+    return () => URL.revokeObjectURL(objectUrl)
+  }, [acceptedFiles])
+
+  const displayedImageUrl = newImageUploaded ? pendingImageUrl : imageUrl
+
+  useEffect(() => {
+    setImageLoadFailed(false)
+  }, [displayedImageUrl])
 
   const fetchSummary = async (summaryId: string) => {
     setStatus("loading");
@@ -71,7 +92,7 @@ function SummaryPage() {
 
       setValue("summary", response.summary_text || "");
       setValue("title", response.title || "");
-      setImageUrl(response.image_url || "");
+      setImageUrl(response.image_url || undefined);
       setConversationId(response.conversation_id);
       setStatus("succeeded");
       console.log("Initial image URL:", response.image_url);
@@ -105,14 +126,8 @@ function SummaryPage() {
       showToast("Success!", "Summary updated successfully.", "success");
       setStatus("succeeded");
 
-      // Log the response to see if the image URL is being returned
-      console.log("Update response:", response);
-
-      // Add a delay before updating the image URL state
-      setTimeout(() => {
-        setImageUrl(response.image_url || "");
-        setNewImageUploaded(false);
-      }, 2000); // 2 second delay
+      setImageUrl(response.image_url || undefined);
+      setNewImageUploaded(false);
     } catch (error) {
       console.error(error);
       setIsSaving(false);
@@ -148,7 +163,7 @@ function SummaryPage() {
   }
 
   return (
-    <Container maxW="full" height="100vh" display="flex" flexDirection="column">
+    <Container maxW="5xl" minH="100vh" px={{ base: 0, md: 4 }} display="flex" flexDirection="column">
       <Flex justifyContent="space-between" alignItems="center" pt={8} gap={3}>
         <Button as={Link} to="/conversations" variant="outline">
           <Box as={IoChevronBackCircleOutline} size="20px" mr={2} />
@@ -167,7 +182,11 @@ function SummaryPage() {
         )}
       </Flex>
 
-      <Flex flex="1" direction="column" overflow="hidden" mt={4}>
+      <Flex mt={6} p={{ base: 4, md: 6 }} bg="#F0F5E7" border="1px solid #DFE7D5" borderRadius="24px" align="center" gap={3}>
+        <ConstellationStar boxSize={{ base: "80px", md: "112px" }} />
+        <Box><Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">A LITTLE LIGHT, KEPT FOREVER</Text><Heading size="lg" mt={1}>One more piece of your story.</Heading><Text color="ui.muted" mt={2} fontSize="sm">Make it sound like you, add a photo, or connect it to another memory.</Text></Box>
+      </Flex>
+      <Flex flex="1" direction="column" mt={4} bg="white" borderRadius="24px" border="1px solid #E5E8DC">
         <Box flex="1" overflowY="auto" p={4}>
           {status === "loading" ? (
             <Text>Loading summary...</Text>
@@ -186,9 +205,11 @@ function SummaryPage() {
                 {errors.title && <Text color="red.500">{errors.title.message}</Text>}
               </FormControl>
               <FormControl mt={4} isInvalid={!!errors.summary}>
-                <FormLabel>Summary</FormLabel>
+                <FormLabel>Your memory</FormLabel>
                 <Textarea
-                  minHeight={220}
+                  minHeight={280}
+                  bg="#FFFEF9"
+                  lineHeight="1.8"
                   {...register("summary", { required: "Summary is required" })}
                 />
                 {errors.summary && <Text color="red.500">{errors.summary.message}</Text>}
@@ -201,21 +222,58 @@ function SummaryPage() {
                   borderColor="gray.300"
                   borderRadius="md"
                   p={4}
-                  width="400px"
+                  w="full"
+                  maxW="400px"
                   textAlign="left"
                   cursor="pointer"
                 >
                   <input {...getInputProps()} />
                   <Text>Drag 'n' drop an image here, or click to select one</Text>
                 </Box>
-                <VStack mt={2} align="start">
-                  <Image
-                    src={imageUrl}
-                    alt="Current image"
-                    boxSize="50px"
-                    objectFit="cover"
-                    mb={2}
-                  />
+                <VStack mt={3} align="stretch" maxW="400px">
+                  {displayedImageUrl && !imageLoadFailed ? (
+                    <Image
+                      src={displayedImageUrl}
+                      alt={newImageUploaded ? "Selected image preview" : "Current memory"}
+                      w="full"
+                      maxH="240px"
+                      objectFit="cover"
+                      borderRadius="18px"
+                      border="1px solid #DFE7D5"
+                      onError={() => setImageLoadFailed(true)}
+                    />
+                  ) : (
+                    <Flex
+                      align="center"
+                      gap={3}
+                      p={4}
+                      bg="#F6F7EF"
+                      border="1px solid #E2E7D8"
+                      borderRadius="18px"
+                      color="ui.muted"
+                    >
+                      <Flex
+                        align="center"
+                        justify="center"
+                        boxSize="42px"
+                        flexShrink={0}
+                        bg="white"
+                        borderRadius="14px"
+                      >
+                        <Icon as={FiImage} boxSize={5} />
+                      </Flex>
+                      <Box>
+                        <Text color="ui.ink" fontWeight="700" fontSize="sm">
+                          {imageLoadFailed ? "This photo couldn’t be loaded" : "No photo added yet"}
+                        </Text>
+                        <Text fontSize="xs" mt={1}>
+                          {imageLoadFailed
+                            ? "Choose another image to replace it."
+                            : "Add one if it helps bring this memory to life."}
+                        </Text>
+                      </Box>
+                    </Flex>
+                  )}
                   {acceptedFiles.length > 0 && newImageUploaded && (
                     acceptedFiles.map((file) => (
                       <Text color="green" key={file.name}>{file.name}</Text>

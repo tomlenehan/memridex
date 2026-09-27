@@ -1,3 +1,4 @@
+import { celebrateMemory } from "../../lib/celebration"
 import {
   Box,
   Button,
@@ -260,8 +261,11 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
       })
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["summaries"] }),
+        queryClient.invalidateQueries({ queryKey: ["memoryProgress"] }),
         queryClient.invalidateQueries({ queryKey: ["conversationConstellation"] }),
       ])
+      celebrateMemory()
+      showToast("A new star in your sky", "Your memory is saved. Keep exploring whenever you’re ready.", "success")
       await navigate({
         to: "/summary/$summaryId",
         params: { summaryId: String(summary.id) },

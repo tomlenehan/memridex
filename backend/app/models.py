@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from typing import List, Optional
 
@@ -381,3 +381,20 @@ class ContactRead(ContactBase):
 
 class ContactUpdate(SQLModel):
     email: Optional[str] = None
+
+
+class MemoryXP(SQLModel, table=True):
+    """An immutable reward per conversation, including after a story is deleted."""
+    __table_args__ = (UniqueConstraint("user_id", "conversation_key"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True))
+    conversation_key: int
+    points: int = 25
+    earned_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class MemoryDay(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("user_id", "activity_date"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True))
+    activity_date: date

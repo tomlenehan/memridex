@@ -14,8 +14,16 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import ConstellationStar from "../../components/Common/ConstellationStar"
+import ProgressTrail from "../../components/Progress/ProgressTrail"
 import { useRef } from "react"
-import { FiArrowRight, FiAward, FiHome, FiMapPin, FiUsers } from "react-icons/fi"
+import {
+  FiArrowRight,
+  FiAward,
+  FiHome,
+  FiMapPin,
+  FiUsers,
+} from "react-icons/fi"
 
 import {
   ConversationsService,
@@ -71,7 +79,9 @@ function Dashboard() {
         requestBody: promptId ? { user_story_prompt_id: promptId } : {},
       }),
     onSuccess: async (conversation) => {
-      await queryClient.invalidateQueries({ queryKey: ["conversationConstellation"] })
+      await queryClient.invalidateQueries({
+        queryKey: ["conversationConstellation"],
+      })
       await navigate({
         to: "/conversation/$conversationId",
         params: { conversationId: String(conversation.id) },
@@ -87,21 +97,59 @@ function Dashboard() {
     startStory.mutate(promptId)
   }
 
-  const promptForCategory = (category: string): UserStoryPromptPublic | undefined =>
+  const promptForCategory = (
+    category: string,
+  ): UserStoryPromptPublic | undefined =>
     promptsQuery.data?.data.find((prompt) => prompt.category?.name === category)
 
   return (
     <Container maxW="6xl" px={0}>
       <Stack spacing={{ base: 6, md: 8 }}>
+        <ProgressTrail />
+        <Flex
+          align="center"
+          gap={5}
+          p={{ base: 6, md: 8 }}
+          bg="linear-gradient(120deg, #EDF4E2, #FFF2CE)"
+          borderRadius="30px"
+          border="1px solid #E2E7D1"
+        >
+          <Box flex="1">
+            <Text color="ui.main" fontWeight="bold" mb={2}>
+              {displayName ? `Welcome back, ${displayName}` : "Welcome back"}
+            </Text>
+            <Heading as="h1" size="xl" letterSpacing={0}>
+              A little memory. A little more you.
+            </Heading>
+            <Text color="ui.muted" mt={3} fontSize={{ base: "lg", md: "xl" }}>
+              Your next star could be a person, a place, or a tiny moment that
+              stayed with you.
+            </Text>
+            <Button
+              variant="accent"
+              size="lg"
+              mt={6}
+              rightIcon={<FiArrowRight />}
+              onClick={() => startStoryFromPrompt()}
+              isLoading={startStory.isPending}
+            >
+              Let’s find a memory
+            </Button>
+            <Text fontSize="xs" color="ui.muted" mt={4}>
+              Speak or type. A few questions, at your own pace.
+            </Text>
+          </Box>
+          <ConstellationStar
+            w="200px"
+            h="200px"
+            flexShrink={0}
+            display={{ base: "none", md: "block" }}
+          />
+        </Flex>
         <Box>
-          <Text color="ui.main" fontWeight="bold" mb={2}>
-            {displayName ? `Welcome back, ${displayName}` : "Welcome back"}
-          </Text>
-          <Heading as="h1" size="xl" letterSpacing={0}>
-            What would you like to remember today?
-          </Heading>
-          <Text color="ui.muted" mt={3} fontSize={{ base: "lg", md: "xl" }}>
-            Choose an idea to get started. You can speak or type your story.
+          <Heading size="md">Or follow a little spark</Heading>
+          <Text color="ui.muted" fontSize="sm" mt={1}>
+            See which one brings something back.
           </Text>
         </Box>
 
@@ -115,7 +163,11 @@ function Dashboard() {
         {promptsQuery.isLoading ? (
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
             {starters.map((starter) => (
-              <Skeleton key={starter.category} minH="148px" borderRadius="8px" />
+              <Skeleton
+                key={starter.category}
+                minH="148px"
+                borderRadius="8px"
+              />
             ))}
           </SimpleGrid>
         ) : (
@@ -140,21 +192,40 @@ function Dashboard() {
                       justify="center"
                       flexShrink={0}
                       boxSize="52px"
-                      borderRadius="8px"
-                      bg="ui.secondary"
+                      borderRadius="18px"
+                      bg={
+                        ["#FFF0BD", "#E6DCF0", "#D5EADD", "#F8DDCB"][
+                          starters.indexOf(starter)
+                        ]
+                      }
                       color="ui.mainDark"
                     >
                       <Icon as={starter.icon} boxSize={6} />
                     </Flex>
                     <Stack align="flex-start" spacing={1} flex="1" minW={0}>
-                      <Text fontSize="lg" fontWeight="bold" color="ui.ink" whiteSpace="normal">
+                      <Text
+                        fontSize="lg"
+                        fontWeight="bold"
+                        color="ui.ink"
+                        whiteSpace="normal"
+                      >
                         {starter.title}
                       </Text>
-                      <Text color="ui.muted" fontSize="md" fontWeight="normal" lineHeight="1.5">
+                      <Text
+                        color="ui.muted"
+                        fontSize="md"
+                        fontWeight="normal"
+                        lineHeight="1.5"
+                      >
                         {starter.description}
                       </Text>
                     </Stack>
-                    <Icon as={FiArrowRight} color="ui.main" boxSize={5} flexShrink={0} />
+                    <Icon
+                      as={FiArrowRight}
+                      color="ui.main"
+                      boxSize={5}
+                      flexShrink={0}
+                    />
                   </Flex>
                 </Button>
               )
@@ -181,7 +252,12 @@ function Dashboard() {
           <Text color="ui.muted" fontSize="md">
             Your stories are saved privately to your account.
           </Text>
-          <Button as={Link} to="/conversations" variant="outline" rightIcon={<FiArrowRight />}>
+          <Button
+            as={Link}
+            to="/conversations"
+            variant="outline"
+            rightIcon={<FiArrowRight />}
+          >
             See my memories
           </Button>
         </Flex>

@@ -17,6 +17,8 @@ from app.llm.story_nodes import get_conversation_prompt
 from app.llm.utils import get_formatted_history
 from app.models import (
     Conversation,
+    ChatMessage,
+    ChatMessageSender,
     Message,
     RelatedStorySuggestion,
     StoryEmbedding,
@@ -29,6 +31,7 @@ from app.models import (
     User,
 )
 from app.utils import upload_image_to_s3
+from app.progress import award_saved_memory
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -138,6 +141,13 @@ async def create_story_summary(
         )
         story_summary = StorySummary.from_orm(story_summary_create)
         db_session.add(story_summary)
+        if conversation.user_turn_count > 0 or db_session.exec(
+            select(ChatMessage.id).where(
+                ChatMessage.conversation_id == conversation.id,
+                ChatMessage.sender_type == ChatMessageSender.USER,
+            ).limit(1)
+        ).first() is not None:
+            award_saved_memory(db_session, conversation.user_id, conversation.id)
         db_session.commit()
         db_session.refresh(story_summary)
 

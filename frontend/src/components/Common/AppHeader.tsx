@@ -12,19 +12,25 @@ import {
   IconButton,
   Image,
   Stack,
-  Text,
   useDisclosure,
 } from "@chakra-ui/react"
 import { Link } from "@tanstack/react-router"
-import { FiGitBranch, FiHome, FiLogOut, FiMenu, FiPlus, FiSettings } from "react-icons/fi"
+import {
+  FiGitBranch,
+  FiHome,
+  FiLogOut,
+  FiMenu,
+  FiSettings,
+} from "react-icons/fi"
 
 import memriPlaceMark from "../../assets/images/MemriPlaceMLogoLG.png"
 import useAuth from "../../hooks/useAuth"
+import SoundToggle from "../Progress/SoundToggle"
 import UserMenu from "./UserMenu"
 
 const links = [
   { label: "Home", to: "/", icon: FiHome },
-  { label: "Story map", to: "/conversations", icon: FiGitBranch },
+  { label: "My constellation", to: "/conversations", icon: FiGitBranch },
 ] as const
 
 function AppHeader() {
@@ -34,7 +40,7 @@ function AppHeader() {
   return (
     <Box
       as="header"
-      bg="rgba(255,255,255,0.96)"
+      bg="rgba(255,253,247,0.94)"
       borderBottom="1px solid"
       borderColor="ui.line"
       position="sticky"
@@ -75,6 +81,8 @@ function AppHeader() {
               as={Link}
               to={item.to}
               variant="ghost"
+              leftIcon={<Icon as={item.icon} />}
+              borderRadius="full"
               color="ui.ink"
               fontSize="md"
               minH="48px"
@@ -107,19 +115,12 @@ function AppHeader() {
           )}
         </HStack>
 
-        <Flex align="center" gap={{ base: 1, md: 3 }} ml={{ base: "auto", md: 0 }}>
-          <Button
-            as={Link}
-            to="/"
-            leftIcon={<FiPlus />}
-            variant="accent"
-            minH="48px"
-            px={{ base: 3, md: 5 }}
-            aria-label="Choose a story to start"
-          >
-            <Text display={{ base: "none", sm: "inline" }}>Choose a story</Text>
-            <Text display={{ base: "inline", sm: "none" }}>Choose</Text>
-          </Button>
+        <Flex
+          align="center"
+          gap={{ base: 1, md: 3 }}
+          ml={{ base: "auto", md: 0 }}
+        >
+          <SoundToggle />
           <Box display={{ base: "none", md: "block" }}>
             <UserMenu />
           </Box>

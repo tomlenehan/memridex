@@ -15,9 +15,10 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { FiArrowLeft, FiCheck, FiCompass, FiGitBranch, FiHeart } from "react-icons/fi"
+import { FiArrowLeft, FiCheck, FiCompass, FiGitBranch } from "react-icons/fi"
 
 import { ConversationsService } from "../../../client"
+import ConstellationStar from "../../../components/Common/ConstellationStar"
 import ChatInput from "../../../components/Conversations/ChatInput"
 import ChatMessages from "../../../components/Conversations/ChatMessages"
 
@@ -73,7 +74,7 @@ function ConversationPage() {
   const progress = (turns / 4) * 100
 
   return (
-    <Flex direction="column" h={{ base: "calc(100svh - 92px)", md: "calc(100vh - 64px)" }} maxW="1050px" mx="auto" color="#17353B">
+    <Flex direction="column" minH="640px" h={{ base: "calc(100svh - 120px)", md: "calc(100svh - 144px)" }} maxW="1050px" mx="auto" color="#17353B">
       <Flex justify="space-between" align="center" gap={3} mb={5}>
         <Button
           as={Link}
@@ -141,7 +142,7 @@ function ConversationPage() {
               bg={isFinished ? "#E7F0E8" : "#F8EBD3"}
               color={isFinished ? "#4B8D82" : "#D08B45"}
             >
-              <Icon as={isFinished ? FiCheck : FiHeart} boxSize={5} />
+              {isFinished ? <Icon as={FiCheck} boxSize={5} /> : <ConstellationStar boxSize="76px" flexShrink={0} />}
             </Center>
           </Flex>
           <Flex align="center" gap={3} mt={5}>
@@ -151,10 +152,10 @@ function ConversationPage() {
             <Progress
               value={isFinished ? 100 : progress}
               flex="1"
-              h="6px"
+              h="10px"
               borderRadius="full"
               bg="#E9E6DC"
-              colorScheme={isFinished ? "green" : "orange"}
+              colorScheme="green"
               sx={{ "& > div": { borderRadius: "full" } }}
             />
             <Text whiteSpace="nowrap" fontSize="xs" color="#66807E">
@@ -198,8 +199,8 @@ function ConversationPage() {
                 as={Link}
                 to="/conversations"
                 size="sm"
-                bg="#4B8D82"
-                color="white"
+                variant="ghost"
+                color="#426858"
                 borderRadius="full"
                 _hover={{ bg: "#3D786F" }}
               >
