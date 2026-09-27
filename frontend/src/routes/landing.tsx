@@ -344,15 +344,14 @@ export function LandingPage({
                   maxW="520px"
                   sx={storybookHeading}
                 >
-                  A home for the stories only you can tell.
+                  The forever home for treasured memories.
                 </Text>
                 <Text
                   color="rgba(255, 248, 232, 0.78)"
                   lineHeight="1.7"
                   maxW="460px"
                 >
-                  Turn a remembered moment into a story you can revisit, share,
-                  and keep close.
+                  Turn a remembered moment into a story you can revisit, and share.
                 </Text>
                 <HStack flexWrap="wrap" pt={2} spacing={3}>
                   <Button
