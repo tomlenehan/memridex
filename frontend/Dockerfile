@@ -24,6 +24,7 @@ FROM nginx:1.27-alpine AS production
 
 ENV PORT=80
 ENV BACKEND_HOSTPORT=backend:80
+ENV BACKEND_PROTOCOL=http
 
 COPY --from=build /app/dist/ /usr/share/nginx/html
 COPY ./nginx.conf /etc/nginx/templates/default.conf.template

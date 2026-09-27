@@ -52,14 +52,14 @@ will prompt for the secret values marked with `sync: false`:
 - `OPENAI_API_KEY`: required for AI conversation features
 
 The frontend is configured as the public app. It serves static files and proxies
-`/api`, `/docs`, and `/redoc` to the backend over Render's private network. The
-backend runs migrations and seeds initial data from `backend/prestart.sh` before
-starting.
+`/api`, `/docs`, and `/redoc` to the API service's Render-managed public hostname.
+This lets the Blueprint work on Render's free web-service plan, which cannot
+receive private-network traffic. The backend runs migrations and seeds initial
+data from `backend/prestart.sh` before starting.
 
-The Blueprint assumes Render assigns `https://memribox-web.onrender.com` to the
-frontend. If you rename the service, Render assigns a different hostname, or you
-add a custom domain, update `DOMAIN` and `BACKEND_CORS_ORIGINS` on
-`memribox-api`.
+The Blueprint is configured for `memriplace.com` and `www.memriplace.com`.
+Add the custom domain to the frontend service in Render and complete the DNS
+verification before sending users to it.
 
 Optional upload settings can be added to `memribox-api` later if you use S3
 uploads: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
