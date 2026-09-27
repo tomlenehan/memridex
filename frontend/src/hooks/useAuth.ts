@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 
@@ -63,6 +63,7 @@ const getAuthErrorMessage = (
 }
 
 const useAuth = () => {
+  const queryClient = useQueryClient()
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
   const { data: user, isLoading } = useQuery<UserPublic | null, Error>({
@@ -75,6 +76,7 @@ const useAuth = () => {
     const response = await LoginService.loginAccessToken({
       formData: data,
     })
+    queryClient.clear()
     localStorage.setItem("access_token", response.access_token)
   }
 
@@ -105,6 +107,7 @@ const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem("access_token")
+    queryClient.clear()
     navigate({ to: "/login" })
   }
 

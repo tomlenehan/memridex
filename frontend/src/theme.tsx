@@ -7,12 +7,12 @@ const theme = extendTheme({
       mainDark: "#1F5E5C",
       secondary: "#F1F5F2",
       accent: "#D9954C",
-      ink: "#1F2933",
-      muted: "#667085",
+      ink: "#24483E",
+      muted: "#617569",
       line: "#DDE5E1",
       success: "#48BB78",
       danger: "#E53E3E",
-      light: "#FBFCFA",
+      light: "#FAFBF2",
       dark: "#18212B",
       darkSlate: "#25313A",
       dim: "#98A2B3",
@@ -24,10 +24,17 @@ const theme = extendTheme({
         bg: "ui.light",
         color: "ui.ink",
       },
+      "@media (prefers-reduced-motion: reduce)": {
+        "*, *::before, *::after": { animationDuration: "0.01ms !important", transitionDuration: "0.01ms !important", scrollBehavior: "auto !important" },
+      },
       "::selection": {
         bg: "rgba(47, 125, 122, 0.18)",
       },
     },
+  },
+  fonts: {
+    heading: '\"Iowan Old Style\", \"Palatino Linotype\", Georgia, serif',
+    body: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   components: {
     Button: {
@@ -35,7 +42,7 @@ const theme = extendTheme({
         fontWeight: 700,
         letterSpacing: 0,
         minH: "44px",
-        borderRadius: "10px",
+        borderRadius: "16px",
         transition: "background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease",
         _focusVisible: {
           outline: "3px solid",
@@ -67,14 +74,14 @@ const theme = extendTheme({
           minW: "48px",
           px: 5,
           fontSize: "md",
-          borderRadius: "10px",
+          borderRadius: "16px",
         },
         lg: {
           h: "56px",
           minW: "56px",
           px: 6,
           fontSize: "lg",
-          borderRadius: "12px",
+          borderRadius: "18px",
         },
       },
       variants: {
@@ -168,7 +175,7 @@ const theme = extendTheme({
           bg: "#FFFDF7",
           color: "ui.ink",
           border: "1px solid #E3E5D9",
-          borderRadius: "14px",
+          borderRadius: "22px",
           boxShadow: "0 3px 0 #E7E5D9, 0 9px 20px rgba(39, 62, 61, 0.05)",
           whiteSpace: "normal",
           textAlign: "left",
