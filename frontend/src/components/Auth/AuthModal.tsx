@@ -5,6 +5,7 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
+  Image,
   Input,
   Modal,
   ModalBody,
@@ -19,6 +20,7 @@ import {
 import { Link } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
+import memriPlaceLogo from "../../assets/images/MemriPlaceMLogoLG.png"
 import useAuth from "../../hooks/useAuth"
 import { emailPattern, passwordRules } from "../../utils"
 
@@ -82,6 +84,15 @@ function AuthModal({ isOpen, mode, onClose }: AuthModalProps) {
         mx={4}
       >
         <ModalHeader color="#12313A" fontFamily="Georgia, serif" pb={1} pt={8}>
+          <Image
+            alt=""
+            aria-hidden="true"
+            boxSize="56px"
+            mb={4}
+            mx="auto"
+            objectFit="contain"
+            src={memriPlaceLogo}
+          />
           {isSignup ? "Start preserving stories" : "Welcome back"}
         </ModalHeader>
         <ModalCloseButton color="#526A70" top={5} />

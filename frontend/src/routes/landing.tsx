@@ -17,6 +17,8 @@ import { FiArrowRight, FiBookOpen, FiMic, FiPenTool } from "react-icons/fi"
 import background from "../assets/images/homepage_parallax/background.png"
 import foreground from "../assets/images/homepage_parallax/foreground.png"
 import midground from "../assets/images/homepage_parallax/midground.png"
+import memriPlaceLogo from "../assets/images/MemriPlaceMLogoLG.png"
+import memriPlaceTextLogo from "../assets/images/MemriPlaceTextLogo.png"
 import star from "../assets/images/homepage_parallax/star.png"
 import starscape from "../assets/images/homepage_parallax/starscape.png"
 import AuthModal from "../components/Auth/AuthModal"
@@ -267,14 +269,13 @@ export function LandingPage({
               position="relative"
               zIndex={6}
             >
-              <Text
-                fontFamily={storybookHeading.fontFamily}
-                fontSize={{ base: "2xl", md: "3xl" }}
-                fontWeight="semibold"
-                letterSpacing="-0.04em"
-              >
-                MemriPlace
-              </Text>
+              <Image
+                alt="MemriPlace"
+                boxSize={{ base: "44px", md: "54px" }}
+                display="block"
+                objectFit="contain"
+                src={memriPlaceLogo}
+              />
               <HStack spacing={{ base: 1, md: 3 }}>
                 <Button
                   _hover={{ bg: "whiteAlpha.200" }}
@@ -326,18 +327,15 @@ export function LandingPage({
                 <Text color="#F4D98D" fontSize="sm" fontWeight="bold">
                   Stories worth keeping
                 </Text>
-                <Heading
-                  as="h1"
-                  fontSize={{
-                    base: "47px",
-                    sm: "68px",
-                    md: "104px",
-                    xl: "124px",
-                  }}
-                  lineHeight="0.9"
-                  sx={storybookHeading}
-                >
-                  MemriPlace
+                <Heading as="h1" lineHeight={0} maxW="100%">
+                  <Image
+                    alt="MemriPlace"
+                    display="block"
+                    maxW="100%"
+                    objectFit="contain"
+                    src={memriPlaceTextLogo}
+                    w={{ base: "320px", sm: "430px", md: "650px" }}
+                  />
                 </Heading>
                 <Text
                   color="rgba(255, 248, 232, 0.92)"
@@ -504,17 +502,18 @@ export function LandingPage({
           color="#FFF8E8"
           overflow="hidden"
           position="relative"
-          py={{ base: 16, md: 22 }}
+          py={{ base: 20, md: 28 }}
         >
           <Image
             alt=""
             aria-hidden="true"
-            opacity={0.24}
+            filter="drop-shadow(0 0 18px rgba(241, 204, 119, 0.24))"
+            opacity={0.28}
             position="absolute"
-            right={{ base: "-86px", md: "8%" }}
+            right={{ base: "8px", md: "8%" }}
             src={star}
-            top={{ base: "-20px", md: "-55px" }}
-            w={{ base: "220px", md: "330px" }}
+            top={{ base: "24px", md: "20px" }}
+            w={{ base: "190px", md: "310px" }}
             sx={{
               "@keyframes memory-star-drift": {
                 from: { transform: "translate3d(0, 0, 0) rotate(-3deg)" },

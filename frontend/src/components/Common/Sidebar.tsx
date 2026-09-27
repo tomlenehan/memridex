@@ -8,6 +8,7 @@ import {
   DrawerOverlay,
   Flex,
   IconButton,
+  Image,
   Text,
   useColorModeValue,
   useDisclosure,
@@ -16,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { FiLogOut, FiMenu } from "react-icons/fi"
 
 import type { UserPublic } from "../../client"
+import memriPlaceTextLogo from "../../assets/images/MemriPlaceTextLogo.png"
 import useAuth from "../../hooks/useAuth"
 import SidebarItems from "./SidebarItems"
 
@@ -59,9 +61,13 @@ const Sidebar = () => {
             <Flex flexDir="column" justify="space-between" minH="full">
               <Box>
                 <Flex justifyContent="flex-start" mb={6}>
-                  <Text color="ui.main" fontSize="2xl" fontWeight="bold">
-                    MemriPlace
-                  </Text>
+                  <Image
+                    alt="MemriPlace"
+                    maxW="170px"
+                    objectFit="contain"
+                    src={memriPlaceTextLogo}
+                    w="full"
+                  />
                 </Flex>
                 <SidebarItems onClose={onClose} />
                 <Button
@@ -117,9 +123,13 @@ const Sidebar = () => {
         >
           <Box>
             <Flex justifyContent="flex-start" mb={6}>
-              <Text color="ui.main" fontSize="2xl" fontWeight="bold">
-                MemriPlace
-              </Text>
+              <Image
+                alt="MemriPlace"
+                maxW="170px"
+                objectFit="contain"
+                src={memriPlaceTextLogo}
+                w="full"
+              />
             </Flex>
             <SidebarItems />
           </Box>
