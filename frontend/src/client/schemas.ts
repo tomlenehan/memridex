@@ -398,8 +398,48 @@ export const $Conversation = {
 	isRequired: true,
 },
 		user_story_prompt_id: {
+	type: 'any-of',
+	contains: [{
 	type: 'number',
-	isRequired: true,
+}, {
+	type: 'null',
+}],
+},
+		parent_conversation_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		node_title: {
+	type: 'string',
+	default: 'New memory',
+},
+		node_prompt: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		branch_context: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		node_depth: {
+	type: 'number',
+	default: 0,
+},
+		user_turn_count: {
+	type: 'number',
+	default: 0,
 },
 		created_at: {
 	type: 'string',
@@ -421,8 +461,12 @@ export const $Conversation = {
 export const $ConversationCreate = {
 	properties: {
 		user_story_prompt_id: {
+	type: 'any-of',
+	contains: [{
 	type: 'number',
-	isRequired: true,
+}, {
+	type: 'null',
+}],
 },
 	},
 } as const;
@@ -430,8 +474,12 @@ export const $ConversationCreate = {
 export const $ConversationPublic = {
 	properties: {
 		user_story_prompt_id: {
+	type: 'any-of',
+	contains: [{
 	type: 'number',
-	isRequired: true,
+}, {
+	type: 'null',
+}],
 },
 		id: {
 	type: 'number',
@@ -447,6 +495,42 @@ export const $ConversationPublic = {
 	contains: [{
 	type: 'ConversationStatus',
 }],
+},
+		parent_conversation_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		node_title: {
+	type: 'string',
+	default: 'New memory',
+},
+		node_prompt: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		branch_context: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
+		node_depth: {
+	type: 'number',
+	default: 0,
+},
+		user_turn_count: {
+	type: 'number',
+	default: 0,
 },
 	},
 } as const;
@@ -654,6 +738,15 @@ export const $ItemsPublic = {
 	},
 } as const;
 
+export const $Message = {
+	properties: {
+		message: {
+	type: 'string',
+	isRequired: true,
+},
+	},
+} as const;
+
 export const $NewPassword = {
 	properties: {
 		token: {
@@ -663,6 +756,16 @@ export const $NewPassword = {
 		new_password: {
 	type: 'string',
 	isRequired: true,
+},
+	},
+} as const;
+
+export const $RealtimeSessionOffer = {
+	properties: {
+		sdp: {
+	type: 'string',
+	isRequired: true,
+	minLength: 1,
 },
 	},
 } as const;
@@ -1156,24 +1259,6 @@ export const $ValidationError = {
 	isRequired: true,
 },
 		type: {
-	type: 'string',
-	isRequired: true,
-},
-	},
-} as const;
-
-export const $app__llm__conversation_agent__Message = {
-	properties: {
-		content: {
-	type: 'string',
-	isRequired: true,
-},
-	},
-} as const;
-
-export const $app__models__Message = {
-	properties: {
-		message: {
 	type: 'string',
 	isRequired: true,
 },

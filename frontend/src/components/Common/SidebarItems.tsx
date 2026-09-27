@@ -1,14 +1,15 @@
 import { Box, Flex, Icon, Text, useColorModeValue } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
 import {
+  FiGitBranch,
   FiHome,
   FiSettings, FiUsers } from "react-icons/fi";
-import { GiConversation, GiSecretBook, GiQuillInk } from "react-icons/gi";
+import { GiSecretBook, GiQuillInk } from "react-icons/gi";
 import useAuth from "../../hooks/useAuth";
 
 const items = [
   { icon: FiHome, title: "Home", path: "/" },
-  { icon: GiConversation, title: "Chat", path: "/conversations" },
+  { icon: FiGitBranch, title: "Memory map", path: "/conversations" },
   { icon: GiQuillInk, title: "Prompts", path: "/user_story_prompts" },
   { icon: FiSettings, title: "Settings", path: "/settings" },
 ];

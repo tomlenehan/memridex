@@ -2,23 +2,23 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { app__models__Message,Body_login_login_access_token,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ContactEmailSchema,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,app__llm__conversation_agent__Message,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_update_story_summary,StorySummaryPublic,SummaryCreateRequest,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate,ContactCreate,ContactRead } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ContactEmailSchema,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,RealtimeSessionOffer,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_update_story_summary,StorySummaryPublic,SummaryCreateRequest,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate,ContactCreate,ContactRead } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
-                
+
             }
 export type TDataRecoverPassword = {
                 email: string
-                
+
             }
 export type TDataResetPassword = {
                 requestBody: NewPassword
-                
+
             }
 export type TDataRecoverPasswordHtmlContent = {
                 email: string
-                
+
             }
 
 export class LoginService {
@@ -60,10 +60,10 @@ formData,
 	/**
 	 * Recover Password
 	 * Password Recovery
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static recoverPassword(data: TDataRecoverPassword): CancelablePromise<app__models__Message> {
+	public static recoverPassword(data: TDataRecoverPassword): CancelablePromise<Message> {
 		const {
 email,
 } = data;
@@ -82,10 +82,10 @@ email,
 	/**
 	 * Reset Password
 	 * Reset password
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static resetPassword(data: TDataResetPassword): CancelablePromise<app__models__Message> {
+	public static resetPassword(data: TDataResetPassword): CancelablePromise<Message> {
 		const {
 requestBody,
 } = data;
@@ -127,36 +127,36 @@ email,
 export type TDataReadUsers = {
                 limit?: number
 skip?: number
-                
+
             }
 export type TDataCreateUser = {
                 requestBody: UserCreate
-                
+
             }
 export type TDataUpdateUserMe = {
                 requestBody: UserUpdateMe
-                
+
             }
 export type TDataUpdatePasswordMe = {
                 requestBody: UpdatePassword
-                
+
             }
 export type TDataRegisterUser = {
                 requestBody: UserRegister
-                
+
             }
 export type TDataReadUserById = {
                 userId: number
-                
+
             }
 export type TDataUpdateUser = {
                 requestBody: UserUpdate
 userId: number
-                
+
             }
 export type TDataDeleteUser = {
                 userId: number
-                
+
             }
 
 export class UsersService {
@@ -220,10 +220,10 @@ requestBody,
 	/**
 	 * Delete User Me
 	 * Delete own user.
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteUserMe(): CancelablePromise<app__models__Message> {
+	public static deleteUserMe(): CancelablePromise<Message> {
 				return __request(OpenAPI, {
 			method: 'DELETE',
 			url: '/api/v1/users/me',
@@ -254,10 +254,10 @@ requestBody,
 	/**
 	 * Update Password Me
 	 * Update own password.
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static updatePasswordMe(data: TDataUpdatePasswordMe): CancelablePromise<app__models__Message> {
+	public static updatePasswordMe(data: TDataUpdatePasswordMe): CancelablePromise<Message> {
 		const {
 requestBody,
 } = data;
@@ -343,10 +343,10 @@ userId,
 	/**
 	 * Delete User
 	 * Delete a user.
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteUser(data: TDataDeleteUser): CancelablePromise<app__models__Message> {
+	public static deleteUser(data: TDataDeleteUser): CancelablePromise<Message> {
 		const {
 userId,
 } = data;
@@ -366,11 +366,11 @@ userId,
 
 export type TDataTestEmail = {
                 emailTo: string
-                
+
             }
 export type TDataSendContactEmail = {
                 requestBody: ContactEmailSchema
-                
+
             }
 
 export class UtilsService {
@@ -378,10 +378,10 @@ export class UtilsService {
 	/**
 	 * Test Email
 	 * Test emails.
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static testEmail(data: TDataTestEmail): CancelablePromise<app__models__Message> {
+	public static testEmail(data: TDataTestEmail): CancelablePromise<Message> {
 		const {
 emailTo,
 } = data;
@@ -399,10 +399,10 @@ emailTo,
 
 	/**
 	 * Send Contact Email
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static sendContactEmail(data: TDataSendContactEmail): CancelablePromise<app__models__Message> {
+	public static sendContactEmail(data: TDataSendContactEmail): CancelablePromise<Message> {
 		const {
 requestBody,
 } = data;
@@ -422,24 +422,24 @@ requestBody,
 export type TDataReadItems = {
                 limit?: number
 skip?: number
-                
+
             }
 export type TDataCreateItem = {
                 requestBody: ItemCreate
-                
+
             }
 export type TDataReadItem = {
                 id: number
-                
+
             }
 export type TDataUpdateItem = {
                 id: number
 requestBody: ItemUpdate
-                
+
             }
 export type TDataDeleteItem = {
                 id: number
-                
+
             }
 
 export class ItemsService {
@@ -538,10 +538,10 @@ requestBody,
 	/**
 	 * Delete Item
 	 * Delete an item.
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteItem(data: TDataDeleteItem): CancelablePromise<app__models__Message> {
+	public static deleteItem(data: TDataDeleteItem): CancelablePromise<Message> {
 		const {
 id,
 } = data;
@@ -561,25 +561,33 @@ id,
 
 export type TDataCreateConversation = {
                 requestBody: ConversationCreate
-                
+
             }
 export type TDataReadConversations = {
                 limit?: number
 skip?: number
-                
+
             }
 export type TDataReadConversation = {
                 id: number
-                
+
             }
 export type TDataUpdateConversation = {
                 id: number
 requestBody: ConversationCreate
-                
+
             }
 export type TDataDeleteConversation = {
                 id: number
-                
+
+            }
+export type TDataActivateStoryNode = {
+                id: number
+
+            }
+export type TDataRetryStoryBranches = {
+                id: number
+
             }
 
 export class ConversationsService {
@@ -673,10 +681,10 @@ requestBody,
 
 	/**
 	 * Delete Conversation
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteConversation(data: TDataDeleteConversation): CancelablePromise<app__models__Message> {
+	public static deleteConversation(data: TDataDeleteConversation): CancelablePromise<Message> {
 		const {
 id,
 } = data;
@@ -692,28 +700,75 @@ id,
 		});
 	}
 
+	/**
+	 * Activate Story Node
+	 * @returns ConversationPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static activateStoryNode(data: TDataActivateStoryNode): CancelablePromise<ConversationPublic> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/conversations/{id}/activate',
+			path: {
+				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
+	 * Retry Story Branches
+	 * @returns ConversationPublic Successful Response
+	 * @throws ApiError
+	 */
+	public static retryStoryBranches(data: TDataRetryStoryBranches): CancelablePromise<Array<ConversationPublic>> {
+		const {
+id,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/conversations/{id}/branches',
+			path: {
+				id
+			},
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
 }
 
 export type TDataCreateChatMessage = {
                 conversationId: number
 requestBody: ChatMessageCreate
-                
+
             }
 export type TDataReadChatMessages = {
                 conversationId: number
 limit?: number
 skip?: number
-                
+
+            }
+export type TDataPersistRealtimeMessage = {
+                conversationId: number
+requestBody: ChatMessageCreate
+
             }
 export type TDataReadChatMessage = {
                 conversationId: number
 messageId: number
-                
+
             }
 export type TDataDeleteChatMessage = {
                 conversationId: number
 messageId: number
-                
+
             }
 
 export class ChatMessagesService {
@@ -769,6 +824,31 @@ skip = 0,
 	}
 
 	/**
+	 * Persist Realtime Message
+	 * Persist a finalized Realtime transcript without generating a second reply.
+	 * @returns ChatMessagePublic Successful Response
+	 * @throws ApiError
+	 */
+	public static persistRealtimeMessage(data: TDataPersistRealtimeMessage): CancelablePromise<ChatMessagePublic> {
+		const {
+conversationId,
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/chat_messages/{conversation_id}/messages/persist',
+			path: {
+				conversation_id: conversationId
+			},
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+	/**
 	 * Read Chat Message
 	 * @returns ChatMessagePublic Successful Response
 	 * @throws ApiError
@@ -792,10 +872,10 @@ messageId,
 
 	/**
 	 * Delete Chat Message
-	 * @returns app__llm__conversation_agent__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteChatMessage(data: TDataDeleteChatMessage): CancelablePromise<app__llm__conversation_agent__Message> {
+	public static deleteChatMessage(data: TDataDeleteChatMessage): CancelablePromise<Message> {
 		const {
 conversationId,
 messageId,
@@ -814,27 +894,61 @@ messageId,
 
 }
 
+export type TDataCreateRealtimeSession = {
+                conversationId: number
+requestBody: RealtimeSessionOffer
+
+            }
+
+export class RealtimeService {
+
+	/**
+	 * Create Realtime Session
+	 * @returns unknown Successful Response
+	 * @throws ApiError
+	 */
+	public static createRealtimeSession(data: TDataCreateRealtimeSession): CancelablePromise<unknown> {
+		const {
+conversationId,
+requestBody,
+} = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/realtime/conversations/{conversation_id}/realtime/session',
+			path: {
+				conversation_id: conversationId
+			},
+			body: requestBody,
+			mediaType: 'application/json',
+			errors: {
+				422: `Validation Error`,
+			},
+		});
+	}
+
+}
+
 export type TDataReadUserStoryPrompts = {
                 limit?: number
 skip?: number
-                
+
             }
 export type TDataCreateUserStoryPrompt = {
                 formData: Body_user_story_prompts_create_user_story_prompt
-                
+
             }
 export type TDataReadUserStoryPrompt = {
                 id: number
-                
+
             }
 export type TDataUpdateUserStoryPrompt = {
                 formData?: Body_user_story_prompts_update_user_story_prompt
 id: number
-                
+
             }
 export type TDataDeleteUserStoryPrompt = {
                 id: number
-                
+
             }
 
 export class UserStoryPromptsService {
@@ -933,10 +1047,10 @@ id,
 	/**
 	 * Delete User Story Prompt
 	 * Delete a user story prompt.
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteUserStoryPrompt(data: TDataDeleteUserStoryPrompt): CancelablePromise<app__models__Message> {
+	public static deleteUserStoryPrompt(data: TDataDeleteUserStoryPrompt): CancelablePromise<Message> {
 		const {
 id,
 } = data;
@@ -957,24 +1071,24 @@ id,
 export type TDataReadStorySummaries = {
                 limit?: number
 skip?: number
-                
+
             }
 export type TDataCreateStorySummary = {
                 requestBody: SummaryCreateRequest
-                
+
             }
 export type TDataReadStorySummary = {
                 id: number
-                
+
             }
 export type TDataUpdateStorySummary = {
                 formData?: Body_summaries_update_story_summary
 id: number
-                
+
             }
 export type TDataDeleteStorySummary = {
                 id: number
-                
+
             }
 
 export class SummariesService {
@@ -1072,10 +1186,10 @@ id,
 	/**
 	 * Delete Story Summary
 	 * Delete a story summary.
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteStorySummary(data: TDataDeleteStorySummary): CancelablePromise<app__models__Message> {
+	public static deleteStorySummary(data: TDataDeleteStorySummary): CancelablePromise<Message> {
 		const {
 id,
 } = data;
@@ -1096,24 +1210,24 @@ id,
 export type TDataReadCategories = {
                 limit?: number
 skip?: number
-                
+
             }
 export type TDataCreateCategory = {
                 requestBody: CategoryCreate
-                
+
             }
 export type TDataReadCategory = {
                 id: number
-                
+
             }
 export type TDataUpdateCategory = {
                 id: number
 requestBody: CategoryUpdate
-                
+
             }
 export type TDataDeleteCategory = {
                 id: number
-                
+
             }
 
 export class CategoriesService {
@@ -1212,10 +1326,10 @@ requestBody,
 	/**
 	 * Delete Category
 	 * Delete a category.
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteCategory(data: TDataDeleteCategory): CancelablePromise<app__models__Message> {
+	public static deleteCategory(data: TDataDeleteCategory): CancelablePromise<Message> {
 		const {
 id,
 } = data;
@@ -1236,24 +1350,24 @@ id,
 export type TDataReadImages = {
                 limit?: number
 skip?: number
-                
+
             }
 export type TDataCreateImage = {
                 requestBody: ImageCreate
-                
+
             }
 export type TDataReadImage = {
                 id: number
-                
+
             }
 export type TDataUpdateImage = {
                 id: number
 requestBody: ImageUpdate
-                
+
             }
 export type TDataDeleteImage = {
                 id: number
-                
+
             }
 
 export class ImagesService {
@@ -1352,10 +1466,10 @@ requestBody,
 	/**
 	 * Delete Image
 	 * Delete an image.
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteImage(data: TDataDeleteImage): CancelablePromise<app__models__Message> {
+	public static deleteImage(data: TDataDeleteImage): CancelablePromise<Message> {
 		const {
 id,
 } = data;
@@ -1376,15 +1490,15 @@ id,
 export type TDataReadContacts = {
                 limit?: number
 skip?: number
-                
+
             }
 export type TDataCreateContact = {
                 requestBody: ContactCreate
-                
+
             }
 export type TDataDeleteContact = {
                 id: number
-                
+
             }
 
 export class ContactsService {
@@ -1436,10 +1550,10 @@ requestBody,
 	/**
 	 * Delete Contact
 	 * Delete a contact.
-	 * @returns app__models__Message Successful Response
+	 * @returns Message Successful Response
 	 * @throws ApiError
 	 */
-	public static deleteContact(data: TDataDeleteContact): CancelablePromise<app__models__Message> {
+	public static deleteContact(data: TDataDeleteContact): CancelablePromise<Message> {
 		const {
 id,
 } = data;

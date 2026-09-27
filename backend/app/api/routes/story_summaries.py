@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 from app.api.deps import get_current_user, get_db
 from app.models import User, StorySummary, StorySummaryPublic, Conversation, Message, StorySummaryCreate, StorySummaryUpdate
 from app.llm.utils import get_formatted_history
+from app.llm.story_nodes import get_conversation_prompt
 from pydantic import BaseModel
 from app.llm.conversation_summarize import generate_summary, generate_title
 from app.utils import upload_image_to_s3
@@ -71,12 +72,15 @@ async def create_story_summary(
         conversation = db_session.get(Conversation, request.conversation_id)
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
+        if not current_user.is_superuser and conversation.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
 
         chat_history, _ = get_formatted_history(request.conversation_id, db_session)
         summary_content = ""
+        story_prompt = get_conversation_prompt(conversation)
 
         system_message = (f"You are an AI ghostwriter tasked with summarizing the following conversation "
-                          f"based on this story prompt {conversation.user_story_prompt.prompt}. "
+                          f"based on this story prompt {story_prompt}. "
                           f"Your output should be in relatively concise prose told from the perspective of the user "
                           f"and be fit to be published in an autobiography. ")
 
@@ -95,7 +99,11 @@ async def create_story_summary(
             summary_text=summary_content,
             title=summary_title,
             user_id=current_user.id,
-            image_url=conversation.user_story_prompt.image_url
+            image_url=(
+                conversation.user_story_prompt.image_url
+                if conversation.user_story_prompt
+                else None
+            ),
         )
         story_summary = StorySummary.from_orm(story_summary_create)
         db_session.add(story_summary)
@@ -110,6 +118,9 @@ async def create_story_summary(
         # Convert StorySummary to StorySummaryPublic
         story_summary_public = StorySummaryPublic.from_orm(story_summary)
         return story_summary_public
+    except HTTPException:
+        db_session.rollback()
+        raise
     except Exception as e:
         db_session.rollback()
         raise HTTPException(status_code=500, detail=str(e))

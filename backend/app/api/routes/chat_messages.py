@@ -6,6 +6,11 @@ from sqlmodel import Session, func, select
 
 from app.api.deps import get_current_user, get_db
 from app.llm.conversation_agent import send_message
+from app.llm.story_nodes import (
+    MAX_NODE_USER_TURNS,
+    create_story_branches,
+    get_conversation_prompt,
+)
 from app.llm.utils import get_formatted_history, refresh_story_status
 from app.models import (
     ChatMessage,
@@ -14,6 +19,7 @@ from app.models import (
     ChatMessageSender,
     ChatMessagesPublic,
     Conversation,
+    ConversationStatus,
     Message,
     User,
 )
@@ -39,7 +45,14 @@ async def create_chat_message(
         raise HTTPException(status_code=403, detail="Not enough permissions")
     if chat_message_in.sender_type != ChatMessageSender.USER:
         raise HTTPException(status_code=422, detail="Only user messages can start a response")
+    if conversation.status != ConversationStatus.ACTIVE:
+        raise HTTPException(status_code=409, detail="This story node is finished")
+    if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
+        raise HTTPException(status_code=409, detail="This story node has reached its turn limit")
 
+    conversation.user_turn_count += 1
+    if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
+        conversation.status = ConversationStatus.READY_FOR_SUMMARY
     chat_message = ChatMessage(
         conversation_id=conversation_id,
         sender_id=current_user.id,
@@ -54,12 +67,31 @@ async def create_chat_message(
         response_content = ""
 
         conversation = db_session.get(Conversation, conversation_id)
-        story_prompt = conversation.user_story_prompt.prompt
+        story_prompt = get_conversation_prompt(conversation)
         chat_history, _ = get_formatted_history(conversation_id, db_session)
+        if chat_history:
+            chat_history = chat_history[:-1]
 
-        system_message = (f"You are an AI ghostwriter tasked with teasing out details from the user "
-                         f"about this story prompt {story_prompt}. continue to ask interesting and "
-                         f"engaging follow-up questions based on their input.")
+        if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
+            pacing = (
+                "This is the final exchange in this story node. Reflect two specific details "
+                "the storyteller shared, close warmly in two or three sentences, and do not "
+                "ask another question. Let them know that new story paths are opening from "
+                "the details they shared."
+            )
+        elif conversation.user_turn_count == MAX_NODE_USER_TURNS - 1:
+            pacing = "Ask one last open-ended follow-up before this story path wraps."
+        else:
+            pacing = "Ask one thoughtful, open-ended follow-up about a detail they shared."
+
+        system_message = (
+            "You are MemriPlace, a warm oral-history guide. Help the storyteller preserve "
+            f"a meaningful memory around this question: {story_prompt}\n\n"
+            f"The storyteller has answered {conversation.user_turn_count} of "
+            f"{MAX_NODE_USER_TURNS} turns in this node. {pacing}\n"
+            "Use only facts the storyteller gave you. Keep responses concise, personal, "
+            "and natural."
+        )
 
         async for token in send_message(chat_message_in.content, system_message, chat_history):
             response_content += token
@@ -77,6 +109,13 @@ async def create_chat_message(
         db_session.refresh(ai_message)
         refresh_story_status(conversation, db_session)
         db_session.commit()
+        if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
+            try:
+                await create_story_branches(conversation, db_session)
+            except Exception:
+                logger.exception(
+                    "Unable to generate story branches for node %s", conversation_id
+                )
 
     current_user_id = current_user.id
 
@@ -84,7 +123,7 @@ async def create_chat_message(
 
 
 @router.post("/{conversation_id}/messages/persist", response_model=ChatMessagePublic)
-def persist_realtime_message(
+async def persist_realtime_message(
         *,
         conversation_id: int,
         chat_message_in: ChatMessageCreate,
@@ -101,7 +140,19 @@ def persist_realtime_message(
         raise HTTPException(status_code=422, detail="Only user or AI transcripts can be stored")
     if not chat_message_in.content.strip():
         raise HTTPException(status_code=422, detail="Message content cannot be empty")
+    if (
+        chat_message_in.sender_type == ChatMessageSender.USER
+        and conversation.status != ConversationStatus.ACTIVE
+    ):
+        raise HTTPException(status_code=409, detail="This story node is finished")
+    if (
+        chat_message_in.sender_type == ChatMessageSender.USER
+        and conversation.user_turn_count >= MAX_NODE_USER_TURNS
+    ):
+        raise HTTPException(status_code=409, detail="This story node has reached its turn limit")
 
+    if chat_message_in.sender_type == ChatMessageSender.USER:
+        conversation.user_turn_count += 1
     chat_message = ChatMessage(
         conversation_id=conversation_id,
         sender_id=current_user.id,
@@ -114,6 +165,16 @@ def persist_realtime_message(
 
     refresh_story_status(conversation, db_session)
     db_session.commit()
+    if (
+        chat_message_in.sender_type == ChatMessageSender.AI
+        and conversation.user_turn_count >= MAX_NODE_USER_TURNS
+    ):
+        try:
+            await create_story_branches(conversation, db_session)
+        except Exception:
+            logger.exception(
+                "Unable to generate voice story branches for node %s", conversation_id
+            )
     return chat_message
 
 

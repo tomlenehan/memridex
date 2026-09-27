@@ -9,7 +9,14 @@ from sqlmodel import Session, select
 from app.api.deps import get_current_user, get_db
 from app.core.config import settings
 from app.llm.realtime import build_realtime_session_config, create_safety_identifier
-from app.models import ChatMessage, Conversation, RealtimeSessionOffer, User
+from app.llm.story_nodes import MAX_NODE_USER_TURNS, get_conversation_prompt
+from app.models import (
+    ChatMessage,
+    Conversation,
+    ConversationStatus,
+    RealtimeSessionOffer,
+    User,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +36,10 @@ async def create_realtime_session(
         raise HTTPException(status_code=404, detail="Conversation not found")
     if conversation.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    if conversation.user_story_prompt is None:
-        raise HTTPException(status_code=409, detail="Conversation story prompt not found")
+    if conversation.status != ConversationStatus.ACTIVE:
+        raise HTTPException(status_code=409, detail="This story node is finished")
+    if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
+        raise HTTPException(status_code=409, detail="This story node is finished")
     if not settings.OPENAI_API_KEY:
         raise HTTPException(
             status_code=503,
@@ -42,8 +51,10 @@ async def create_realtime_session(
         .where(ChatMessage.conversation_id == conversation_id)
         .order_by(ChatMessage.timestamp.asc())
     ).all()
-    story_prompt = conversation.user_story_prompt.prompt
-    session_config = build_realtime_session_config(story_prompt, chat_messages)
+    story_prompt = get_conversation_prompt(conversation)
+    session_config = build_realtime_session_config(
+        story_prompt, chat_messages, conversation.user_turn_count
+    )
 
     files = {
         "sdp": (None, offer.sdp),

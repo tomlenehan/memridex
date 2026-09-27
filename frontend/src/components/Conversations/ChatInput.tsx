@@ -4,17 +4,16 @@ import {
   Flex,
   HStack,
   Icon,
-  IconButton,
   Input,
   Text,
-  Tooltip,
+  VStack,
   useColorModeValue,
   useDisclosure,
 } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
-import { FiMic, FiMicOff, FiSend, FiVolume2 } from "react-icons/fi"
+import { FiEdit3, FiHeadphones, FiMic, FiMicOff, FiSend, FiVolume2 } from "react-icons/fi"
 import { GiSecretBook } from "react-icons/gi"
 import { useDispatch, useSelector } from "react-redux"
 
@@ -26,25 +25,29 @@ import {
   addMessage,
   addStreamingMessage,
   endStreamingMessage,
+  removeStreamingMessage,
+  replaceStreamingMessage,
   startStreamingMessage,
 } from "../../redux/chatSlice"
-import { fetchConversationStatus } from "../../redux/conversationSlice"
-import type { AppDispatch, RootState } from "../../redux/store"
+import type { AppDispatch } from "../../redux/store"
+import type { RootState } from "../../redux/store"
 import AddSummary from "../Summaries/AddSummary"
 
 interface ChatInputProps {
   conversationId: number
+  storyFinished: boolean
+  userTurnCount: number
 }
 
 const statusLabels = {
-  connected: "Voice conversation is ready. You can speak or type.",
+  connected: "Ready when you are. Speak naturally—your words will appear here.",
   connecting: "Connecting your microphone...",
-  listening: "Listening...",
-  speaking: "MemriPlace is speaking...",
-  thinking: "MemriPlace is gathering its next question...",
+  listening: "Listening… your words are appearing in the chat.",
+  speaking: "MemriPlace is asking a question aloud…",
+  thinking: "MemriPlace is gathering its next question…",
 } as const
 
-const ChatInput = ({ conversationId }: ChatInputProps) => {
+const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputProps) => {
   const {
     register,
     handleSubmit,
@@ -58,27 +61,43 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
   })
   const queryClient = useQueryClient()
   const dispatch = useDispatch<AppDispatch>()
+  const chatMessages = useSelector((state: RootState) => state.chat.messages)
+  const chatStatus = useSelector((state: RootState) => state.chat.status)
   const showToast = useCustomToast()
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const [startMode, setStartMode] = useState<"choose" | "voice" | "type">("choose")
   const streamingMessageId = useRef<number | null>(null)
-  const conversationStatus = useSelector(
-    (state: RootState) => state.conversation.status,
-  )
+  const assistantVoiceMessageId = useRef<number | null>(null)
+  const userVoiceMessageIds = useRef(new Map<string, number>())
+  const completedUserTranscriptIds = useRef(new Set<string>())
+  const nextVoiceMessageId = useRef(Date.now() * 10)
+  const isStoryFinished = storyFinished
   const bgColor = useColorModeValue("ui.light", "ui.dark")
   const textColor = useColorModeValue("ui.dark", "ui.light")
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate")
   const mutedTextColor = useColorModeValue("ui.muted", "ui.dim")
   const { isOpen, onOpen, onClose } = useDisclosure()
-
-  const refreshConversation = useCallback(() => {
-    void queryClient.invalidateQueries({
-      queryKey: ["chatMessages", conversationId],
-    })
-    void dispatch(fetchConversationStatus(conversationId))
-  }, [conversationId, dispatch, queryClient])
+  const latestChatMessage = chatMessages[chatMessages.length - 1]
+  const isFirstTurn = userTurnCount === 0
+  const canStartVoice = !isStoryFinished && (isFirstTurn || chatStatus === "succeeded")
 
   useEffect(() => {
-    void dispatch(fetchConversationStatus(conversationId))
-  }, [conversationId, dispatch])
+    if (startMode === "type") inputRef.current?.focus()
+  }, [startMode])
+
+  const refreshConversation = useCallback((includeChatMessages = true) => {
+    if (includeChatMessages) {
+      void queryClient.invalidateQueries({
+        queryKey: ["chatMessages", conversationId],
+      })
+    }
+    void queryClient.invalidateQueries({
+      queryKey: ["conversationNode", conversationId],
+    })
+    void queryClient.invalidateQueries({
+      queryKey: ["conversationConstellation"],
+    })
+  }, [conversationId, queryClient])
 
   const handleStream = async (newMessage: ChatMessageCreate) => {
     const token = localStorage.getItem("access_token")
@@ -120,37 +139,81 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
         )
       }
     } finally {
-      dispatch(endStreamingMessage())
+      dispatch(endStreamingMessage({ id: tempId }))
       streamingMessageId.current = null
       refreshConversation()
     }
   }
 
   const handleVoiceUserMessage = useCallback(
-    (message: ChatMessagePublic) => {
-      dispatch(addMessage(message))
+    (message: ChatMessagePublic, itemId?: string) => {
+      const draftId = itemId ? userVoiceMessageIds.current.get(itemId) : undefined
+      if (itemId) {
+        completedUserTranscriptIds.current.add(itemId)
+        userVoiceMessageIds.current.delete(itemId)
+      }
+      if (draftId !== undefined) {
+        dispatch(replaceStreamingMessage({ id: draftId, message }))
+      } else {
+        dispatch(addMessage(message))
+      }
+    },
+    [dispatch],
+  )
+
+  const handleVoiceUserTranscriptDelta = useCallback(
+    (itemId: string, content: string) => {
+      if (completedUserTranscriptIds.current.has(itemId)) return
+      let messageId = userVoiceMessageIds.current.get(itemId)
+      if (messageId === undefined) {
+        messageId = ++nextVoiceMessageId.current
+        userVoiceMessageIds.current.set(itemId, messageId)
+        dispatch(startStreamingMessage({ id: messageId, sender_type: "user" }))
+      }
+      dispatch(addStreamingMessage({ id: messageId, content }))
+    },
+    [dispatch],
+  )
+
+  const handleVoiceUserTranscriptFailed = useCallback(
+    (itemId: string) => {
+      const messageId = userVoiceMessageIds.current.get(itemId)
+      if (messageId !== undefined) {
+        dispatch(removeStreamingMessage({ id: messageId }))
+        userVoiceMessageIds.current.delete(itemId)
+      }
+      completedUserTranscriptIds.current.add(itemId)
     },
     [dispatch],
   )
 
   const handleVoiceAssistantStart = useCallback(() => {
-    if (streamingMessageId.current) return
-    const tempId = Date.now() + 1
-    streamingMessageId.current = tempId
+    if (assistantVoiceMessageId.current) return
+    const tempId = ++nextVoiceMessageId.current
+    assistantVoiceMessageId.current = tempId
     dispatch(startStreamingMessage({ id: tempId }))
   }, [dispatch])
 
   const handleVoiceAssistantDelta = useCallback(
     (content: string) => {
-      if (!streamingMessageId.current) return
-      dispatch(addStreamingMessage({ id: streamingMessageId.current, content }))
+      if (assistantVoiceMessageId.current === null) return
+      dispatch(addStreamingMessage({ id: assistantVoiceMessageId.current, content }))
     },
     [dispatch],
   )
 
   const handleVoiceAssistantComplete = useCallback(() => {
-    dispatch(endStreamingMessage())
-    streamingMessageId.current = null
+    if (assistantVoiceMessageId.current !== null) {
+      dispatch(endStreamingMessage({ id: assistantVoiceMessageId.current }))
+      assistantVoiceMessageId.current = null
+    }
+  }, [dispatch])
+
+  const handleVoiceAssistantCancelled = useCallback(() => {
+    if (assistantVoiceMessageId.current !== null) {
+      dispatch(removeStreamingMessage({ id: assistantVoiceMessageId.current }))
+      assistantVoiceMessageId.current = null
+    }
   }, [dispatch])
 
   const handleVoiceError = useCallback(
@@ -167,13 +230,18 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
     stop,
   } = useRealtimeStory({
     conversationId,
+    suppressFirstAssistantTranscript: isFirstTurn || latestChatMessage?.sender_type !== "user",
     onUserMessage: handleVoiceUserMessage,
+    onUserTranscriptDelta: handleVoiceUserTranscriptDelta,
+    onUserTranscriptFailed: handleVoiceUserTranscriptFailed,
     onAssistantStart: handleVoiceAssistantStart,
     onAssistantDelta: handleVoiceAssistantDelta,
     onAssistantComplete: handleVoiceAssistantComplete,
+    onAssistantCancelled: handleVoiceAssistantCancelled,
     onConversationChanged: refreshConversation,
     onError: handleVoiceError,
   })
+  const showWelcomeChoice = isFirstTurn && startMode === "choose" && !isVoiceActive
 
   const onSubmit: SubmitHandler<ChatMessageCreate> = async (data) => {
     const content = data.content.trim()
@@ -223,13 +291,22 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
       stop()
       return
     }
+    setStartMode("voice")
     void start()
   }
 
-  const voiceStatusLabel =
-    voiceStatus in statusLabels
-      ? statusLabels[voiceStatus as keyof typeof statusLabels]
-      : voiceError
+  const handleChooseTyping = () => setStartMode("type")
+
+  const handleChooseVoice = () => {
+    setStartMode("voice")
+    void start()
+  }
+
+  const contentField = register("content", { required: true })
+
+  const voiceStatusLabel = voiceStatus in statusLabels
+    ? statusLabels[voiceStatus as keyof typeof statusLabels]
+    : voiceError
 
   return (
     <Box
@@ -241,59 +318,150 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
       borderColor="gray.200"
       width="100%"
     >
-      <Flex gap={2} align="center">
-        <Input
-          {...register("content", { required: true })}
-          aria-label="Story message"
-          placeholder={
-            isVoiceActive
-              ? "Type a memory while you talk..."
-              : "Type a memory or question..."
-          }
-          bg={bgColor}
-          color={textColor}
-        />
-        <Tooltip
-          label={
-            isVoiceActive
-              ? "End voice conversation"
-              : "Start voice conversation"
-          }
+      <VStack align="stretch" spacing={3}>
+        {showWelcomeChoice ? (
+          <Box
+            p={{ base: 4, md: 5 }}
+            borderRadius="2xl"
+            border="1px solid #D8E8DD"
+            bg="linear-gradient(135deg, #F2F7F1 0%, #F7F1E4 100%)"
+          >
+            <HStack align="flex-start" spacing={3}>
+              <Flex
+                align="center"
+                justify="center"
+                flexShrink={0}
+                boxSize={10}
+                borderRadius="full"
+                bg="white"
+                color="#477B70"
+              >
+                <Icon as={GiSecretBook} boxSize={5} />
+              </Flex>
+              <Box>
+                <Text color="#244D4C" fontSize="md" fontWeight="800">
+                  Ready to begin?
+                </Text>
+                <Text mt={1} color="#66807E" fontSize="sm" lineHeight="1.6">
+                  MemriPlace will ask the question aloud and show your spoken answers in the chat. Or start by typing at your own pace.
+                </Text>
+              </Box>
+            </HStack>
+            <Flex mt={4} gap={3} direction={{ base: "column", sm: "row" }}>
+              <Button
+                type="button"
+                flex="1"
+                colorScheme="teal"
+                leftIcon={<FiMic />}
+                isLoading={voiceStatus === "connecting"}
+                isDisabled={!canStartVoice}
+                onClick={handleChooseVoice}
+              >
+                Start with voice
+              </Button>
+              <Button
+                type="button"
+                flex="1"
+                variant="outline"
+                color="#477B70"
+                borderColor="#AFC8BA"
+                leftIcon={<FiEdit3 />}
+                onClick={handleChooseTyping}
+              >
+                Start typing
+              </Button>
+            </Flex>
+          </Box>
+        ) : (
+        <Flex
+          align={{ base: "stretch", sm: "center" }}
+          justify="space-between"
+          gap={3}
+          direction={{ base: "column", sm: "row" }}
+          p={{ base: 3, md: 4 }}
+          borderRadius="2xl"
+          border="1px solid"
+          borderColor={isVoiceActive ? "teal.300" : "#D8E8DD"}
+          bg={isVoiceActive ? "#E8F5EF" : "#F2F7F1"}
         >
-          <IconButton
-            aria-label={
-              isVoiceActive
-                ? "End voice conversation"
-                : "Start voice conversation"
-            }
-            icon={isVoiceActive ? <FiMicOff /> : <FiMic />}
-            type="button"
-            colorScheme={isVoiceActive ? "red" : "teal"}
-            variant={isVoiceActive ? "solid" : "outline"}
-            isLoading={voiceStatus === "connecting"}
-            onClick={handleVoiceToggle}
-          />
-        </Tooltip>
-        <Button
-          type="submit"
-          colorScheme="blue"
-          isLoading={isSubmitting}
-          rightIcon={<FiSend />}
-        >
-          Send
-        </Button>
-        {(conversationStatus === "ready_for_summary" ||
-          conversationStatus === "complete") && (
+          <HStack align="flex-start" spacing={3}>
+            <Flex
+              align="center"
+              justify="center"
+              flexShrink={0}
+              boxSize={10}
+              borderRadius="full"
+              bg={isVoiceActive ? "teal.100" : "white"}
+              color="#477B70"
+            >
+              <Icon as={isVoiceActive ? FiVolume2 : FiHeadphones} boxSize={5} />
+            </Flex>
+            <Box>
+              <Text color="#244D4C" fontSize="sm" fontWeight="800">
+                {isVoiceActive ? "You’re in a voice story" : "Talk through this memory"}
+              </Text>
+              <Text mt={0.5} color="#66807E" fontSize="xs" lineHeight="1.5">
+                MemriPlace asks questions aloud. Your spoken answers appear in the chat as you talk.
+              </Text>
+            </Box>
+          </HStack>
           <Button
             type="button"
-            colorScheme="green"
-            onClick={onOpen}
-            rightIcon={<GiSecretBook />}
+            flexShrink={0}
+            colorScheme={isVoiceActive ? "red" : "teal"}
+            leftIcon={isVoiceActive ? <FiMicOff /> : <FiMic />}
+            isLoading={voiceStatus === "connecting"}
+            isDisabled={!isVoiceActive && !canStartVoice}
+            onClick={handleVoiceToggle}
+            aria-label={isVoiceActive ? "End voice conversation" : "Start voice conversation"}
           >
-            Save Memory
+            {isVoiceActive ? "End voice chat" : voiceStatus === "error" ? "Try voice again" : "Start voice chat"}
           </Button>
+        </Flex>
         )}
-      </Flex>
+
+        {!showWelcomeChoice && (
+          <Flex gap={2} align="center">
+            <Input
+              {...contentField}
+              ref={(element) => {
+                contentField.ref(element)
+                inputRef.current = element
+              }}
+              aria-label="Story message"
+              placeholder={isStoryFinished
+                ? "This path is complete. Save it or explore the new paths."
+                : isVoiceActive
+                  ? "Type a memory while you talk..."
+                  : isFirstTurn
+                    ? "Start typing your memory..."
+                    : "Or type a memory or question..."}
+              bg={bgColor}
+              color={textColor}
+              isDisabled={isStoryFinished}
+            />
+            <Button
+              type="submit"
+              colorScheme="blue"
+              isLoading={isSubmitting}
+              isDisabled={isStoryFinished}
+              rightIcon={<FiSend />}
+            >
+              Send
+            </Button>
+            {isStoryFinished && (
+              <Button
+                type="button"
+                colorScheme="green"
+                onClick={onOpen}
+                rightIcon={<GiSecretBook />}
+              >
+                Save Memory
+              </Button>
+            )}
+          </Flex>
+        )}
+      </VStack>
 
       {voiceStatusLabel && (
         <HStack
@@ -302,7 +470,9 @@ const ChatInput = ({ conversationId }: ChatInputProps) => {
           color={voiceError ? "red.500" : mutedTextColor}
         >
           <Icon as={voiceError ? FiMicOff : FiVolume2} boxSize={4} />
-          <Text fontSize="sm">{voiceStatusLabel}</Text>
+          <Text fontSize="sm" role="status" aria-live="polite">
+            {voiceError || voiceStatusLabel}
+          </Text>
         </HStack>
       )}
 

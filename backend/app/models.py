@@ -171,8 +171,25 @@ class Conversation(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
     user: Optional[User] = Relationship(back_populates="conversations")
-    user_story_prompt_id: int = Field(foreign_key="userstoryprompt.id")
+    user_story_prompt_id: Optional[int] = Field(
+        default=None, foreign_key="userstoryprompt.id"
+    )
     user_story_prompt: Optional[UserStoryPrompt] = Relationship(back_populates="conversations")
+    parent_conversation_id: Optional[int] = Field(
+        default=None,
+        foreign_key="conversation.id",
+        index=True,
+    )
+    parent: Optional["Conversation"] = Relationship(
+        back_populates="children",
+        sa_relationship_kwargs={"remote_side": "Conversation.id"},
+    )
+    children: List["Conversation"] = Relationship(back_populates="parent")
+    node_title: str = Field(default="New memory")
+    node_prompt: Optional[str] = None
+    branch_context: Optional[str] = None
+    node_depth: int = Field(default=0)
+    user_turn_count: int = Field(default=0)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     chat_messages: List["ChatMessage"] = Relationship(back_populates="conversation")
     status: ConversationStatus = Field(default=ConversationStatus.INACTIVE)
@@ -230,12 +247,18 @@ class StorySummaryUpdate(SQLModel):
     modified_at: Optional[datetime]
 
 class ConversationCreate(SQLModel):
-    user_story_prompt_id: int
+    user_story_prompt_id: Optional[int] = None
 
 class ConversationPublic(ConversationCreate):
     id: int
     created_at: datetime
     status: ConversationStatus = Field(default=ConversationStatus.INACTIVE)
+    parent_conversation_id: Optional[int] = None
+    node_title: str = "New memory"
+    node_prompt: Optional[str] = None
+    branch_context: Optional[str] = None
+    node_depth: int = 0
+    user_turn_count: int = 0
 
 class ChatMessageCreate(SQLModel):
     sender_type: ChatMessageSender

@@ -6,6 +6,7 @@ interface ChatState {
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
   currentStreamingMessageId: number | null;
+  streamingMessageIds: number[];
 }
 
 const initialState: ChatState = {
@@ -13,6 +14,7 @@ const initialState: ChatState = {
   status: 'idle',
   error: null,
   currentStreamingMessageId: null,
+  streamingMessageIds: [],
 };
 
 export const fetchMessages = createAsyncThunk(
@@ -32,6 +34,7 @@ const chatSlice = createSlice({
       state.status = 'idle';
       state.error = null;
       state.currentStreamingMessageId = null;
+      state.streamingMessageIds = [];
     },
     addMessage: (state, action: PayloadAction<ChatMessagePublic>) => {
       state.messages.push(action.payload);
@@ -40,11 +43,14 @@ const chatSlice = createSlice({
       const newMessage: ChatMessagePublic = {
         id: action.payload.id,
         timestamp: new Date().toISOString(),
-        sender_type: 'ai',
+        sender_type: (action.payload.sender_type as ChatMessagePublic['sender_type']) || 'ai',
         content: '',
       };
       state.messages.push(newMessage);
       state.currentStreamingMessageId = newMessage.id;
+      if (!state.streamingMessageIds.includes(newMessage.id)) {
+        state.streamingMessageIds.push(newMessage.id);
+      }
     },
     addStreamingMessage: (state, action: PayloadAction<{ id: number, content: string }>) => {
       if (action.payload.id) {
@@ -57,8 +63,32 @@ const chatSlice = createSlice({
         }
       }
     },
-    endStreamingMessage: (state) => {
-      state.currentStreamingMessageId = null;
+    replaceStreamingMessage: (state, action: PayloadAction<{ id: number, message: ChatMessagePublic }>) => {
+      const index = state.messages.findIndex((msg) => msg.id === action.payload.id);
+      if (index >= 0) state.messages[index] = action.payload.message;
+      else state.messages.push(action.payload.message);
+      state.streamingMessageIds = state.streamingMessageIds.filter((id) => id !== action.payload.id);
+      if (state.currentStreamingMessageId === action.payload.id) {
+        state.currentStreamingMessageId = null;
+      }
+    },
+    removeStreamingMessage: (state, action: PayloadAction<{ id: number }>) => {
+      state.messages = state.messages.filter((msg) => msg.id !== action.payload.id);
+      state.streamingMessageIds = state.streamingMessageIds.filter((id) => id !== action.payload.id);
+      if (state.currentStreamingMessageId === action.payload.id) {
+        state.currentStreamingMessageId = null;
+      }
+    },
+    endStreamingMessage: (state, action: PayloadAction<{ id?: number } | undefined>) => {
+      if (action.payload?.id !== undefined) {
+        state.streamingMessageIds = state.streamingMessageIds.filter((id) => id !== action.payload?.id);
+        if (state.currentStreamingMessageId === action.payload.id) {
+          state.currentStreamingMessageId = null;
+        }
+      } else {
+        state.streamingMessageIds = [];
+        state.currentStreamingMessageId = null;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -82,6 +112,8 @@ export const {
   addMessage,
   startStreamingMessage,
   addStreamingMessage,
+  replaceStreamingMessage,
+  removeStreamingMessage,
   endStreamingMessage,
 } = chatSlice.actions;
 

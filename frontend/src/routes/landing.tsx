@@ -10,7 +10,7 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react"
-import { Link, createFileRoute } from "@tanstack/react-router"
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useRef } from "react"
 import { FiArrowRight, FiBookOpen, FiMic, FiPenTool } from "react-icons/fi"
 
@@ -19,10 +19,17 @@ import foreground from "../assets/images/homepage_parallax/foreground.png"
 import midground from "../assets/images/homepage_parallax/midground.png"
 import star from "../assets/images/homepage_parallax/star.png"
 import starscape from "../assets/images/homepage_parallax/starscape.png"
+import AuthModal from "../components/Auth/AuthModal"
+
+export type AuthModalMode = "login" | "signup"
 
 export const Route = createFileRoute("/landing")({
-  component: LandingPage,
+  component: LandingRoute,
 })
+
+function LandingRoute() {
+  return <LandingPage />
+}
 
 const storybookHeading = {
   fontFamily:
@@ -52,9 +59,14 @@ const storySteps = [
   },
 ]
 
-function LandingPage() {
+export function LandingPage({
+  initialAuthMode = null,
+}: {
+  initialAuthMode?: AuthModalMode | null
+} = {}) {
   const parallaxTrackRef = useRef<HTMLDivElement>(null)
   const storyStepsRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
@@ -574,6 +586,13 @@ function LandingPage() {
         <Text fontSize="sm">MemriPlace. Stories worth keeping.</Text>
         <Text fontSize="sm">© {new Date().getFullYear()}</Text>
       </Flex>
+      {initialAuthMode && (
+        <AuthModal
+          isOpen
+          mode={initialAuthMode}
+          onClose={() => navigate({ to: "/landing" })}
+        />
+      )}
     </Box>
   )
 }

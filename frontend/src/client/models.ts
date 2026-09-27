@@ -141,7 +141,13 @@ export type ContactRead = {
 export type Conversation = {
 	id?: number | null;
 	user_id: number;
-	user_story_prompt_id: number;
+	user_story_prompt_id?: number | null;
+	parent_conversation_id?: number | null;
+	node_title?: string;
+	node_prompt?: string | null;
+	branch_context?: string | null;
+	node_depth?: number;
+	user_turn_count?: number;
 	created_at?: string;
 	status?: ConversationStatus;
 	token_total?: number;
@@ -150,16 +156,22 @@ export type Conversation = {
 
 
 export type ConversationCreate = {
-	user_story_prompt_id: number;
+	user_story_prompt_id?: number | null;
 };
 
 
 
 export type ConversationPublic = {
-	user_story_prompt_id: number;
+	user_story_prompt_id?: number | null;
 	id: number;
 	created_at: string;
 	status?: ConversationStatus;
+	parent_conversation_id?: number | null;
+	node_title?: string;
+	node_prompt?: string | null;
+	branch_context?: string | null;
+	node_depth?: number;
+	user_turn_count?: number;
 };
 
 
@@ -243,9 +255,21 @@ export type ItemsPublic = {
 
 
 
+export type Message = {
+	message: string;
+};
+
+
+
 export type NewPassword = {
 	token: string;
 	new_password: string;
+};
+
+
+
+export type RealtimeSessionOffer = {
+	sdp: string;
 };
 
 
@@ -390,17 +414,5 @@ export type ValidationError = {
 	loc: Array<string | number>;
 	msg: string;
 	type: string;
-};
-
-
-
-export type app__llm__conversation_agent__Message = {
-	content: string;
-};
-
-
-
-export type app__models__Message = {
-	message: string;
 };
 

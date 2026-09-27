@@ -22,11 +22,15 @@ interface RealtimeEvent {
 
 interface UseRealtimeStoryOptions {
   conversationId: number
-  onUserMessage: (message: ChatMessagePublic) => void
+  suppressFirstAssistantTranscript: boolean
+  onUserMessage: (message: ChatMessagePublic, itemId?: string) => void
+  onUserTranscriptDelta: (itemId: string, delta: string) => void
+  onUserTranscriptFailed: (itemId: string) => void
   onAssistantStart: () => void
   onAssistantDelta: (delta: string) => void
   onAssistantComplete: () => void
-  onConversationChanged: () => void
+  onAssistantCancelled: () => void
+  onConversationChanged: (includeChatMessages?: boolean) => void
   onError: (message: string) => void
 }
 
@@ -53,10 +57,14 @@ const waitForIceGathering = (connection: RTCPeerConnection) => {
 
 export function useRealtimeStory({
   conversationId,
+  suppressFirstAssistantTranscript,
   onUserMessage,
+  onUserTranscriptDelta,
+  onUserTranscriptFailed,
   onAssistantStart,
   onAssistantDelta,
   onAssistantComplete,
+  onAssistantCancelled,
   onConversationChanged,
   onError,
 }: UseRealtimeStoryOptions) {
@@ -64,9 +72,12 @@ export function useRealtimeStory({
   const [error, setError] = useState<string | null>(null)
   const callbacksRef = useRef({
     onUserMessage,
+    onUserTranscriptDelta,
+    onUserTranscriptFailed,
     onAssistantStart,
     onAssistantDelta,
     onAssistantComplete,
+    onAssistantCancelled,
     onConversationChanged,
     onError,
   })
@@ -76,13 +87,21 @@ export function useRealtimeStory({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const assistantTranscriptsRef = useRef(new Map<string, string>())
   const assistantStreamingRef = useRef(false)
+  const userSpeechActiveRef = useRef(false)
+  const suppressFirstAssistantTranscriptRef = useRef(false)
+  const suppressedAssistantItemRef = useRef<string | null>(null)
+  const userTranscriptsRef = useRef(new Map<string, string>())
+  const persistedUserItemsRef = useRef(new Set<string>())
 
   useEffect(() => {
     callbacksRef.current = {
       onUserMessage,
+      onUserTranscriptDelta,
+      onUserTranscriptFailed,
       onAssistantStart,
       onAssistantDelta,
       onAssistantComplete,
+      onAssistantCancelled,
       onConversationChanged,
       onError,
     }
@@ -90,9 +109,12 @@ export function useRealtimeStory({
     onAssistantComplete,
     onAssistantDelta,
     onAssistantStart,
+    onAssistantCancelled,
     onConversationChanged,
     onError,
     onUserMessage,
+    onUserTranscriptDelta,
+    onUserTranscriptFailed,
   ])
 
   const clearConnection = useCallback(() => {
@@ -105,9 +127,15 @@ export function useRealtimeStory({
     }
     streamRef.current = null
     audioRef.current?.pause()
+    if (audioRef.current) audioRef.current.srcObject = null
+    audioRef.current?.remove()
     audioRef.current = null
     assistantTranscriptsRef.current.clear()
     assistantStreamingRef.current = false
+    userSpeechActiveRef.current = false
+    suppressFirstAssistantTranscriptRef.current = false
+    suppressedAssistantItemRef.current = null
+    userTranscriptsRef.current.clear()
   }, [])
 
   const persistMessage = useCallback(
@@ -136,20 +164,64 @@ export function useRealtimeStory({
     [conversationId],
   )
 
+  const persistUserTranscript = useCallback(
+    async (itemId: string, content: string) => {
+      if (!content.trim() || persistedUserItemsRef.current.has(itemId)) return
+      // Mark before awaiting so the final event and Stop cannot save the same turn twice.
+      persistedUserItemsRef.current.add(itemId)
+      try {
+        const message = await persistMessage("user", content.trim())
+        userTranscriptsRef.current.delete(itemId)
+        callbacksRef.current.onUserMessage(message, itemId)
+        callbacksRef.current.onConversationChanged(false)
+      } catch (persistError) {
+        persistedUserItemsRef.current.delete(itemId)
+        throw persistError
+      }
+    },
+    [persistMessage],
+  )
+
+  const failVoiceSession = useCallback(
+    (message: string) => {
+      const unfinishedTranscripts = [...userTranscriptsRef.current.entries()]
+      const assistantWasStreaming = assistantStreamingRef.current
+      clearConnection()
+      if (assistantWasStreaming) callbacksRef.current.onAssistantCancelled()
+      setError(message)
+      setStatus("error")
+      callbacksRef.current.onError(message)
+      for (const [itemId, transcript] of unfinishedTranscripts) {
+        void persistUserTranscript(itemId, transcript).catch(() => undefined)
+      }
+    },
+    [clearConnection, persistUserTranscript],
+  )
+
   const saveAssistantTranscript = useCallback(
     async (event: RealtimeEvent) => {
       const itemId = event.item_id || "assistant"
+      const isOpeningQuestion =
+        suppressFirstAssistantTranscriptRef.current ||
+        suppressedAssistantItemRef.current === itemId
+      if (isOpeningQuestion) {
+        suppressFirstAssistantTranscriptRef.current = false
+        suppressedAssistantItemRef.current = null
+        assistantTranscriptsRef.current.delete(itemId)
+        setStatus("connected")
+        return
+      }
+
       const transcript =
         event.transcript || assistantTranscriptsRef.current.get(itemId) || ""
       if (!transcript.trim()) return
 
-      const message = await persistMessage("ai", transcript.trim())
+      await persistMessage("ai", transcript.trim())
       assistantTranscriptsRef.current.delete(itemId)
       assistantStreamingRef.current = false
       callbacksRef.current.onAssistantComplete()
-      callbacksRef.current.onConversationChanged()
+      callbacksRef.current.onConversationChanged(true)
       setStatus("connected")
-      return message
     },
     [persistMessage],
   )
@@ -163,21 +235,36 @@ export function useRealtimeStory({
             setStatus("connected")
             return
           case "input_audio_buffer.speech_started":
+            userSpeechActiveRef.current = true
             setStatus("listening")
             return
           case "input_audio_buffer.speech_stopped":
+            userSpeechActiveRef.current = false
             setStatus("thinking")
             return
-          case "conversation.item.input_audio_transcription.completed": {
-            if (!event.transcript?.trim()) return
-            const message = await persistMessage(
-              "user",
-              event.transcript.trim(),
-            )
-            callbacksRef.current.onUserMessage(message)
-            callbacksRef.current.onConversationChanged()
+          case "conversation.item.input_audio_transcription.delta": {
+            if (!event.item_id || !event.delta) return
+            const current = userTranscriptsRef.current.get(event.item_id) || ""
+            userTranscriptsRef.current.set(event.item_id, current + event.delta)
+            callbacksRef.current.onUserTranscriptDelta(event.item_id, event.delta)
+            setStatus(userSpeechActiveRef.current ? "listening" : "thinking")
             return
           }
+          case "conversation.item.input_audio_transcription.completed": {
+            if (!event.item_id || !event.transcript?.trim()) return
+            await persistUserTranscript(event.item_id, event.transcript)
+            return
+          }
+          case "conversation.item.input_audio_transcription.failed": {
+            if (event.item_id) {
+              userTranscriptsRef.current.delete(event.item_id)
+              callbacksRef.current.onUserTranscriptFailed(event.item_id)
+            }
+            return
+          }
+          case "response.created":
+            setStatus("thinking")
+            return
           case "response.output_audio_transcript.delta": {
             const itemId = event.item_id || "assistant"
             const current = assistantTranscriptsRef.current.get(itemId) || ""
@@ -185,16 +272,34 @@ export function useRealtimeStory({
               itemId,
               current + (event.delta || ""),
             )
-            if (!assistantStreamingRef.current) {
-              assistantStreamingRef.current = true
-              callbacksRef.current.onAssistantStart()
+            if (suppressFirstAssistantTranscriptRef.current) {
+              suppressFirstAssistantTranscriptRef.current = false
+              suppressedAssistantItemRef.current = itemId
             }
-            if (event.delta) callbacksRef.current.onAssistantDelta(event.delta)
+            const isSuppressedTranscript = suppressedAssistantItemRef.current === itemId
+            if (!isSuppressedTranscript) {
+              if (!assistantStreamingRef.current) {
+                assistantStreamingRef.current = true
+                callbacksRef.current.onAssistantStart()
+              }
+              if (event.delta) callbacksRef.current.onAssistantDelta(event.delta)
+            }
             setStatus("speaking")
             return
           }
           case "response.output_audio_transcript.done":
             await saveAssistantTranscript(event)
+            return
+          case "response.done":
+            setStatus("connected")
+            return
+          case "response.cancelled":
+            assistantTranscriptsRef.current.clear()
+            if (assistantStreamingRef.current) {
+              assistantStreamingRef.current = false
+              callbacksRef.current.onAssistantCancelled()
+            }
+            setStatus("listening")
             return
           case "error":
             throw new Error(
@@ -205,12 +310,10 @@ export function useRealtimeStory({
         }
       } catch (eventError) {
         const message = getErrorMessage(eventError)
-        setError(message)
-        setStatus("error")
-        callbacksRef.current.onError(message)
+        failVoiceSession(message)
       }
     },
-    [persistMessage, saveAssistantTranscript],
+    [failVoiceSession, persistUserTranscript, saveAssistantTranscript],
   )
 
   const start = useCallback(async () => {
@@ -236,7 +339,13 @@ export function useRealtimeStory({
     setStatus("connecting")
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      })
       streamRef.current = stream
 
       const connection = new RTCPeerConnection()
@@ -247,18 +356,34 @@ export function useRealtimeStory({
 
       const audio = document.createElement("audio")
       audio.autoplay = true
+      audio.setAttribute("playsinline", "")
+      audio.setAttribute("aria-hidden", "true")
+      document.body.append(audio)
       audioRef.current = audio
       connection.addEventListener("track", (event) => {
-        const [remoteStream] = event.streams
-        if (!remoteStream) return
+        const remoteStream = event.streams[0] || new MediaStream([event.track])
 
         audio.srcObject = remoteStream
-        void audio.play().catch(() => undefined)
+        void audio.play().catch(() => {
+          const message =
+            "Your browser blocked voice playback. Check your audio settings, then restart voice chat."
+          failVoiceSession(message)
+        })
+      })
+      connection.addEventListener("connectionstatechange", () => {
+        if (connection.connectionState === "failed") {
+          const message = "The voice connection dropped. Please try again."
+          failVoiceSession(message)
+        }
       })
 
       const dataChannel = connection.createDataChannel("oai-events")
       dataChannelRef.current = dataChannel
-      dataChannel.addEventListener("open", () => setStatus("connected"))
+      dataChannel.addEventListener("open", () => {
+        suppressFirstAssistantTranscriptRef.current = suppressFirstAssistantTranscript
+        dataChannel.send(JSON.stringify({ type: "response.create" }))
+        setStatus("thinking")
+      })
       dataChannel.addEventListener("message", (messageEvent) => {
         try {
           void handleRealtimeEvent(
@@ -304,13 +429,30 @@ export function useRealtimeStory({
       setStatus("error")
       callbacksRef.current.onError(message)
     }
-  }, [clearConnection, conversationId, handleRealtimeEvent])
+  }, [
+    clearConnection,
+    conversationId,
+    failVoiceSession,
+    handleRealtimeEvent,
+    suppressFirstAssistantTranscript,
+  ])
 
   const stop = useCallback(() => {
+    const unfinishedTranscripts = [...userTranscriptsRef.current.entries()]
+    const assistantWasStreaming = assistantStreamingRef.current
     clearConnection()
+    if (assistantWasStreaming) callbacksRef.current.onAssistantCancelled()
     setError(null)
     setStatus("idle")
-  }, [clearConnection])
+    for (const [itemId, transcript] of unfinishedTranscripts) {
+      void persistUserTranscript(itemId, transcript).catch((persistError) => {
+        const message = getErrorMessage(persistError)
+        setError(message)
+        setStatus("error")
+        callbacksRef.current.onError(message)
+      })
+    }
+  }, [clearConnection, persistUserTranscript])
 
   const sendText = useCallback(
     async (content: string) => {
@@ -320,7 +462,7 @@ export function useRealtimeStory({
 
       const message = await persistMessage("user", content.trim())
       callbacksRef.current.onUserMessage(message)
-      callbacksRef.current.onConversationChanged()
+      callbacksRef.current.onConversationChanged(false)
       dataChannel.send(
         JSON.stringify({
           type: "conversation.item.create",

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 MODEL_NAME = "gpt-4-turbo"
 # MODEL_NAME = "gpt-3.5-turbo"
-STORY_TOKEN_LIMIT = 40
+MAX_NODE_USER_TURNS = 4
 
 def num_tokens_from_string(string: str) -> int:
     """Returns the number of tokens in a text string."""
@@ -52,6 +52,9 @@ def refresh_story_status(conversation: Conversation, session: Session) -> None:
         return
     _, total_tokens = get_formatted_history(conversation.id, session)
     conversation.token_total = total_tokens
-    if total_tokens >= STORY_TOKEN_LIMIT:
+    if (
+        conversation.user_turn_count >= MAX_NODE_USER_TURNS
+        and conversation.status == ConversationStatus.ACTIVE
+    ):
         conversation.status = ConversationStatus.READY_FOR_SUMMARY
     session.add(conversation)
