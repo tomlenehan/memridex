@@ -85,7 +85,7 @@ function ConversationPage() {
           size="sm"
           _hover={{ bg: "#E9F1E9" }}
         >
-          Memory map
+          Story map
         </Button>
         <HStack spacing={2} color="#66807E">
           <Icon as={FiCompass} />

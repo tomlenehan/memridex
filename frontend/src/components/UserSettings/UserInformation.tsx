@@ -138,7 +138,7 @@ const UserInformation = () => {
               {editMode ? "Save" : "Edit"}
             </Button>
             {editMode && (
-              <Button onClick={onCancel} isDisabled={isSubmitting}>
+              <Button variant="outline" onClick={onCancel} isDisabled={isSubmitting}>
                 Cancel
               </Button>
             )}

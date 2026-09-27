@@ -97,7 +97,7 @@ const AddConversation = ({isOpen, onClose, prompt}: AddConversationProps) => {
                     <Button variant="primary" type="submit" isLoading={isSubmitting}>
                         Yes
                     </Button>
-                    <Button onClick={onClose}>Cancel</Button>
+<Button variant="outline" onClick={onClose}>Cancel</Button>
                 </ModalFooter>
             </ModalContent>
         </Modal>

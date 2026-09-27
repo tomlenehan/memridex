@@ -1,5 +1,6 @@
 import {
-  Badge,
+  Alert,
+  AlertIcon,
   Box,
   Button,
   Container,
@@ -7,163 +8,186 @@ import {
   Heading,
   Icon,
   SimpleGrid,
+  Skeleton,
   Stack,
   Text,
-} from "@chakra-ui/react";
-import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { FiArrowRight, FiBookOpen, FiMessageCircle, FiPenTool } from "react-icons/fi";
+} from "@chakra-ui/react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import { useRef } from "react"
+import { FiArrowRight, FiAward, FiHome, FiMapPin, FiUsers } from "react-icons/fi"
 
-import homepageBg from "../../assets/images/homepage_parallax/background.png";
-import type { UserPublic } from "../../client";
+import {
+  ConversationsService,
+  UserStoryPromptsService,
+  type UserPublic,
+  type UserStoryPromptPublic,
+} from "../../client"
 
 export const Route = createFileRoute("/_layout/")({
   component: Dashboard,
-});
+})
 
-const actions = [
+const starters = [
   {
-    title: "Start a conversation",
-    text: "Choose a prompt and talk through a memory while the details are fresh.",
-    icon: FiMessageCircle,
-    path: "/conversations",
-    cta: "Open prompts",
+    category: "Childhood",
+    title: "A memory from growing up",
+    description: "A family tradition, a favorite day, or a place you remember.",
+    icon: FiHome,
   },
   {
-    title: "Edit prompts",
-    text: "Add your own cues or adjust the prompts you already use.",
-    icon: FiPenTool,
-    path: "/user_story_prompts",
-    cta: "Manage prompts",
+    category: "Influences",
+    title: "Someone special",
+    description: "Think of someone who made a difference in your life.",
+    icon: FiUsers,
   },
   {
-    title: "Read memories",
-    text: "Return to completed stories and keep polishing what matters.",
-    icon: FiBookOpen,
-    path: "/stories",
-    cta: "View memories",
+    category: "Special Places",
+    title: "A favorite place",
+    description: "Remember a place where something meaningful happened.",
+    icon: FiMapPin,
   },
-];
+  {
+    category: "Achievements",
+    title: "A moment you felt proud",
+    description: "Tell the story of something you worked hard to do.",
+    icon: FiAward,
+  },
+]
 
 function Dashboard() {
-  const queryClient = useQueryClient();
-  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"]);
-  const displayName = currentUser?.full_name || currentUser?.email || "there";
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const startRequestInFlight = useRef(false)
+  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
+  const displayName = currentUser?.full_name?.trim().split(/\s+/)[0]
+  const promptsQuery = useQuery({
+    queryKey: ["storyStarters"],
+    queryFn: () => UserStoryPromptsService.readUserStoryPrompts({ limit: 100 }),
+  })
+  const startStory = useMutation({
+    mutationFn: (promptId?: number) =>
+      ConversationsService.createConversation({
+        requestBody: promptId ? { user_story_prompt_id: promptId } : {},
+      }),
+    onSuccess: async (conversation) => {
+      await queryClient.invalidateQueries({ queryKey: ["conversationConstellation"] })
+      await navigate({
+        to: "/conversation/$conversationId",
+        params: { conversationId: String(conversation.id) },
+      })
+    },
+    onSettled: () => {
+      startRequestInFlight.current = false
+    },
+  })
+  const startStoryFromPrompt = (promptId?: number) => {
+    if (startRequestInFlight.current) return
+    startRequestInFlight.current = true
+    startStory.mutate(promptId)
+  }
+
+  const promptForCategory = (category: string): UserStoryPromptPublic | undefined =>
+    promptsQuery.data?.data.find((prompt) => prompt.category?.name === category)
 
   return (
-    <Container maxW="7xl" px={0}>
+    <Container maxW="6xl" px={0}>
       <Stack spacing={{ base: 6, md: 8 }}>
-        <Box
-          bg="#17232B"
-          color="white"
-          borderRadius="8px"
-          p={{ base: 6, md: 10 }}
-          position="relative"
-          overflow="hidden"
-          minH={{ base: "360px", md: "420px" }}
-          bgImage={`linear-gradient(90deg, rgba(23, 35, 43, 0.95), rgba(23, 35, 43, 0.70)), url(${homepageBg})`}
-          bgSize="cover"
-          bgPosition="center"
-        >
-          <Stack spacing={5} maxW="700px" h="full" justify="center">
-            <Badge
-              alignSelf="flex-start"
-              bg="whiteAlpha.200"
-              color="white"
-              border="1px solid"
-              borderColor="whiteAlpha.300"
-              borderRadius="8px"
-              px={3}
-              py={1}
-            >
-              Welcome back
-            </Badge>
-            <Heading
-              as="h1"
-              fontSize={{ base: "36px", md: "56px" }}
-              lineHeight="1.05"
-              letterSpacing={0}
-            >
-              Hi, {displayName}
-            </Heading>
-            <Text color="whiteAlpha.800" fontSize={{ base: "lg", md: "xl" }} lineHeight="1.7">
-              Keep gathering the moments, details, and voices that make a memory
-              worth saving.
-            </Text>
-            <Flex gap={3} flexWrap="wrap" pt={2}>
-              <Button
-                as={Link}
-                to="/conversations"
-                variant="primary"
-                size="lg"
-                rightIcon={<FiArrowRight />}
-              >
-                Tell a story
-              </Button>
-              <Button
-                as={Link}
-                to="/user_story_prompts"
-                size="lg"
-                bg="whiteAlpha.200"
-                color="white"
-                border="1px solid"
-                borderColor="whiteAlpha.300"
-                _hover={{ bg: "whiteAlpha.300" }}
-              >
-                Browse prompts
-              </Button>
-            </Flex>
-          </Stack>
+        <Box>
+          <Text color="ui.main" fontWeight="bold" mb={2}>
+            {displayName ? `Welcome back, ${displayName}` : "Welcome back"}
+          </Text>
+          <Heading as="h1" size="xl" letterSpacing={0}>
+            What would you like to remember today?
+          </Heading>
+          <Text color="ui.muted" mt={3} fontSize={{ base: "lg", md: "xl" }}>
+            Choose an idea to get started. You can speak or type your story.
+          </Text>
         </Box>
 
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={5}>
-          {actions.map((action) => (
-            <Box
-              key={action.title}
-              bg="white"
-              border="1px solid"
-              borderColor="ui.line"
-              borderRadius="8px"
-              p={6}
-              boxShadow="0 14px 32px rgba(31, 41, 51, 0.06)"
-            >
-              <Stack spacing={4} h="full">
-                <Flex
-                  align="center"
-                  justify="center"
-                  boxSize="44px"
-                  borderRadius="8px"
-                  bg="ui.secondary"
-                  color="ui.mainDark"
-                >
-                  <Icon as={action.icon} boxSize={5} />
-                </Flex>
-                <Box>
-                  <Heading as="h2" size="md" mb={2}>
-                    {action.title}
-                  </Heading>
-                  <Text color="ui.muted" lineHeight="1.7">
-                    {action.text}
-                  </Text>
-                </Box>
+        {promptsQuery.isError && (
+          <Alert status="info" borderRadius="8px">
+            <AlertIcon />
+            You can still begin with any idea below.
+          </Alert>
+        )}
+
+        {promptsQuery.isLoading ? (
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            {starters.map((starter) => (
+              <Skeleton key={starter.category} minH="148px" borderRadius="8px" />
+            ))}
+          </SimpleGrid>
+        ) : (
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            {starters.map((starter) => {
+              const prompt = promptForCategory(starter.category)
+              const isStarting = startStory.isPending
+
+              return (
                 <Button
-                  as={Link}
-                  to={action.path}
-                  variant="ghost"
-                  color="ui.mainDark"
-                  rightIcon={<FiArrowRight />}
-                  alignSelf="flex-start"
-                  mt="auto"
+                  key={starter.category}
+                  variant="storyStarter"
+                  onClick={() => startStoryFromPrompt(prompt?.id)}
+                  isLoading={isStarting}
+                  isDisabled={isStarting}
+                  aria-label={`Start a story: ${starter.title}`}
+                  minH={{ base: "132px", md: "148px" }}
                 >
-                  {action.cta}
+                  <Flex align="center" gap={4} w="full">
+                    <Flex
+                      align="center"
+                      justify="center"
+                      flexShrink={0}
+                      boxSize="52px"
+                      borderRadius="8px"
+                      bg="ui.secondary"
+                      color="ui.mainDark"
+                    >
+                      <Icon as={starter.icon} boxSize={6} />
+                    </Flex>
+                    <Stack align="flex-start" spacing={1} flex="1" minW={0}>
+                      <Text fontSize="lg" fontWeight="bold" color="ui.ink" whiteSpace="normal">
+                        {starter.title}
+                      </Text>
+                      <Text color="ui.muted" fontSize="md" fontWeight="normal" lineHeight="1.5">
+                        {starter.description}
+                      </Text>
+                    </Stack>
+                    <Icon as={FiArrowRight} color="ui.main" boxSize={5} flexShrink={0} />
+                  </Flex>
                 </Button>
-              </Stack>
-            </Box>
-          ))}
-        </SimpleGrid>
+              )
+            })}
+          </SimpleGrid>
+        )}
+
+        {startStory.isError && (
+          <Alert status="error" borderRadius="8px">
+            <AlertIcon />
+            We couldn’t start a story just now. Please try again.
+          </Alert>
+        )}
+
+        <Flex
+          align={{ base: "flex-start", sm: "center" }}
+          justify="space-between"
+          gap={4}
+          direction={{ base: "column", sm: "row" }}
+          borderTop="1px solid"
+          borderColor="ui.line"
+          pt={5}
+        >
+          <Text color="ui.muted" fontSize="md">
+            Your stories are saved privately to your account.
+          </Text>
+          <Button as={Link} to="/stories" variant="outline" rightIcon={<FiArrowRight />}>
+            See my saved stories
+          </Button>
+        </Flex>
       </Stack>
     </Container>
-  );
+  )
 }
 
-export default Dashboard;
+export default Dashboard

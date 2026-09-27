@@ -288,14 +288,11 @@ export function LandingPage({
                   Log in
                 </Button>
                 <Button
-                  _hover={{ bg: "#FFE5A5", transform: "translateY(-1px)" }}
                   as={Link}
-                  bg="#F1CC77"
-                  borderRadius="6px"
-                  color="#0C2830"
                   rightIcon={<FiArrowRight />}
                   size={{ base: "sm", md: "md" }}
                   to="/signup"
+                  variant="accent"
                 >
                   Start
                 </Button>
@@ -355,14 +352,11 @@ export function LandingPage({
                 </Text>
                 <HStack flexWrap="wrap" pt={2} spacing={3}>
                   <Button
-                    _hover={{ bg: "#FFE5A5", transform: "translateY(-1px)" }}
                     as={Link}
-                    bg="#F1CC77"
-                    borderRadius="6px"
-                    color="#0C2830"
                     rightIcon={<FiArrowRight />}
                     size="lg"
                     to="/signup"
+                    variant="accent"
                   >
                     Start a story
                   </Button>
@@ -370,11 +364,11 @@ export function LandingPage({
                     _hover={{ bg: "whiteAlpha.200" }}
                     as={Link}
                     borderColor="rgba(255, 248, 232, 0.62)"
-                    borderRadius="6px"
+                    borderWidth="1px"
                     color="#FFF8E8"
                     size="lg"
                     to="/login"
-                    variant="outline"
+                    variant="ghost"
                   >
                     Continue writing
                   </Button>
@@ -555,15 +549,12 @@ export function LandingPage({
               </Text>
             </Stack>
             <Button
-              _hover={{ bg: "#FFE5A5", transform: "translateY(-1px)" }}
               as={Link}
-              bg="#F1CC77"
-              borderRadius="6px"
-              color="#0C2830"
               flexShrink={0}
               rightIcon={<FiArrowRight />}
               size="lg"
               to="/signup"
+              variant="accent"
             >
               Begin yours
             </Button>

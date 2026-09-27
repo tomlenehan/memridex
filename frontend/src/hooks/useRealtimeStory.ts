@@ -92,6 +92,7 @@ export function useRealtimeStory({
   const suppressedAssistantItemRef = useRef<string | null>(null)
   const userTranscriptsRef = useRef(new Map<string, string>())
   const persistedUserItemsRef = useRef(new Set<string>())
+  const realtimeEventQueueRef = useRef<Promise<void>>(Promise.resolve())
 
   useEffect(() => {
     callbacksRef.current = {
@@ -386,9 +387,12 @@ export function useRealtimeStory({
       })
       dataChannel.addEventListener("message", (messageEvent) => {
         try {
-          void handleRealtimeEvent(
-            JSON.parse(messageEvent.data) as RealtimeEvent,
-          )
+          const event = JSON.parse(messageEvent.data) as RealtimeEvent
+          realtimeEventQueueRef.current = realtimeEventQueueRef.current
+            .then(() => handleRealtimeEvent(event))
+            .catch((eventError) => {
+              failVoiceSession(getErrorMessage(eventError))
+            })
         } catch {
           // Ignore malformed, non-JSON events while keeping the media stream alive.
         }

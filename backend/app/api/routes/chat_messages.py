@@ -195,7 +195,7 @@ def read_chat_messages(
     chat_messages = session.exec(
         select(ChatMessage)
         .where(ChatMessage.conversation_id == conversation_id)
-        .order_by(ChatMessage.timestamp.asc())
+        .order_by(ChatMessage.id.asc())
         .offset(skip)
         .limit(limit)
     ).all()

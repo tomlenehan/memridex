@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useMemo } from "react"
+import { useMemo, useRef } from "react"
 import {
   FiArrowRight,
   FiCheck,
@@ -119,6 +119,7 @@ function groupNodesByRoot(nodes: ConversationPublic[]) {
 function ConversationConstellation() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const startRequestInFlight = useRef(false)
   const conversationsQuery = useQuery({
     queryKey: ["conversationConstellation"],
     queryFn: () => ConversationsService.readConversations({ limit: 500 }),
@@ -129,7 +130,15 @@ function ConversationConstellation() {
       await queryClient.invalidateQueries({ queryKey: ["conversationConstellation"] })
       await navigate({ to: "/conversation/$conversationId", params: { conversationId: String(conversation.id) } })
     },
+    onSettled: () => {
+      startRequestInFlight.current = false
+    },
   })
+  const startNewStory = () => {
+    if (startRequestInFlight.current) return
+    startRequestInFlight.current = true
+    createNode.mutate()
+  }
   const allNodes = conversationsQuery.data?.data ?? []
   const roots = allNodes.filter((node) => node.parent_conversation_id == null)
   const treeNodesByRoot = useMemo(() => groupNodesByRoot(allNodes), [allNodes])
@@ -183,22 +192,19 @@ function ConversationConstellation() {
             Follow the moments that matter. Your stories will grow into a one-of-a-kind constellation.
           </Text>
         </Box>
-        <Button
-          leftIcon={<FiPlus />}
-          onClick={() => createNode.mutate()}
-          isLoading={createNode.isPending}
-          bg="#D98061"
-          color="white"
-          borderRadius="full"
-          px={6}
-          h="52px"
-          boxShadow="0 8px 20px rgba(153, 84, 56, 0.18)"
-          _hover={{ bg: "#C96D50", transform: "translateY(-2px)" }}
-          transition="all 180ms ease"
-          flexShrink={0}
-        >
-          Start a story
-        </Button>
+        {sortedRoots.length > 0 && (
+          <Button
+            leftIcon={<FiPlus />}
+            onClick={startNewStory}
+            isLoading={createNode.isPending}
+            variant="accent"
+            px={6}
+            h="52px"
+            flexShrink={0}
+          >
+            Start a story
+          </Button>
+        )}
       </Flex>
 
       <Flex
@@ -262,14 +268,11 @@ function ConversationConstellation() {
             Start with one small moment from childhood. MemriPlace will help you follow the details into new stories.
           </Text>
           <Button
-            onClick={() => createNode.mutate()}
+            onClick={startNewStory}
             isLoading={createNode.isPending}
             rightIcon={<FiArrowRight />}
-            bg="#4B8D82"
-            color="white"
-            borderRadius="full"
+            variant="primary"
             px={6}
-            _hover={{ bg: "#3D786F" }}
           >
             Begin your constellation
           </Button>

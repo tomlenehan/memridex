@@ -180,9 +180,7 @@ function AuthModal({ isOpen, mode, onClose }: AuthModalProps) {
               </Button>
             )}
             <Button
-              _hover={{ bg: "#FFE5A5" }}
-              bg="#F1CC77"
-              color="#0C2830"
+              variant="accent"
               isLoading={isSubmitting}
               type="submit"
             >

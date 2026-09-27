@@ -80,6 +80,7 @@ const DeleteConfirmation = ({ isOpen, onClose }: DeleteProps) => {
                 Confirm
               </Button>
               <Button
+                variant="outline"
                 ref={cancelRef}
                 onClick={onClose}
                 isDisabled={isSubmitting}

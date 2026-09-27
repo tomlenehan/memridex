@@ -5,6 +5,11 @@ import {
   HStack,
   Icon,
   Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
   Text,
   VStack,
   useColorModeValue,
@@ -243,6 +248,10 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
   })
   const showWelcomeChoice = isFirstTurn && startMode === "choose" && !isVoiceActive
 
+  useEffect(() => {
+    if (isStoryFinished && isVoiceActive) stop()
+  }, [isStoryFinished, isVoiceActive, stop])
+
   const onSubmit: SubmitHandler<ChatMessageCreate> = async (data) => {
     const content = data.content.trim()
     if (!content) return
@@ -319,60 +328,7 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
       width="100%"
     >
       <VStack align="stretch" spacing={3}>
-        {showWelcomeChoice ? (
-          <Box
-            p={{ base: 4, md: 5 }}
-            borderRadius="2xl"
-            border="1px solid #D8E8DD"
-            bg="linear-gradient(135deg, #F2F7F1 0%, #F7F1E4 100%)"
-          >
-            <HStack align="flex-start" spacing={3}>
-              <Flex
-                align="center"
-                justify="center"
-                flexShrink={0}
-                boxSize={10}
-                borderRadius="full"
-                bg="white"
-                color="#477B70"
-              >
-                <Icon as={GiSecretBook} boxSize={5} />
-              </Flex>
-              <Box>
-                <Text color="#244D4C" fontSize="md" fontWeight="800">
-                  Ready to begin?
-                </Text>
-                <Text mt={1} color="#66807E" fontSize="sm" lineHeight="1.6">
-                  MemriPlace will ask the question aloud and show your spoken answers in the chat. Or start by typing at your own pace.
-                </Text>
-              </Box>
-            </HStack>
-            <Flex mt={4} gap={3} direction={{ base: "column", sm: "row" }}>
-              <Button
-                type="button"
-                flex="1"
-                colorScheme="teal"
-                leftIcon={<FiMic />}
-                isLoading={voiceStatus === "connecting"}
-                isDisabled={!canStartVoice}
-                onClick={handleChooseVoice}
-              >
-                Start with voice
-              </Button>
-              <Button
-                type="button"
-                flex="1"
-                variant="outline"
-                color="#477B70"
-                borderColor="#AFC8BA"
-                leftIcon={<FiEdit3 />}
-                onClick={handleChooseTyping}
-              >
-                Start typing
-              </Button>
-            </Flex>
-          </Box>
-        ) : (
+        {!showWelcomeChoice && !isStoryFinished && (
         <Flex
           align={{ base: "stretch", sm: "center" }}
           justify="space-between"
@@ -408,7 +364,7 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
           <Button
             type="button"
             flexShrink={0}
-            colorScheme={isVoiceActive ? "red" : "teal"}
+            variant={isVoiceActive ? "danger" : "primary"}
             leftIcon={isVoiceActive ? <FiMicOff /> : <FiMic />}
             isLoading={voiceStatus === "connecting"}
             isDisabled={!isVoiceActive && !canStartVoice}
@@ -421,7 +377,14 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
         )}
 
         {!showWelcomeChoice && (
-          <Flex gap={2} align="center">
+          <Flex
+            gap={2}
+            align="center"
+            direction={{ base: "column", sm: "row" }}
+            w="full"
+          >
+            {!isStoryFinished && (
+              <>
             <Input
               {...contentField}
               ref={(element) => {
@@ -429,39 +392,97 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
                 inputRef.current = element
               }}
               aria-label="Story message"
-              placeholder={isStoryFinished
-                ? "This path is complete. Save it or explore the new paths."
+              placeholder={chatStatus !== "succeeded"
+                ? "Loading your story..."
                 : isVoiceActive
                   ? "Type a memory while you talk..."
                   : isFirstTurn
                     ? "Start typing your memory..."
                     : "Or type a memory or question..."}
               bg={bgColor}
-              color={textColor}
-              isDisabled={isStoryFinished}
+                  color={textColor}
+                  flex="1"
+                  minW={0}
+                  minH="52px"
+                  w={{ base: "full", sm: "auto" }}
+              isDisabled={chatStatus !== "succeeded"}
             />
             <Button
               type="submit"
-              colorScheme="blue"
+              variant="primary"
               isLoading={isSubmitting}
-              isDisabled={isStoryFinished}
+              isDisabled={chatStatus !== "succeeded"}
               rightIcon={<FiSend />}
+              minH="52px"
+              minW={{ base: "full", sm: "104px" }}
             >
               Send
             </Button>
+              </>
+            )}
             {isStoryFinished && (
               <Button
                 type="button"
-                colorScheme="green"
+                variant="accent"
                 onClick={onOpen}
                 rightIcon={<GiSecretBook />}
+                minH="54px"
+                w={{ base: "full", sm: "auto" }}
+                px={6}
               >
-                Save Memory
+                Save this memory
               </Button>
             )}
           </Flex>
         )}
       </VStack>
+
+      <Modal
+        isOpen={showWelcomeChoice}
+        onClose={handleChooseTyping}
+        isCentered
+        closeOnEsc={false}
+        closeOnOverlayClick={false}
+        size="md"
+      >
+        <ModalOverlay bg="blackAlpha.600" />
+        <ModalContent mx={4} borderRadius="16px" bg="#FFFDF7">
+          <ModalHeader color="#244D4C" fontSize="2xl" pb={1}>
+            How would you like to tell your story?
+          </ModalHeader>
+          <ModalBody pb={6}>
+            <Text color="#66807E" lineHeight="1.6" mb={5}>
+              Choose voice to talk naturally, or type at your own pace.
+            </Text>
+            <VStack spacing={3}>
+              <Button
+                type="button"
+                w="full"
+                minH="58px"
+                variant="primary"
+                leftIcon={<FiMic />}
+                isLoading={voiceStatus === "connecting"}
+                isDisabled={!canStartVoice}
+                onClick={handleChooseVoice}
+              >
+                Talk with MemriPlace
+              </Button>
+              <Button
+                type="button"
+                w="full"
+                minH="58px"
+                variant="outline"
+                color="#477B70"
+                borderColor="#AFC8BA"
+                leftIcon={<FiEdit3 />}
+                onClick={handleChooseTyping}
+              >
+                Type my story
+              </Button>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
 
       {voiceStatusLabel && (
         <HStack

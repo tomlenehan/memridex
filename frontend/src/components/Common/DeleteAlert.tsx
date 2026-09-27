@@ -98,6 +98,7 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
                 Delete
               </Button>
               <Button
+                variant="outline"
                 ref={cancelRef}
                 onClick={onClose}
                 isDisabled={isSubmitting}

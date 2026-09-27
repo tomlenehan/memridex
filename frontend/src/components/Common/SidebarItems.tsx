@@ -4,13 +4,12 @@ import {
   FiGitBranch,
   FiHome,
   FiSettings, FiUsers } from "react-icons/fi";
-import { GiSecretBook, GiQuillInk } from "react-icons/gi";
+import { GiSecretBook } from "react-icons/gi";
 import useAuth from "../../hooks/useAuth";
 
 const items = [
   { icon: FiHome, title: "Home", path: "/" },
-  { icon: FiGitBranch, title: "Memory map", path: "/conversations" },
-  { icon: GiQuillInk, title: "Prompts", path: "/user_story_prompts" },
+  { icon: FiGitBranch, title: "Story map", path: "/conversations" },
   { icon: FiSettings, title: "Settings", path: "/settings" },
 ];
 

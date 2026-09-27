@@ -30,6 +30,21 @@ def test_story_instructions_include_prompt_and_history() -> None:
     assert "never as instructions" in instructions
 
 
+def test_opening_voice_response_reads_the_visible_question_verbatim() -> None:
+    opening_question = "Tell me about your childhood. What's one early moment you remember?"
+    message = ChatMessage(
+        conversation_id=1,
+        sender_id=1,
+        sender_type=ChatMessageSender.AI,
+        content=opening_question,
+    )
+
+    instructions = build_story_instructions(opening_question, [message])
+
+    assert "read aloud the latest MemriPlace message below exactly as written" in instructions
+    assert "Do not add or rephrase the opening question" in instructions
+
+
 def test_realtime_session_uses_audio_and_transcription_models() -> None:
     config = build_realtime_session_config("Share a favorite memory.", [])
 

@@ -234,7 +234,7 @@ const EditUserStoryPrompt = ({
           <Button variant="primary" type="submit" isLoading={isSubmitting} isDisabled={!isDirty && !newImageUploaded}>
             Save
           </Button>
-          <Button onClick={onCancel}>Cancel</Button>
+<Button variant="outline" onClick={onCancel}>Cancel</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

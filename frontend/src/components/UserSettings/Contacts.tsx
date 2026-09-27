@@ -104,7 +104,7 @@ const Contacts = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter email address"
             />
-            <Button colorScheme="teal" onClick={handleAddEmail}>
+            <Button variant="primary" onClick={handleAddEmail}>
               Add
             </Button>
           </HStack>

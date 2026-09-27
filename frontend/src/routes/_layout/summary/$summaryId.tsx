@@ -140,7 +140,7 @@ function SummaryPage() {
   return (
     <Container maxW="full" height="100vh" display="flex" flexDirection="column">
       <Flex justifyContent="space-between" alignItems="center" pt={12}>
-        <Button as={Link} to="/conversations" marginTop={-6} colorScheme="teal" variant="outline">
+        <Button as={Link} to="/conversations" marginTop={-6} variant="outline">
           <Box as={IoChevronBackCircleOutline} size="20px" mr={2} />
           Back
         </Button>
@@ -206,7 +206,7 @@ function SummaryPage() {
               <Button
                 mt={4}
                 rightIcon={<FaRegSave />}
-                colorScheme="blue"
+                variant="primary"
                 type="submit"
                 isLoading={isSaving}
               >
@@ -216,7 +216,7 @@ function SummaryPage() {
                 mt={4}
                 marginLeft={2}
                 rightIcon={<CiShare2 />}
-                colorScheme="teal"
+                variant="accent"
                 onClick={handleEmail}
               >
                 Share

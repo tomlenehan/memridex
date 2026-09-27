@@ -106,10 +106,10 @@ const AddSummary: React.FC<AddSummaryProps> = ({ isOpen, onClose, conversationId
             </FormControl>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} type="submit" isLoading={isLoading}>
+            <Button variant="primary" mr={3} type="submit" isLoading={isLoading}>
               Save
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
           </ModalFooter>
         </form>
       </ModalContent>

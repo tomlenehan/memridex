@@ -36,7 +36,17 @@ def build_story_instructions(
 
     history = "\n".join(reversed(history_lines)) or "No previous turns yet."
     latest_message = chat_messages[-1] if chat_messages else None
-    if user_turn_count == 0:
+    if (
+        user_turn_count == 0
+        and latest_message
+        and latest_message.sender_type == "ai"
+    ):
+        session_opening = (
+            "For your first voice response, read aloud the latest MemriPlace message below "
+            "exactly as written, with a warm natural delivery, then pause and listen. "
+            "Do not add or rephrase the opening question."
+        )
+    elif user_turn_count == 0:
         session_opening = (
             "For your first voice response, ask the story prompt below as a warm, natural "
             "opening question. Ask it once, then pause and listen. Do not answer it yourself."

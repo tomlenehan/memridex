@@ -172,7 +172,7 @@ const AddUser = ({ isOpen, onClose }: AddUserProps) => {
             <Button variant="primary" type="submit" isLoading={isSubmitting}>
               Save
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
+<Button variant="outline" onClick={onClose}>Cancel</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
