@@ -13,16 +13,16 @@ import {
   Text,
   VStack,
   useColorModeValue,
-  useDisclosure,
 } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
 import { FiEdit3, FiHeadphones, FiMic, FiMicOff, FiSend, FiVolume2 } from "react-icons/fi"
 import { GiSecretBook } from "react-icons/gi"
 import { useDispatch, useSelector } from "react-redux"
 
-import type { ChatMessageCreate, ChatMessagePublic } from "../../client"
+import { SummariesService, type ChatMessageCreate, type ChatMessagePublic } from "../../client"
 import { API_BASE_URL } from "../../config"
 import useCustomToast from "../../hooks/useCustomToast"
 import { useRealtimeStory } from "../../hooks/useRealtimeStory"
@@ -36,7 +36,6 @@ import {
 } from "../../redux/chatSlice"
 import type { AppDispatch } from "../../redux/store"
 import type { RootState } from "../../redux/store"
-import AddSummary from "../Summaries/AddSummary"
 
 interface ChatInputProps {
   conversationId: number
@@ -65,12 +64,15 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
     },
   })
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>()
   const chatMessages = useSelector((state: RootState) => state.chat.messages)
   const chatStatus = useSelector((state: RootState) => state.chat.status)
   const showToast = useCustomToast()
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [startMode, setStartMode] = useState<"choose" | "voice" | "type">("choose")
+  const [isSavingMemory, setIsSavingMemory] = useState(false)
+  const savingMemory = useRef(false)
   const streamingMessageId = useRef<number | null>(null)
   const assistantVoiceMessageId = useRef<number | null>(null)
   const userVoiceMessageIds = useRef(new Map<string, number>())
@@ -81,7 +83,6 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
   const textColor = useColorModeValue("ui.dark", "ui.light")
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate")
   const mutedTextColor = useColorModeValue("ui.muted", "ui.dim")
-  const { isOpen, onOpen, onClose } = useDisclosure()
   const latestChatMessage = chatMessages[chatMessages.length - 1]
   const isFirstTurn = userTurnCount === 0
   const canStartVoice = !isStoryFinished && (isFirstTurn || chatStatus === "succeeded")
@@ -248,9 +249,34 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
   })
   const showWelcomeChoice = isFirstTurn && startMode === "choose" && !isVoiceActive
 
-  useEffect(() => {
-    if (isStoryFinished && isVoiceActive) stop()
-  }, [isStoryFinished, isVoiceActive, stop])
+  const handleSaveMemory = async () => {
+    if (savingMemory.current || (isVoiceActive && voiceStatus !== "connected")) return
+    savingMemory.current = true
+    setIsSavingMemory(true)
+    try {
+      if (isVoiceActive) stop()
+      const summary = await SummariesService.createStorySummary({
+        requestBody: { conversation_id: conversationId, tone: 50 },
+      })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["summaries"] }),
+        queryClient.invalidateQueries({ queryKey: ["conversationConstellation"] }),
+      ])
+      await navigate({
+        to: "/summary/$summaryId",
+        params: { summaryId: String(summary.id) },
+      })
+    } catch (error) {
+      showToast(
+        "Could not save memory",
+        error instanceof Error ? error.message : "Please try again.",
+        "error",
+      )
+    } finally {
+      savingMemory.current = false
+      setIsSavingMemory(false)
+    }
+  }
 
   const onSubmit: SubmitHandler<ChatMessageCreate> = async (data) => {
     const content = data.content.trim()
@@ -313,9 +339,11 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
 
   const contentField = register("content", { required: true })
 
-  const voiceStatusLabel = voiceStatus in statusLabels
-    ? statusLabels[voiceStatus as keyof typeof statusLabels]
-    : voiceError
+  const voiceStatusLabel = isStoryFinished && voiceStatus === "connected"
+    ? "Your conversation is ready to save."
+    : voiceStatus in statusLabels
+      ? statusLabels[voiceStatus as keyof typeof statusLabels]
+      : voiceError
 
   return (
     <Box
@@ -328,7 +356,7 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
       width="100%"
     >
       <VStack align="stretch" spacing={3}>
-        {!showWelcomeChoice && !isStoryFinished && (
+        {!showWelcomeChoice && (!isStoryFinished || isVoiceActive) && (
         <Flex
           align={{ base: "stretch", sm: "center" }}
           justify="space-between"
@@ -422,15 +450,17 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
             )}
             {isStoryFinished && (
               <Button
-                type="button"
-                variant="accent"
-                onClick={onOpen}
-                rightIcon={<GiSecretBook />}
+              type="button"
+              variant="accent"
+              onClick={handleSaveMemory}
+              isLoading={isSavingMemory}
+              isDisabled={isSavingMemory || (isVoiceActive && voiceStatus !== "connected")}
+              rightIcon={<GiSecretBook />}
                 minH="54px"
                 w={{ base: "full", sm: "auto" }}
                 px={6}
               >
-                Save this memory
+                {isSavingMemory ? "Saving your memory…" : isVoiceActive && voiceStatus !== "connected" ? "Finishing conversation…" : "Save this memory"}
               </Button>
             )}
           </Flex>
@@ -497,11 +527,6 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
         </HStack>
       )}
 
-      <AddSummary
-        isOpen={isOpen}
-        onClose={onClose}
-        conversationId={conversationId}
-      />
     </Box>
   )
 }

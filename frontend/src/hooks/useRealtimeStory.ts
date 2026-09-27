@@ -92,6 +92,8 @@ export function useRealtimeStory({
   const suppressedAssistantItemRef = useRef<string | null>(null)
   const userTranscriptsRef = useRef(new Map<string, string>())
   const persistedUserItemsRef = useRef(new Set<string>())
+  const pendingUserItemsRef = useRef(new Set<string>())
+  const deferredAssistantTranscriptsRef = useRef<RealtimeEvent[]>([])
   const realtimeEventQueueRef = useRef<Promise<void>>(Promise.resolve())
 
   useEffect(() => {
@@ -137,6 +139,8 @@ export function useRealtimeStory({
     suppressFirstAssistantTranscriptRef.current = false
     suppressedAssistantItemRef.current = null
     userTranscriptsRef.current.clear()
+    pendingUserItemsRef.current.clear()
+    deferredAssistantTranscriptsRef.current = []
   }, [])
 
   const persistMessage = useCallback(
@@ -227,6 +231,12 @@ export function useRealtimeStory({
     [persistMessage],
   )
 
+  const saveDeferredAssistantTranscripts = useCallback(async () => {
+    if (pendingUserItemsRef.current.size > 0) return
+    const deferred = deferredAssistantTranscriptsRef.current.splice(0)
+    for (const event of deferred) await saveAssistantTranscript(event)
+  }, [saveAssistantTranscript])
+
   const handleRealtimeEvent = useCallback(
     async (event: RealtimeEvent) => {
       try {
@@ -241,10 +251,12 @@ export function useRealtimeStory({
             return
           case "input_audio_buffer.speech_stopped":
             userSpeechActiveRef.current = false
+            if (event.item_id) pendingUserItemsRef.current.add(event.item_id)
             setStatus("thinking")
             return
           case "conversation.item.input_audio_transcription.delta": {
             if (!event.item_id || !event.delta) return
+            pendingUserItemsRef.current.add(event.item_id)
             const current = userTranscriptsRef.current.get(event.item_id) || ""
             userTranscriptsRef.current.set(event.item_id, current + event.delta)
             callbacksRef.current.onUserTranscriptDelta(event.item_id, event.delta)
@@ -252,8 +264,17 @@ export function useRealtimeStory({
             return
           }
           case "conversation.item.input_audio_transcription.completed": {
-            if (!event.item_id || !event.transcript?.trim()) return
+            if (!event.item_id) return
+            if (!event.transcript?.trim()) {
+              userTranscriptsRef.current.delete(event.item_id)
+              callbacksRef.current.onUserTranscriptFailed(event.item_id)
+              failVoiceSession("We couldn't transcribe that answer. Please say it again or type it.")
+              return
+            }
+            setStatus("thinking")
             await persistUserTranscript(event.item_id, event.transcript)
+            pendingUserItemsRef.current.delete(event.item_id)
+            await saveDeferredAssistantTranscripts()
             return
           }
           case "conversation.item.input_audio_transcription.failed": {
@@ -261,6 +282,7 @@ export function useRealtimeStory({
               userTranscriptsRef.current.delete(event.item_id)
               callbacksRef.current.onUserTranscriptFailed(event.item_id)
             }
+            failVoiceSession("We couldn't transcribe that answer. Please say it again or type it.")
             return
           }
           case "response.created":
@@ -289,13 +311,17 @@ export function useRealtimeStory({
             return
           }
           case "response.output_audio_transcript.done":
+            if (pendingUserItemsRef.current.size > 0) {
+              deferredAssistantTranscriptsRef.current.push(event)
+              return
+            }
             await saveAssistantTranscript(event)
             return
           case "response.done":
-            setStatus("connected")
             return
           case "response.cancelled":
             assistantTranscriptsRef.current.clear()
+            deferredAssistantTranscriptsRef.current = []
             if (assistantStreamingRef.current) {
               assistantStreamingRef.current = false
               callbacksRef.current.onAssistantCancelled()
@@ -314,7 +340,7 @@ export function useRealtimeStory({
         failVoiceSession(message)
       }
     },
-    [failVoiceSession, persistUserTranscript, saveAssistantTranscript],
+    [failVoiceSession, persistUserTranscript, saveAssistantTranscript, saveDeferredAssistantTranscripts],
   )
 
   const start = useCallback(async () => {

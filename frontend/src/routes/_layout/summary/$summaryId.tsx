@@ -4,10 +4,15 @@ import {
   Flex,
   Heading,
   Button,
+  Icon,
   Text,
   FormControl,
   FormLabel,
+  HStack,
   Input,
+  SimpleGrid,
+  Spinner,
+  Stack,
   Textarea,
   Image,
   VStack,
@@ -18,9 +23,10 @@ import { useEffect, useState } from "react";
 import { FaRegSave } from "react-icons/fa";
 import { CiShare2 } from "react-icons/ci";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDropzone } from "react-dropzone";
-import { SummariesService, ContactsService, ContactRead, Body_summaries_update_story_summary } from "../../../client";
+import { SummariesService, ContactsService, ContactRead, Body_summaries_update_story_summary, type RelatedStorySuggestion, type StorySummaryPublic } from "../../../client";
+import { FiArrowRight, FiGitBranch, FiLink, FiX } from "react-icons/fi";
 import useCustomToast from "../../../hooks/useCustomToast"
 
 export const Route = createFileRoute("/_layout/summary/$summaryId")({
@@ -42,7 +48,9 @@ function SummaryPage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [newImageUploaded, setNewImageUploaded] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const [conversationId, setConversationId] = useState<number | undefined>(undefined);
   const showToast = useCustomToast()
+  const queryClient = useQueryClient()
 
   const { getRootProps, getInputProps, acceptedFiles } = useDropzone({
     accept: { "image/*": [".jpeg", ".jpg", ".png"] },
@@ -64,6 +72,7 @@ function SummaryPage() {
       setValue("summary", response.summary_text || "");
       setValue("title", response.title || "");
       setImageUrl(response.image_url || "");
+      setConversationId(response.conversation_id);
       setStatus("succeeded");
       console.log("Initial image URL:", response.image_url);
     } catch (error) {
@@ -91,6 +100,7 @@ function SummaryPage() {
         id: Number(summaryId),
         formData,
       });
+      await queryClient.invalidateQueries({ queryKey: ["summaries"] })
 
       showToast("Success!", "Summary updated successfully.", "success");
       setStatus("succeeded");
@@ -139,13 +149,22 @@ function SummaryPage() {
 
   return (
     <Container maxW="full" height="100vh" display="flex" flexDirection="column">
-      <Flex justifyContent="space-between" alignItems="center" pt={12}>
-        <Button as={Link} to="/conversations" marginTop={-6} variant="outline">
+      <Flex justifyContent="space-between" alignItems="center" pt={8} gap={3}>
+        <Button as={Link} to="/conversations" variant="outline">
           <Box as={IoChevronBackCircleOutline} size="20px" mr={2} />
-          Back
+          Your memories
         </Button>
-        <Heading size="lg" textAlign={{ base: "center", md: "left" }}>
-        </Heading>
+        {conversationId && (
+          <Button
+            as={Link}
+            to="/conversation/$conversationId"
+            params={{ conversationId: String(conversationId) }}
+            variant="ghost"
+            rightIcon={<FiGitBranch />}
+          >
+            Revisit conversation
+          </Button>
+        )}
       </Flex>
 
       <Flex flex="1" direction="column" overflow="hidden" mt={4}>
@@ -155,6 +174,7 @@ function SummaryPage() {
           ) : status === "failed" ? (
             <Text>Error loading summary</Text>
           ) : (
+            <>
             <form onSubmit={handleSubmit(onSubmit)}>
               <FormControl isInvalid={!!errors.title}>
                 <FormLabel>Title</FormLabel>
@@ -222,6 +242,8 @@ function SummaryPage() {
                 Share
               </Button>
             </form>
+            <RelatedMemories storyId={Number(summaryId)} />
+            </>
           )}
         </Box>
       </Flex>
@@ -230,3 +252,143 @@ function SummaryPage() {
 }
 
 export default SummaryPage;
+
+function RelatedMemories({ storyId }: { storyId: number }) {
+  const queryClient = useQueryClient()
+  const [dismissed, setDismissed] = useState<number[]>([])
+  const suggestionsQuery = useQuery({
+    queryKey: ["relatedStories", storyId],
+    queryFn: () => SummariesService.readRelatedStories({ id: storyId, limit: 5 }),
+    enabled: Number.isFinite(storyId) && storyId > 0,
+  })
+  const relationshipsQuery = useQuery({
+    queryKey: ["storyRelationships"],
+    queryFn: () => SummariesService.readStoryRelationships(),
+  })
+  const storiesQuery = useQuery({
+    queryKey: ["summaries"],
+    queryFn: () => SummariesService.readStorySummaries({ limit: 100 }),
+  })
+  const createLink = useMutation({
+    mutationFn: (otherId: number) => SummariesService.createStoryRelationship({ id: storyId, otherId }),
+    onSuccess: async (_relationship, otherId) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["storyRelationships"] }),
+        queryClient.invalidateQueries({ queryKey: ["relatedStories", storyId] }),
+        queryClient.invalidateQueries({ queryKey: ["relatedStories", otherId] }),
+      ])
+    },
+  })
+  const removeLink = useMutation({
+    mutationFn: (otherId: number) => SummariesService.deleteStoryRelationship({ id: storyId, otherId }),
+    onSuccess: async (_result, otherId) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["storyRelationships"] }),
+        queryClient.invalidateQueries({ queryKey: ["relatedStories", storyId] }),
+        queryClient.invalidateQueries({ queryKey: ["relatedStories", otherId] }),
+      ])
+    },
+  })
+
+  const relationships = relationshipsQuery.data ?? []
+  const storyById = new Map((storiesQuery.data ?? []).map((story) => [story.id, story]))
+  const connected = relationships.flatMap((relationship) => {
+    if (relationship.story_a_id === storyId) return [{ id: relationship.story_b_id, story: storyById.get(relationship.story_b_id) }]
+    if (relationship.story_b_id === storyId) return [{ id: relationship.story_a_id, story: storyById.get(relationship.story_a_id) }]
+    return []
+  }).filter((item): item is { id: number; story: StorySummaryPublic } => Boolean(item.story))
+  const connectedIds = new Set(connected.map((item) => item.id))
+  const suggestions = (suggestionsQuery.data ?? [])
+    .filter((item) => !connectedIds.has(item.story.id) && !dismissed.includes(item.story.id))
+    .slice(0, 2)
+
+  if (suggestionsQuery.isLoading || relationshipsQuery.isLoading) {
+    return <Flex justify="center" py={8}><Spinner color="#4B8D82" /></Flex>
+  }
+
+  return (
+    <Stack spacing={5} mt={8} pt={6} borderTop="1px solid" borderColor="ui.line">
+      {connected.length > 0 && (
+        <Box>
+          <HStack spacing={2} mb={3} color="#4B8D82">
+            <Icon as={FiLink} />
+            <Heading size="sm" color="ui.ink">Connected memories</Heading>
+          </HStack>
+          <Stack spacing={2}>
+            {connected.map(({ id, story }) => (
+              <Flex key={id} align="center" justify="space-between" gap={3} p={3} bg="#F1F7F3" borderRadius="12px">
+                <Button
+                  as={Link}
+                  to="/summary/$summaryId"
+                  params={{ summaryId: String(id) }}
+                  variant="link"
+                  rightIcon={<FiArrowRight />}
+                  whiteSpace="normal"
+                  textAlign="left"
+                  justifyContent="flex-start"
+                >
+                  {story.title || "A remembered moment"}
+                </Button>
+                <Button
+                  aria-label={`Disconnect ${story.title || "memory"}`}
+                  title="Remove this connection"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeLink.mutate(id)}
+                  isLoading={removeLink.isPending && removeLink.variables === id}
+                  flexShrink={0}
+                >
+                  <FiX />
+                </Button>
+              </Flex>
+            ))}
+          </Stack>
+        </Box>
+      )}
+
+      {suggestionsQuery.isError ? (
+        <Text color="ui.muted" fontSize="sm">Memory connections are temporarily unavailable.</Text>
+      ) : suggestions.length > 0 ? (
+        <Box>
+          <Heading size="sm" mb={2}>Could these stories be connected?</Heading>
+          <Text color="ui.muted" fontSize="sm" mb={4}>
+            These stories may share a theme. Connect them only if it feels right to you.
+          </Text>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
+            {suggestions.map((suggestion: RelatedStorySuggestion) => (
+              <Box key={suggestion.story.id} p={4} border="1px solid #E8E2D3" borderRadius="14px" bg="#FFFDF5">
+                <Heading size="sm" lineHeight="1.4" mb={3}>{suggestion.story.title || "A remembered moment"}</Heading>
+                <Text color="ui.muted" fontSize="sm" lineHeight="1.5" noOfLines={2} mb={3}>
+                  {suggestion.story.summary_text}
+                </Text>
+                <HStack spacing={2}>
+                  <Button
+                    variant="accent"
+                    size="sm"
+                    leftIcon={<FiLink />}
+                    onClick={() => createLink.mutate(suggestion.story.id)}
+                    isLoading={createLink.isPending && createLink.variables === suggestion.story.id}
+                  >
+                    Connect memories
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setDismissed((items) => [...items, suggestion.story.id])}>
+                    Not now
+                  </Button>
+                </HStack>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </Box>
+      ) : suggestionsQuery.data?.length === 0 && connected.length === 0 ? (
+        <Box>
+          <Heading size="sm" mb={2}>Connections</Heading>
+          <Text color="ui.muted" fontSize="sm">As you save more memories, possible connections will appear here.</Text>
+        </Box>
+      ) : null}
+
+      {(createLink.isError || removeLink.isError) && (
+        <Text role="alert" color="red.600" fontSize="sm">We couldn’t update this connection. Please try again.</Text>
+      )}
+    </Stack>
+  )
+}

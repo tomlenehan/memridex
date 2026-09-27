@@ -37,6 +37,7 @@ pydevd-pycharm = ">=241.15989.155,<241.15990.0"
 faiss-cpu = "^1.8.0"
 debugpy = "^1.8.1"
 langchain-community = "^0.2.4"
+pgvector = "^0.2.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

@@ -50,13 +50,13 @@ const storySteps = [
   {
     icon: FiMic,
     index: "02",
-    text: "Speak or type as the details come back to you.",
+    text: "Speak or type or type to a friendly AI .",
     title: "Follow the memory",
   },
   {
     icon: FiPenTool,
     index: "03",
-    text: "Keep a story you can return to and share in your own time.",
+    text: "Keep a story you can return to and share.",
     title: "Make it lasting",
   },
 ]
@@ -341,7 +341,7 @@ export function LandingPage({
                   maxW="520px"
                   sx={storybookHeading}
                 >
-                  The forever home for treasured memories.
+                  The permanent home for treasured memories.
                 </Text>
                 <Text
                   color="rgba(255, 248, 232, 0.78)"

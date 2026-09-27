@@ -4,7 +4,6 @@ import {
   FiGitBranch,
   FiHome,
   FiSettings, FiUsers } from "react-icons/fi";
-import { GiSecretBook } from "react-icons/gi";
 import useAuth from "../../hooks/useAuth";
 
 const items = [
@@ -28,13 +27,7 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
     return <Text>Loading...</Text>;
   }
 
-  const hasStorySummaries = (user?.story_summaries?.length ?? 0) > 0;
-
   const finalItems = [...items];
-
-  if (hasStorySummaries) {
-    finalItems.splice(2, 0, { icon: GiSecretBook, title: "Memories", path: "/stories" });
-  }
 
   if (user?.is_superuser) {
     finalItems.push({ icon: FiUsers, title: "Admin", path: "/admin" });

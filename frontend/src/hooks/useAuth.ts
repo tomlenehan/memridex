@@ -33,6 +33,35 @@ const hasValidSession = async () => {
   }
 }
 
+const getAuthErrorMessage = (
+  error: unknown,
+  action: "login" | "signup",
+): string => {
+  if (error instanceof ApiError) {
+    if ([502, 503, 504].includes(error.status) || error.status >= 500) {
+      return "MemriPlace is temporarily unavailable. Please try again in a few minutes."
+    }
+
+    if (action === "login" && [400, 401].includes(error.status)) {
+      return "That email and password don't match. Please check them and try again."
+    }
+
+    const detail = (error.body as { detail?: unknown } | null)?.detail
+    if (typeof detail === "string") return detail
+    if (Array.isArray(detail)) {
+      return "Please check the information you entered and try again."
+    }
+  }
+
+  if (error instanceof AxiosError) {
+    return "We couldn't connect to MemriPlace. Check your internet connection and try again."
+  }
+
+  return action === "login"
+    ? "We couldn't log you in just now. Please try again."
+    : "We couldn't create your account just now. Please try again."
+}
+
 const useAuth = () => {
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -54,18 +83,8 @@ const useAuth = () => {
     onSuccess: () => {
       navigate({ to: "/conversations" })
     },
-    onError: (err: ApiError) => {
-      let errDetail = (err.body as any)?.detail
-
-      if (err instanceof AxiosError) {
-        errDetail = err.message
-      }
-
-      if (Array.isArray(errDetail)) {
-        errDetail = "Something went wrong"
-      }
-
-      setError(errDetail)
+    onError: (err: unknown) => {
+      setError(getAuthErrorMessage(err, "login"))
     },
   })
 
@@ -79,18 +98,8 @@ const useAuth = () => {
     onSuccess: () => {
       navigate({ to: "/login" })
     },
-    onError: (err: ApiError) => {
-      let errDetail = (err.body as any)?.detail
-
-      if (err instanceof AxiosError) {
-        errDetail = err.message
-      }
-
-      if (Array.isArray(errDetail)) {
-        errDetail = "Something went wrong"
-      }
-
-      setError(errDetail)
+    onError: (err: unknown) => {
+      setError(getAuthErrorMessage(err, "signup"))
     },
   })
 

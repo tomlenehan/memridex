@@ -1,15 +1,34 @@
-from typing import Any, Optional
-from datetime import datetime
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, Form, File
-from sqlmodel import Session, select
-from app.api.deps import get_current_user, get_db
-from app.models import User, StorySummary, StorySummaryPublic, Conversation, Message, StorySummaryCreate, StorySummaryUpdate
-from app.llm.utils import get_formatted_history
-from app.llm.story_nodes import get_conversation_prompt
-from pydantic import BaseModel
-from app.llm.conversation_summarize import generate_summary, generate_title
-from app.utils import upload_image_to_s3
 import logging
+from datetime import datetime
+from typing import Any, Optional
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from pydantic import BaseModel
+from sqlalchemy import or_
+from sqlmodel import Session, select
+
+from app.api.deps import get_current_user, get_db
+from app.llm.conversation_summarize import generate_summary, generate_title
+from app.llm.story_embeddings import (
+    ensure_story_embedding,
+    ensure_user_story_embeddings,
+)
+from app.llm.story_nodes import get_conversation_prompt
+from app.llm.utils import get_formatted_history
+from app.models import (
+    Conversation,
+    Message,
+    RelatedStorySuggestion,
+    StoryEmbedding,
+    StoryRelationship,
+    StoryRelationshipCreate,
+    StoryRelationshipPublic,
+    StorySummary,
+    StorySummaryCreate,
+    StorySummaryPublic,
+    User,
+)
+from app.utils import upload_image_to_s3
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -43,6 +62,18 @@ def read_story_summaries(
         )
     summaries = session.exec(statement).all()
     return summaries
+
+
+@router.get("/relationships", response_model=list[StoryRelationshipPublic])
+def read_story_relationships(
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[StoryRelationship]:
+    return session.exec(
+        select(StoryRelationship)
+        .where(StoryRelationship.user_id == current_user.id)
+        .order_by(StoryRelationship.created_at.desc())
+    ).all()
 
 @router.get("/{id}", response_model=StorySummaryPublic)
 def read_story_summary(
@@ -110,6 +141,13 @@ async def create_story_summary(
         db_session.commit()
         db_session.refresh(story_summary)
 
+        try:
+            ensure_story_embedding(db_session, story_summary)
+            db_session.commit()
+        except Exception:
+            db_session.rollback()
+            logger.exception("Story saved but its embedding could not be created")
+
         conversation.status = "complete"
         db_session.add(conversation)
         db_session.commit()
@@ -167,6 +205,14 @@ def update_story_summary(
         session.commit()
         session.refresh(summary)
 
+        if title is not None or summary_text is not None:
+            try:
+                ensure_story_embedding(session, summary)
+                session.commit()
+            except Exception:
+                session.rollback()
+                logger.exception("Story updated but its embedding could not be refreshed")
+
         return summary
     except Exception as e:
         session.rollback()
@@ -194,3 +240,141 @@ def delete_story_summary(
     session.delete(summary)
     session.commit()
     return Message(message="Story summary deleted successfully")
+
+
+@router.get("/{id}/related", response_model=list[RelatedStorySuggestion])
+def read_related_stories(
+    id: int,
+    limit: int = 5,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[RelatedStorySuggestion]:
+    story = session.get(StorySummary, id)
+    if not story or story.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Story not found")
+    if not 1 <= limit <= 20:
+        raise HTTPException(status_code=422, detail="Limit must be between 1 and 20")
+
+    try:
+        ensure_user_story_embeddings(session, current_user.id)
+        source_embedding = session.exec(
+            select(StoryEmbedding).where(
+                StoryEmbedding.user_id == current_user.id,
+                StoryEmbedding.story_summary_id == id,
+            )
+        ).first()
+        if not source_embedding:
+            return []
+
+        relationship_exists = (
+            select(StoryRelationship.id)
+            .where(
+                StoryRelationship.user_id == current_user.id,
+                or_(
+                    (StoryRelationship.story_a_id == id)
+                    & (StoryRelationship.story_b_id == StorySummary.id),
+                    (StoryRelationship.story_b_id == id)
+                    & (StoryRelationship.story_a_id == StorySummary.id),
+                ),
+            )
+            .exists()
+        )
+        distance = StoryEmbedding.embedding.cosine_distance(
+            source_embedding.embedding
+        )
+        matches = session.exec(
+            select(StorySummary, distance.label("distance"))
+            .join(
+                StoryEmbedding,
+                StoryEmbedding.story_summary_id == StorySummary.id,
+            )
+            .where(
+                StorySummary.user_id == current_user.id,
+                StorySummary.id != id,
+                StoryEmbedding.user_id == current_user.id,
+                ~relationship_exists,
+            )
+            .order_by(distance)
+            .limit(limit)
+        ).all()
+        return [
+            RelatedStorySuggestion(
+                story=StorySummaryPublic.from_orm(candidate),
+                similarity=max(0.0, min(1.0, 1.0 - float(distance_value))),
+            )
+            for candidate, distance_value in matches
+        ]
+    except Exception as error:
+        session.rollback()
+        logger.exception("Unable to find related stories")
+        raise HTTPException(
+            status_code=503,
+            detail="Related stories are temporarily unavailable",
+        ) from error
+
+
+@router.post(
+    "/{id}/relationships/{other_id}",
+    response_model=StoryRelationshipPublic,
+)
+def create_story_relationship(
+    id: int,
+    other_id: int,
+    relationship: StoryRelationshipCreate,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> StoryRelationship:
+    if id == other_id:
+        raise HTTPException(status_code=422, detail="A story cannot be linked to itself")
+    stories = session.exec(
+        select(StorySummary).where(
+            StorySummary.user_id == current_user.id,
+            StorySummary.id.in_([id, other_id]),
+        )
+    ).all()
+    if len(stories) != 2:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    story_a_id, story_b_id = sorted((id, other_id))
+    existing = session.exec(
+        select(StoryRelationship).where(
+            StoryRelationship.user_id == current_user.id,
+            StoryRelationship.story_a_id == story_a_id,
+            StoryRelationship.story_b_id == story_b_id,
+        )
+    ).first()
+    if existing:
+        return existing
+
+    record = StoryRelationship(
+        user_id=current_user.id,
+        story_a_id=story_a_id,
+        story_b_id=story_b_id,
+        note=relationship.note,
+    )
+    session.add(record)
+    session.commit()
+    session.refresh(record)
+    return record
+
+
+@router.delete("/{id}/relationships/{other_id}")
+def delete_story_relationship(
+    id: int,
+    other_id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Message:
+    story_a_id, story_b_id = sorted((id, other_id))
+    record = session.exec(
+        select(StoryRelationship).where(
+            StoryRelationship.user_id == current_user.id,
+            StoryRelationship.story_a_id == story_a_id,
+            StoryRelationship.story_b_id == story_b_id,
+        )
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Story relationship not found")
+    session.delete(record)
+    session.commit()
+    return Message(message="Story relationship removed")

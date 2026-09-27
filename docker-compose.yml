@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:12-alpine
+    image: pgvector/pgvector:0.7.4-pg12
     restart: unless-stopped
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata

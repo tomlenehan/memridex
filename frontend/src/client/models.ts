@@ -298,6 +298,21 @@ export type StorySummaryPublic = {
 };
 
 
+export type StoryRelationshipPublic = {
+	id: number;
+	story_a_id: number;
+	story_b_id: number;
+	note?: string | null;
+	created_at: string;
+};
+
+
+export type RelatedStorySuggestion = {
+	story: StorySummaryPublic;
+	similarity: number;
+};
+
+
 
 export type SummaryCreateRequest = {
 	conversation_id: number;
@@ -415,4 +430,3 @@ export type ValidationError = {
 	msg: string;
 	type: string;
 };
-

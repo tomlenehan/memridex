@@ -1,7 +1,11 @@
 from datetime import datetime
-from typing import List, Optional
-from sqlmodel import Field, Relationship, SQLModel
 from enum import Enum
+from typing import List, Optional
+
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, UniqueConstraint
+from sqlmodel import Field, Relationship, SQLModel
+
 
 # Shared properties
 class UserBase(SQLModel):
@@ -223,6 +227,61 @@ class StorySummary(SQLModel, table=True):
     modified_at: Optional[datetime] = Field(default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow})
     image_url: Optional[str] = None
 
+
+class StoryEmbedding(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("story_summary_id"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    story_summary_id: int = Field(
+        sa_column=Column(
+            Integer,
+            ForeignKey("storysummary.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        )
+    )
+    embedding: List[float] = Field(sa_type=Vector(1536))
+    embedding_model: str = Field(default="text-embedding-3-small")
+    content_hash: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    modified_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class StoryRelationship(SQLModel, table=True):
+    __table_args__ = (
+        UniqueConstraint("user_id", "story_a_id", "story_b_id"),
+        CheckConstraint("story_a_id < story_b_id", name="story_relationship_ordered_ids"),
+    )
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    story_a_id: int = Field(
+        sa_column=Column(
+            Integer, ForeignKey("storysummary.id", ondelete="CASCADE"), nullable=False
+        )
+    )
+    story_b_id: int = Field(
+        sa_column=Column(
+            Integer, ForeignKey("storysummary.id", ondelete="CASCADE"), nullable=False
+        )
+    )
+    note: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class StoryRelationshipCreate(SQLModel):
+    note: Optional[str] = None
+
+
+class StoryRelationshipPublic(SQLModel):
+    id: int
+    story_a_id: int
+    story_b_id: int
+    note: Optional[str]
+    created_at: datetime
+
+
 class StorySummaryPublic(SQLModel):
     id: int
     conversation_id: int
@@ -245,6 +304,11 @@ class StorySummaryUpdate(SQLModel):
     summary_text: str
     image_url: Optional[str] = None
     modified_at: Optional[datetime]
+
+
+class RelatedStorySuggestion(SQLModel):
+    story: StorySummaryPublic
+    similarity: float
 
 class ConversationCreate(SQLModel):
     user_story_prompt_id: Optional[int] = None

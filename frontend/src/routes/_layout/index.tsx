@@ -181,8 +181,8 @@ function Dashboard() {
           <Text color="ui.muted" fontSize="md">
             Your stories are saved privately to your account.
           </Text>
-          <Button as={Link} to="/stories" variant="outline" rightIcon={<FiArrowRight />}>
-            See my saved stories
+          <Button as={Link} to="/conversations" variant="outline" rightIcon={<FiArrowRight />}>
+            See my memories
           </Button>
         </Flex>
       </Stack>

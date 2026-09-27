@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ContactEmailSchema,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,RealtimeSessionOffer,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_update_story_summary,StorySummaryPublic,SummaryCreateRequest,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate,ContactCreate,ContactRead } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ContactEmailSchema,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,RealtimeSessionOffer,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_update_story_summary,StorySummaryPublic,SummaryCreateRequest,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate,ContactCreate,ContactRead,StoryRelationshipPublic,RelatedStorySuggestion } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -1081,6 +1081,22 @@ export type TDataReadStorySummary = {
                 id: number
 
             }
+export type TDataReadRelatedStories = {
+                id: number
+limit?: number
+
+            }
+export type TDataCreateStoryRelationship = {
+                id: number
+otherId: number
+note?: string
+
+            }
+export type TDataDeleteStoryRelationship = {
+                id: number
+otherId: number
+
+            }
 export type TDataUpdateStorySummary = {
                 formData?: Body_summaries_update_story_summary
 id: number
@@ -1092,6 +1108,46 @@ export type TDataDeleteStorySummary = {
             }
 
 export class SummariesService {
+	/** Read the current user's confirmed memory links. */
+	public static readStoryRelationships(): CancelablePromise<Array<StoryRelationshipPublic>> {
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/summaries/relationships',
+		});
+	}
+
+	/** Find likely related memories for a saved story. */
+	public static readRelatedStories(data: TDataReadRelatedStories): CancelablePromise<Array<RelatedStorySuggestion>> {
+		const { id, limit = 5 } = data;
+		return __request(OpenAPI, {
+			method: 'GET',
+			url: '/api/v1/summaries/{id}/related',
+			path: { id },
+			query: { limit },
+		});
+	}
+
+	/** Confirm a connection between two memories. */
+	public static createStoryRelationship(data: TDataCreateStoryRelationship): CancelablePromise<StoryRelationshipPublic> {
+		const { id, otherId, note } = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/summaries/{id}/relationships/{other_id}',
+			path: { id, other_id: otherId },
+			body: { note },
+			mediaType: 'application/json',
+		});
+	}
+
+	/** Remove a confirmed connection between two memories. */
+	public static deleteStoryRelationship(data: TDataDeleteStoryRelationship): CancelablePromise<Message> {
+		const { id, otherId } = data;
+		return __request(OpenAPI, {
+			method: 'DELETE',
+			url: '/api/v1/summaries/{id}/relationships/{other_id}',
+			path: { id, other_id: otherId },
+		});
+	}
 
 	/**
 	 * Read Story Summaries

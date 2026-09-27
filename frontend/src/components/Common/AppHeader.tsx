@@ -16,7 +16,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react"
 import { Link } from "@tanstack/react-router"
-import { FiBookOpen, FiGitBranch, FiHome, FiLogOut, FiMenu, FiPlus, FiSettings } from "react-icons/fi"
+import { FiGitBranch, FiHome, FiLogOut, FiMenu, FiPlus, FiSettings } from "react-icons/fi"
 
 import memriPlaceMark from "../../assets/images/MemriPlaceMLogoLG.png"
 import useAuth from "../../hooks/useAuth"
@@ -24,7 +24,6 @@ import UserMenu from "./UserMenu"
 
 const links = [
   { label: "Home", to: "/", icon: FiHome },
-  { label: "My stories", to: "/stories", icon: FiBookOpen },
   { label: "Story map", to: "/conversations", icon: FiGitBranch },
 ] as const
 
