@@ -1,9 +1,12 @@
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
 import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
+from jose import JWTError, jwt
 from pydantic import BaseModel
 from sqlalchemy import or_
 from sqlmodel import Session, select
@@ -32,7 +35,11 @@ from app.models import (
     StorySummaryPublic,
     User,
 )
-from app.utils import get_private_image_url, upload_private_image_to_s3
+from app.utils import (
+    get_local_uploads_directory,
+    get_private_image_url,
+    upload_private_story_image,
+)
 from app.progress import award_saved_memory
 
 logging.basicConfig(level=logging.INFO)
@@ -43,7 +50,7 @@ router = APIRouter()
 
 def _story_summary_public(summary: StorySummary) -> StorySummaryPublic:
     result = StorySummaryPublic.from_orm(summary)
-    result.image_url = get_private_image_url(result.image_url)
+    result.image_url = get_private_image_url(result.image_url, user_id=summary.user_id)
     return result
 
 class StoryImageGenerationRequest(BaseModel):
@@ -223,7 +230,7 @@ def update_story_summary(
         if summary_text:
             summary.summary_text = summary_text
         if image:
-            image_url = upload_private_image_to_s3(image)
+            image_url = upload_private_story_image(image)
             summary.image_url = image_url
 
         summary.modified_at = datetime.utcnow()
@@ -253,6 +260,25 @@ def update_story_summary(
         raise HTTPException(status_code=500, detail="Could not update story summary") from e
     finally:
         session.close()
+
+
+@router.get("/uploads/{access_token}", include_in_schema=False)
+def read_private_story_upload(access_token: str) -> FileResponse:
+    """Serve a story image only when the request carries a short-lived signed URL."""
+    try:
+        payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=["HS256"])
+        filename = payload.get("file")
+        if payload.get("scope") != "story-image" or not isinstance(filename, str):
+            raise ValueError("Invalid image token")
+        if Path(filename).name != filename:
+            raise ValueError("Invalid image filename")
+    except (JWTError, ValueError):
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    image_path = get_local_uploads_directory() / filename
+    if not image_path.is_file():
+        raise HTTPException(status_code=404, detail="Image not found")
+    return FileResponse(image_path)
 
 
 @router.delete("/{id}")

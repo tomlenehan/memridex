@@ -575,13 +575,13 @@ export function LandingPage({
                     Light your first star
                   </Button>
                 </HStack>
-                <HStack color="rgba(255,248,232,.85)" spacing={2} fontSize="sm">
-                  <Icon as={FiLock} flexShrink={0} />
-                  <Text>
-                    Your constellation stays private. Share one story at a time,
-                    only when you choose.
-                  </Text>
-                </HStack>
+                {/*<HStack color="rgba(255,248,232,.85)" spacing={2} fontSize="sm">*/}
+                {/*  <Icon as={FiLock} flexShrink={0} />*/}
+                {/*  <Text>*/}
+                {/*    Your constellation stays private. Share one story at a time,*/}
+                {/*    only when you choose.*/}
+                {/*  </Text>*/}
+                {/*</HStack>*/}
               </Stack>
             </Flex>
 

@@ -1,5 +1,6 @@
 import os
 import logging
+import shutil
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -13,6 +14,14 @@ import boto3
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
 from app.core.config import settings
+
+
+LOCAL_UPLOADS_DIRECTORY = Path(__file__).resolve().parent.parent / "uploads"
+
+
+def get_local_uploads_directory() -> Path:
+    """Return the upload directory used locally and by the Render persistent disk."""
+    return LOCAL_UPLOADS_DIRECTORY
 
 
 @dataclass
@@ -163,12 +172,45 @@ def upload_image_to_s3(image: UploadFile) -> str:
     return _upload_image_to_s3(image, private=False)
 
 
-def upload_private_image_to_s3(image: UploadFile) -> str:
-    return _upload_image_to_s3(image, private=True)
+def upload_private_story_image(image: UploadFile) -> str:
+    """Store a story image on the local filesystem or the mounted Render disk."""
+    filename = image.filename or "image"
+    suffix = Path(filename).suffix.lower()
+    if suffix not in {".gif", ".jpeg", ".jpg", ".png", ".webp"}:
+        suffix = ".png" if image.content_type == "image/png" else ".bin"
+
+    try:
+        uploads_directory = get_local_uploads_directory()
+        uploads_directory.mkdir(parents=True, exist_ok=True)
+        stored_filename = f"{uuid4()}{suffix}"
+        with (uploads_directory / stored_filename).open("wb") as destination:
+            shutil.copyfileobj(image.file, destination)
+        return f"disk-private://{stored_filename}"
+    except OSError as error:
+        raise RuntimeError("Could not store the story image") from error
 
 
-def get_private_image_url(image_url: str | None) -> str | None:
-    if not image_url or not image_url.startswith("s3-private://"):
+def get_private_image_url(image_url: str | None, *, user_id: int | None = None) -> str | None:
+    if not image_url:
+        return image_url
+
+    if image_url.startswith("disk-private://"):
+        filename = image_url.removeprefix("disk-private://")
+        if not user_id or Path(filename).name != filename:
+            return None
+        token = jwt.encode(
+            {
+                "exp": datetime.utcnow() + timedelta(hours=1),
+                "file": filename,
+                "scope": "story-image",
+                "sub": str(user_id),
+            },
+            settings.SECRET_KEY,
+            algorithm="HS256",
+        )
+        return f"{settings.API_V1_STR}/summaries/uploads/{token}"
+
+    if not image_url.startswith("s3-private://"):
         return image_url
 
     s3_client = boto3.client(

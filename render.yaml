@@ -28,6 +28,10 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     healthCheckPath: /docs
+    disk:
+      name: story-images
+      mountPath: /app/uploads
+      sizeGB: 1
     envVars:
       - key: PORT
         value: "10000"
@@ -59,8 +63,6 @@ services:
         value: marin
       - key: OPENAI_TRANSCRIPTION_MODEL
         value: gpt-transcribe
-      - key: AWS_DEFAULT_REGION
-        value: us-east-1
 
 databases:
   - name: memribox-db

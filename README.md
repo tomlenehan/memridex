@@ -64,9 +64,9 @@ The Blueprint is configured for `memriplace.com` and `www.memriplace.com`.
 Add the custom domain to the frontend service in Render and complete the DNS
 verification before sending users to it.
 
-Optional upload settings can be added to `memribox-api` later if you use S3
-uploads: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
-`AWS_UPLOAD_BUCKET_NAME`, and `AWS_DEFAULT_REGION`.
+Story images are stored privately in `backend/uploads/` for local Compose and
+on the API service's `/app/uploads` persistent disk in Render. The API returns
+short-lived signed URLs for these images.
 
 Run backend tests inside Docker:
 

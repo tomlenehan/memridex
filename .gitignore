@@ -9,6 +9,7 @@ __pycache__/
 # Backend generated files
 backend/.coverage
 backend/htmlcov/
+backend/uploads/
 
 # Frontend generated files
 frontend/dist/
