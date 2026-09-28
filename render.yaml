@@ -23,7 +23,7 @@ services:
   - type: web
     name: memribox-api
     runtime: docker
-    plan: free
+    plan: 0.5c-512mb
     region: oregon
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
@@ -64,7 +64,8 @@ services:
 
 databases:
   - name: memribox-db
-    plan: free
+    plan: 0.1c-256mb
+    diskSizeGB: 1
     region: oregon
     databaseName: memribox
     user: memribox

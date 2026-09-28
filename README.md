@@ -42,8 +42,9 @@ specific backend URL directly, set `VITE_API_URL`.
 The repo includes a Render Blueprint at `render.yaml`. It creates:
 
 - `memribox-web`: the public Nginx/Vite frontend
-- `memribox-api`: the FastAPI backend
-- `memribox-db`: a managed Render Postgres database
+- `memribox-api`: the FastAPI backend on Render's 512 MB paid compute plan
+- `memribox-db`: a managed Render Postgres database on the 256 MB paid
+  compute plan with 1 GB of storage
 
 In Render, create a new Blueprint from this repository. During setup, Render
 will prompt for the secret values marked with `sync: false`:
@@ -53,9 +54,11 @@ will prompt for the secret values marked with `sync: false`:
 
 The frontend is configured as the public app. It serves static files and proxies
 `/api`, `/docs`, and `/redoc` to the API service's Render-managed public hostname.
-This lets the Blueprint work on Render's free web-service plan, which cannot
-receive private-network traffic. The backend runs migrations and seeds initial
-data from `backend/prestart.sh` before starting.
+The frontend remains on Render's free web-service plan. The API uses
+`0.5c-512mb`, so it stays available instead of sleeping after inactivity. The
+database uses `0.1c-256mb` with 1 GB of storage so it does not expire under the
+free database limit. The backend runs migrations and seeds initial data from
+`backend/prestart.sh` before starting.
 
 The Blueprint is configured for `memriplace.com` and `www.memriplace.com`.
 Add the custom domain to the frontend service in Render and complete the DNS
