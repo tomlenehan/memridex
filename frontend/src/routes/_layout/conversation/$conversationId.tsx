@@ -15,6 +15,7 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
+import { useRef } from "react"
 import { FiArrowLeft, FiCheck, FiCompass, FiGitBranch } from "react-icons/fi"
 
 import { ConversationsService } from "../../../client"
@@ -30,6 +31,7 @@ function ConversationPage() {
   const { conversationId } = Route.useParams()
   const id = Number(conversationId)
   const queryClient = useQueryClient()
+  const branchPollDeadline = useRef<{ id: number; until: number } | null>(null)
   const conversationQuery = useQuery({
     queryKey: ["conversationNode", id],
     queryFn: () => ConversationsService.readConversation({ id }),
@@ -39,6 +41,16 @@ function ConversationPage() {
     queryKey: ["conversationConstellation"],
     queryFn: () => ConversationsService.readConversations({ limit: 500 }),
     enabled: Number.isInteger(id) && id > 0,
+    refetchInterval: (query) => {
+      const conversation = conversationQuery.data
+      if (!conversation || (conversation.user_turn_count ?? 0) < 4 || (conversation.node_depth ?? 0) >= 4) return false
+      const hasNewPath = query.state.data?.data.some((item) => item.parent_conversation_id === id)
+      if (hasNewPath) return false
+      if (!branchPollDeadline.current || branchPollDeadline.current.id !== id) {
+        branchPollDeadline.current = { id, until: Date.now() + 30_000 }
+      }
+      return Date.now() < branchPollDeadline.current.until ? 2_500 : false
+    },
   })
   const retryBranches = useMutation({
     mutationFn: () => ConversationsService.retryStoryBranches({ id }),

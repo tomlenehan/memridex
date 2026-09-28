@@ -15,7 +15,9 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
   const streamingMessageIds = useSelector((state: RootState) => state.chat.streamingMessageIds);
   const status = useSelector((state: RootState) => state.chat.status);
   const error = useSelector((state: RootState) => state.chat.error);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const stickToBottomRef = useRef(true);
+  const previousMessageCountRef = useRef(0);
   const bgColor = useColorModeValue("#FBF9F1", "ui.dark");
   const textColor = useColorModeValue("#17353B", "ui.light");
 
@@ -25,7 +27,20 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
   }, [conversationId, dispatch]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (
+      messages.length > previousMessageCountRef.current &&
+      messages.slice(previousMessageCountRef.current).some((message) => message.sender_type === "user")
+    ) {
+      stickToBottomRef.current = true;
+    }
+    previousMessageCountRef.current = messages.length;
+    const frame = window.requestAnimationFrame(() => {
+      const container = scrollContainerRef.current;
+      if (container && stickToBottomRef.current) {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [messages]);
 
   if (status === 'loading') {
@@ -37,7 +52,19 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
   }
 
   return (
-    <Box flex="1" overflowY="auto" px={{ base: 4, md: 7 }} py={{ base: 5, md: 7 }} bg={bgColor} height="100%">
+    <Box
+      ref={scrollContainerRef}
+      flex="1"
+      overflowY="auto"
+      px={{ base: 4, md: 7 }}
+      py={{ base: 5, md: 7 }}
+      bg={bgColor}
+      height="100%"
+      onScroll={(event) => {
+        const container = event.currentTarget;
+        stickToBottomRef.current = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+      }}
+    >
       <VStack spacing={5} align="stretch" maxW="760px" mx="auto">
         {messages.map((message) => {
           const isStreaming = streamingMessageIds.includes(message.id);
@@ -75,7 +102,6 @@ const ChatMessages = ({ conversationId }: ChatMessagesProps) => {
             </Flex>
           );
         })}
-        <div ref={messagesEndRef} />
       </VStack>
     </Box>
   );

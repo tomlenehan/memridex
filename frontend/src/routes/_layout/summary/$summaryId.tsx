@@ -8,11 +8,8 @@ import {
   Text,
   FormControl,
   FormLabel,
-  HStack,
   Input,
-  SimpleGrid,
   Spinner,
-  Stack,
   Textarea,
   Image,
   VStack,
@@ -30,12 +27,14 @@ import {
   ContactsService,
   ContactRead,
   Body_summaries_update_story_summary,
-  type RelatedStorySuggestion,
+  type StoryRelationshipPublic,
   type StorySummaryPublic,
 } from "../../../client"
-import { FiArrowRight, FiGitBranch, FiImage, FiLink, FiX } from "react-icons/fi"
+import { FiGitBranch, FiImage } from "react-icons/fi"
 import ConstellationStar from "../../../components/Common/ConstellationStar"
+import ConnectionConstellation from "../../../components/MemoryMap/ConnectionConstellation"
 import useCustomToast from "../../../hooks/useCustomToast"
+import { celebrateConnection } from "../../../lib/celebration"
 import { API_BASE_URL } from "../../../config"
 
 export const Route = createFileRoute("/_layout/summary/$summaryId")({
@@ -68,6 +67,7 @@ function SummaryPage() {
   const [generatedImageFile, setGeneratedImageFile] = useState<File | undefined>()
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [conversationId, setConversationId] = useState<number | undefined>(undefined)
+  const [currentStory, setCurrentStory] = useState<StorySummaryPublic | undefined>()
   const showToast = useCustomToast()
   const queryClient = useQueryClient()
 
@@ -113,6 +113,7 @@ function SummaryPage() {
       setValue("title", response.title || "")
       setImageUrl(response.image_url || undefined)
       setConversationId(response.conversation_id)
+      setCurrentStory(response)
       setStatus("succeeded")
       console.log("Initial image URL:", response.image_url)
     } catch (error) {
@@ -146,6 +147,7 @@ function SummaryPage() {
       setStatus("succeeded")
 
       setImageUrl(response.image_url || undefined)
+      setCurrentStory(response)
       setNewImageUploaded(false)
       setGeneratedImageFile(undefined)
     } catch (error) {
@@ -246,6 +248,7 @@ function SummaryPage() {
           </Text>
         </Box>
       </Flex>
+      {status === "succeeded" && <RelatedMemories storyId={Number(summaryId)} currentStory={currentStory} />}
       <Flex flex="1" direction="column" mt={4} bg="white" borderRadius="24px" border="1px solid #E5E8DC">
         <Box flex="1" overflowY="auto" p={4}>
           {status === "loading" ? (
@@ -346,7 +349,6 @@ function SummaryPage() {
                   Share
                 </Button>
               </form>
-              <RelatedMemories storyId={Number(summaryId)} />
             </>
           )}
         </Box>
@@ -357,9 +359,10 @@ function SummaryPage() {
 
 export default SummaryPage
 
-function RelatedMemories({ storyId }: { storyId: number }) {
+function RelatedMemories({ storyId, currentStory }: { storyId: number; currentStory?: StorySummaryPublic }) {
   const queryClient = useQueryClient()
   const [dismissed, setDismissed] = useState<number[]>([])
+  const [recentlyConnectedId, setRecentlyConnectedId] = useState<number | null>(null)
   const suggestionsQuery = useQuery({
     queryKey: ["relatedStories", storyId],
     queryFn: () => SummariesService.readRelatedStories({ id: storyId, limit: 5 }),
@@ -375,7 +378,12 @@ function RelatedMemories({ storyId }: { storyId: number }) {
   })
   const createLink = useMutation({
     mutationFn: (otherId: number) => SummariesService.createStoryRelationship({ id: storyId, otherId }),
-    onSuccess: async (_relationship, otherId) => {
+    onSuccess: async (relationship, otherId) => {
+      queryClient.setQueryData<StoryRelationshipPublic[]>(["storyRelationships"], (current = []) =>
+        current.some((item) => item.id === relationship.id) ? current : [...current, relationship],
+      )
+      setRecentlyConnectedId(otherId)
+      celebrateConnection()
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["storyRelationships"] }),
         queryClient.invalidateQueries({
@@ -390,6 +398,13 @@ function RelatedMemories({ storyId }: { storyId: number }) {
   const removeLink = useMutation({
     mutationFn: (otherId: number) => SummariesService.deleteStoryRelationship({ id: storyId, otherId }),
     onSuccess: async (_result, otherId) => {
+      queryClient.setQueryData<StoryRelationshipPublic[]>(["storyRelationships"], (current = []) =>
+        current.filter((item) => !(
+          (item.story_a_id === storyId && item.story_b_id === otherId) ||
+          (item.story_b_id === storyId && item.story_a_id === otherId)
+        )),
+      )
+      setRecentlyConnectedId(null)
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["storyRelationships"] }),
         queryClient.invalidateQueries({
@@ -404,6 +419,8 @@ function RelatedMemories({ storyId }: { storyId: number }) {
 
   const relationships = relationshipsQuery.data ?? []
   const storyById = new Map((storiesQuery.data ?? []).map((story) => [story.id, story]))
+  if (currentStory) storyById.set(currentStory.id, currentStory)
+  for (const suggestion of suggestionsQuery.data ?? []) storyById.set(suggestion.story.id, suggestion.story)
   const connected = relationships
     .flatMap((relationship) => {
       if (relationship.story_a_id === storyId)
@@ -424,9 +441,12 @@ function RelatedMemories({ storyId }: { storyId: number }) {
     })
     .filter((item): item is { id: number; story: StorySummaryPublic } => Boolean(item.story))
   const connectedIds = new Set(connected.map((item) => item.id))
-  const suggestions = (suggestionsQuery.data ?? []).filter((item) => !connectedIds.has(item.story.id) && !dismissed.includes(item.story.id)).slice(0, 2)
+  const suggestions = (suggestionsQuery.data ?? [])
+    .filter((item) => !connectedIds.has(item.story.id) && !dismissed.includes(item.story.id))
+    .slice(0, 2)
+  const displayedConnected = connected.slice(0, 4 - suggestions.length)
 
-  if (suggestionsQuery.isLoading || relationshipsQuery.isLoading) {
+  if (suggestionsQuery.isLoading || relationshipsQuery.isLoading || storiesQuery.isLoading) {
     return (
       <Flex justify="center" py={8}>
         <Spinner color="#4B8D82" />
@@ -435,102 +455,29 @@ function RelatedMemories({ storyId }: { storyId: number }) {
   }
 
   return (
-    <Stack spacing={5} mt={8} pt={6} borderTop="1px solid" borderColor="ui.line">
-      {connected.length > 0 && (
-        <Box>
-          <HStack spacing={2} mb={3} color="#4B8D82">
-            <Icon as={FiLink} />
-            <Heading size="sm" color="ui.ink">
-              Connected memories
-            </Heading>
-          </HStack>
-          <Stack spacing={2}>
-            {connected.map(({ id, story }) => (
-              <Flex key={id} align="center" justify="space-between" gap={3} p={3} bg="#F1F7F3" borderRadius="12px">
-                <Button
-                  as={Link}
-                  to="/summary/$summaryId"
-                  params={{ summaryId: String(id) }}
-                  variant="link"
-                  rightIcon={<FiArrowRight />}
-                  whiteSpace="normal"
-                  textAlign="left"
-                  justifyContent="flex-start"
-                >
-                  {story.title || "A remembered moment"}
-                </Button>
-                <Button
-                  aria-label={`Disconnect ${story.title || "memory"}`}
-                  title="Remove this connection"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeLink.mutate(id)}
-                  isLoading={removeLink.isPending && removeLink.variables === id}
-                  flexShrink={0}
-                >
-                  <FiX />
-                </Button>
-              </Flex>
-            ))}
-          </Stack>
-        </Box>
-      )}
-
-      {suggestionsQuery.isError ? (
-        <Text color="ui.muted" fontSize="sm">
-          Memory connections are temporarily unavailable.
+    <Box mt={5}>
+      <ConnectionConstellation
+        currentStory={storyById.get(storyId)}
+        connected={displayedConnected.map(({ story }) => story)}
+        suggestions={suggestions}
+        hiddenConnectionCount={Math.max(0, connected.length - displayedConnected.length)}
+        connectingId={createLink.isPending ? createLink.variables : undefined}
+        disconnectingId={removeLink.isPending ? removeLink.variables : undefined}
+        recentlyConnectedId={recentlyConnectedId}
+        onConnect={(id) => createLink.mutate(id)}
+        onDisconnect={(id) => removeLink.mutate(id)}
+        onDismiss={(id) => setDismissed((items) => [...items, id])}
+      />
+      {suggestionsQuery.isError && (
+        <Text color="ui.muted" fontSize="sm" mt={4}>
+          Possible connections are temporarily unavailable. Your saved links are still here.
         </Text>
-      ) : suggestions.length > 0 ? (
-        <Box>
-          <Heading size="sm" mb={2}>
-            Could these stories be connected?
-          </Heading>
-          <Text color="ui.muted" fontSize="sm" mb={4}>
-            These stories may share a theme. Connect them only if it feels right to you.
-          </Text>
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-            {suggestions.map((suggestion: RelatedStorySuggestion) => (
-              <Box key={suggestion.story.id} p={4} border="1px solid #E8E2D3" borderRadius="14px" bg="#FFFDF5">
-                <Heading size="sm" lineHeight="1.4" mb={3}>
-                  {suggestion.story.title || "A remembered moment"}
-                </Heading>
-                <Text color="ui.muted" fontSize="sm" lineHeight="1.5" noOfLines={2} mb={3}>
-                  {suggestion.story.summary_text}
-                </Text>
-                <HStack spacing={2}>
-                  <Button
-                    variant="accent"
-                    size="sm"
-                    leftIcon={<FiLink />}
-                    onClick={() => createLink.mutate(suggestion.story.id)}
-                    isLoading={createLink.isPending && createLink.variables === suggestion.story.id}
-                  >
-                    Connect memories
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setDismissed((items) => [...items, suggestion.story.id])}>
-                    Not now
-                  </Button>
-                </HStack>
-              </Box>
-            ))}
-          </SimpleGrid>
-        </Box>
-      ) : suggestionsQuery.data?.length === 0 && connected.length === 0 ? (
-        <Box>
-          <Heading size="sm" mb={2}>
-            Connections
-          </Heading>
-          <Text color="ui.muted" fontSize="sm">
-            As you save more memories, possible connections will appear here.
-          </Text>
-        </Box>
-      ) : null}
-
+      )}
       {(createLink.isError || removeLink.isError) && (
-        <Text role="alert" color="red.600" fontSize="sm">
+        <Text role="alert" color="red.600" fontSize="sm" mt={4}>
           We couldn’t update this connection. Please try again.
         </Text>
       )}
-    </Stack>
+    </Box>
   )
 }

@@ -94,14 +94,14 @@ const chatSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchMessages.pending, (state) => {
-        state.status = 'loading';
+        if (state.messages.length === 0) state.status = 'loading';
       })
       .addCase(fetchMessages.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.messages = action.payload;
       })
       .addCase(fetchMessages.rejected, (state, action) => {
-        state.status = 'failed';
+        state.status = state.messages.length === 0 ? 'failed' : 'succeeded';
         state.error = action.error.message || null;
       });
   },

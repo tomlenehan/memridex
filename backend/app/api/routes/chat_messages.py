@@ -1,10 +1,11 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session, func, select
 
 from app.api.deps import get_current_user, get_db
+from app.core.db import engine
 from app.llm.conversation_agent import send_message
 from app.llm.story_nodes import (
     MAX_NODE_USER_TURNS,
@@ -30,11 +31,25 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+async def generate_story_branches_after_reply(conversation_id: int) -> None:
+    """Create the next paths after the reply has reached the storyteller."""
+    with Session(engine) as session:
+        conversation = session.get(Conversation, conversation_id)
+        if conversation is None:
+            return
+        try:
+            await create_story_branches(conversation, session)
+        except Exception:
+            session.rollback()
+            logger.exception("Unable to generate story branches for node %s", conversation_id)
+
+
 @router.post("/{conversation_id}/messages", response_model=ChatMessagePublic)
 async def create_chat_message(
         *,
         conversation_id: int,
         chat_message_in: ChatMessageCreate,
+        background_tasks: BackgroundTasks,
         current_user: User = Depends(get_current_user),
         db_session: Session = Depends(get_db)
 ) -> StreamingResponse:
@@ -110,16 +125,15 @@ async def create_chat_message(
         refresh_story_status(conversation, db_session)
         db_session.commit()
         if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
-            try:
-                await create_story_branches(conversation, db_session)
-            except Exception:
-                logger.exception(
-                    "Unable to generate story branches for node %s", conversation_id
-                )
+            background_tasks.add_task(generate_story_branches_after_reply, conversation_id)
 
     current_user_id = current_user.id
 
-    return StreamingResponse(message_generator(db_session, current_user_id), media_type="text/event-stream")
+    return StreamingResponse(
+        message_generator(db_session, current_user_id),
+        media_type="text/event-stream",
+        background=background_tasks,
+    )
 
 
 @router.post("/{conversation_id}/messages/persist", response_model=ChatMessagePublic)
@@ -127,6 +141,7 @@ async def persist_realtime_message(
         *,
         conversation_id: int,
         chat_message_in: ChatMessageCreate,
+        background_tasks: BackgroundTasks,
         current_user: User = Depends(get_current_user),
         db_session: Session = Depends(get_db),
 ) -> ChatMessage:
@@ -169,12 +184,7 @@ async def persist_realtime_message(
         chat_message_in.sender_type == ChatMessageSender.AI
         and conversation.user_turn_count >= MAX_NODE_USER_TURNS
     ):
-        try:
-            await create_story_branches(conversation, db_session)
-        except Exception:
-            logger.exception(
-                "Unable to generate voice story branches for node %s", conversation_id
-            )
+        background_tasks.add_task(generate_story_branches_after_reply, conversation_id)
     return chat_message
 
 

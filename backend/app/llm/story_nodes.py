@@ -95,6 +95,15 @@ Conversation transcript:
         [SystemMessage(content=instructions), HumanMessage(content=request)]
     )
 
+    # A manual retry may have finished while the automatic request was generating.
+    existing_children = session.exec(
+        select(Conversation)
+        .where(Conversation.parent_conversation_id == conversation.id)
+        .order_by(Conversation.id.asc())
+    ).all()
+    if existing_children:
+        return existing_children
+
     children = []
     for branch in plan.branches[:3]:
         child = Conversation(

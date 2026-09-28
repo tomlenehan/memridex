@@ -49,3 +49,20 @@ export function celebrateMemory() {
     })
     .catch(() => {})
 }
+
+export function celebrateConnection() {
+  if (soundEnabled()) playChime()
+  void import("canvas-confetti")
+    .then(({ default: confetti }) => {
+      void confetti({
+        particleCount: 34,
+        spread: 54,
+        origin: { y: 0.65 },
+        colors: ["#E9B84E", "#5C9F90", "#B7A0CF"],
+        disableForReducedMotion: true,
+        ticks: 120,
+        scalar: 0.8,
+      })
+    })
+    .catch(() => {})
+}

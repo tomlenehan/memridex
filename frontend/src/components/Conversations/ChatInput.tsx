@@ -31,6 +31,7 @@ import {
   addMessage,
   addStreamingMessage,
   endStreamingMessage,
+  fetchMessages,
   removeStreamingMessage,
   replaceStreamingMessage,
   startStreamingMessage,
@@ -74,6 +75,7 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
   const [startMode, setStartMode] = useState<"choose" | "voice" | "type">("choose")
   const [isSavingMemory, setIsSavingMemory] = useState(false)
   const savingMemory = useRef(false)
+  const sendingMessage = useRef(false)
   const streamingMessageId = useRef<number | null>(null)
   const assistantVoiceMessageId = useRef<number | null>(null)
   const userVoiceMessageIds = useRef(new Map<string, number>())
@@ -113,6 +115,14 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
     const tempId = Date.now() + 1
     streamingMessageId.current = tempId
     dispatch(startStreamingMessage({ id: tempId }))
+    let pendingText = ""
+    let frame: number | null = null
+    const flushText = () => {
+      frame = null
+      if (!pendingText) return
+      dispatch(addStreamingMessage({ id: tempId, content: pendingText }))
+      pendingText = ""
+    }
 
     try {
       const response = await fetch(
@@ -138,17 +148,17 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        dispatch(
-          addStreamingMessage({
-            id: tempId,
-            content: decoder.decode(value, { stream: true }),
-          }),
-        )
+        pendingText += decoder.decode(value, { stream: true })
+        if (frame === null) frame = window.requestAnimationFrame(flushText)
       }
+      pendingText += decoder.decode()
     } finally {
+      if (frame !== null) window.cancelAnimationFrame(frame)
+      flushText()
       dispatch(endStreamingMessage({ id: tempId }))
       streamingMessageId.current = null
-      refreshConversation()
+      await dispatch(fetchMessages(conversationId))
+      refreshConversation(false)
     }
   }
 
@@ -284,17 +294,40 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
 
   const onSubmit: SubmitHandler<ChatMessageCreate> = async (data) => {
     const content = data.content.trim()
-    if (!content) return
+    if (!content || sendingMessage.current) return
+    sendingMessage.current = true
 
-    if (isVoiceActive) {
-      try {
-        const sent = await sendText(content)
-        if (!sent) {
-          throw new Error(
-            "Voice conversation is still connecting. Please try again.",
+    try {
+      if (isVoiceActive) {
+        try {
+          const sent = await sendText(content)
+          if (!sent) {
+            throw new Error(
+              "Voice conversation is still connecting. Please try again.",
+            )
+          }
+          reset()
+        } catch (error) {
+          showToast(
+            "Message not sent",
+            error instanceof Error ? error.message : "Please try again.",
+            "error",
           )
         }
-        reset()
+        return
+      }
+
+      const newMessage = {
+        id: Date.now(),
+        sender_type: data.sender_type,
+        content,
+        timestamp: new Date().toISOString(),
+      }
+      dispatch(addMessage(newMessage))
+      reset()
+
+      try {
+        await handleStream({ ...data, content })
       } catch (error) {
         showToast(
           "Message not sent",
@@ -302,26 +335,8 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
           "error",
         )
       }
-      return
-    }
-
-    const newMessage = {
-      id: Date.now(),
-      sender_type: data.sender_type,
-      content,
-      timestamp: new Date().toISOString(),
-    }
-    dispatch(addMessage(newMessage))
-    reset()
-
-    try {
-      await handleStream({ ...data, content })
-    } catch (error) {
-      showToast(
-        "Message not sent",
-        error instanceof Error ? error.message : "Please try again.",
-        "error",
-      )
+    } finally {
+      sendingMessage.current = false
     }
   }
 

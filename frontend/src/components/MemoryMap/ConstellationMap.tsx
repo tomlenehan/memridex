@@ -108,8 +108,8 @@ export default function ConstellationMap({
                   x2={`${b.x}%`}
                   y2={b.y}
                   stroke={active ? "#68967A" : "#C1D1BA"}
-                  strokeWidth={active ? 3 : 2}
-                  strokeDasharray="5 7"
+                  strokeWidth={active ? 3.5 : 2.5}
+                  strokeLinecap="round"
                 />
               )
             })}
