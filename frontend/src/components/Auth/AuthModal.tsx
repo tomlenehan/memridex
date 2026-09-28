@@ -20,7 +20,7 @@ import {
 import { Link } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import memriPlaceLogo from "../../assets/images/MemriPlaceMLogoLG.png"
+import memriPlaceLogo from "../../assets/images/MemriPlaceLighterLogo.png"
 import useAuth from "../../hooks/useAuth"
 import { emailPattern, passwordRules } from "../../utils"
 
@@ -97,11 +97,11 @@ function AuthModal({ isOpen, mode, onClose }: AuthModalProps) {
         </ModalHeader>
         <ModalCloseButton color="#526A70" top={5} />
         <ModalBody pb={3}>
-          <Text color="#526A70" mb={6}>
-            {isSignup
-              ? "Create your free MemriPlace account."
-              : "Pick up the memories you have already started."}
-          </Text>
+          {/*<Text color="#526A70" mb={6}>*/}
+          {/*  {isSignup*/}
+          {/*    ? "Create your free MemriPlace account."*/}
+          {/*    : "Pick up the memories you have already started."}*/}
+          {/*</Text>*/}
           <Stack as="form" onSubmit={handleSubmit(onSubmit)} spacing={4}>
             {isSignup && (
               <FormControl isInvalid={!!errors.full_name}>

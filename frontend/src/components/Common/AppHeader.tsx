@@ -23,7 +23,7 @@ import {
   FiSettings,
 } from "react-icons/fi"
 
-import memriPlaceMark from "../../assets/images/MemriPlaceMLogoLG.png"
+import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import useAuth from "../../hooks/useAuth"
 import SoundToggle from "../Progress/SoundToggle"
 import UserMenu from "./UserMenu"

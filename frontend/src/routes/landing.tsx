@@ -25,8 +25,8 @@ import {
 import background from "../assets/images/homepage_parallax/background.png"
 import foreground from "../assets/images/homepage_parallax/foreground.png"
 import midground from "../assets/images/homepage_parallax/midground.png"
-import memriPlaceLogo from "../assets/images/MemriPlaceMLogoLG.png"
-import memriPlaceTextLogo from "../assets/images/MemriPlaceTextLogo.png"
+import memriPlaceLogo from "../assets/images/MemriPlaceLighterLogo.png"
+import memriPlaceTextLogo from "../assets/images/MemriPlaceTextLogoFlat.png"
 import starscape from "../assets/images/homepage_parallax/starscape.png"
 import AuthModal from "../components/Auth/AuthModal"
 import ConstellationStar from "../components/Common/ConstellationStar"
@@ -59,14 +59,14 @@ const storySteps = [
   {
     icon: FiMic,
     index: "02",
-    text: "Speak or type to your AI companion. A few thoughtful questions help bring the little details back.",
+    text: "Your AI companion will ask you a few thoughtful questions help bring the little details back.",
     title: "Follow the memory",
     color: "#DDEDE1",
   },
   {
     icon: FiStar,
     index: "03",
-    text: "Save your story, earn a little XP, and add a star to your constellation. Come back whenever a new memory finds you.",
+    text: "Save your story to add a star to your constellation. Come back whenever a new memory finds you.",
     title: "Watch your sky grow",
     color: "#E9DFF1",
   },
@@ -244,63 +244,91 @@ export function LandingPage({
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
-
     const track = parallaxTrackRef.current
-    if (!track) return
+    const scene = track?.querySelector<HTMLElement>("[data-parallax-scene]")
+    if (!track || !scene) return
 
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const layers = Array.from(scene.querySelectorAll<HTMLElement>("[data-parallax-layer]"))
+    const copy = scene.querySelector<HTMLElement>("[data-parallax-copy]")
     let frame: number | null = null
-    const layerDistances: Record<string, number> = {
-      background: -15,
-      starscape: -58,
-      midground: -102,
-      foreground: -168,
+    let current = 0
+    let target = 0
+    let lastTime = 0
+    let sceneHeight = scene.offsetHeight
+    let travel = 1
+
+    const paint = (progress: number) => {
+      const strength = window.innerWidth < 768 ? 0.6 : 1
+      const depth = progress * strength
+      // Push into the scene around the reader; near objects spread outward
+      // while the horizon stays almost still. Scaling keeps every edge covered.
+      const transforms: Record<string, [number, number, number]> = {
+        background: [0, -sceneHeight * 0.012 * depth, 1.08 + 0.018 * depth],
+        starscape: [-12 * depth, -sceneHeight * 0.075 * depth, 1.06 + 0.08 * depth],
+        midground: [-8 * depth, -sceneHeight * 0.025 * depth, 1.08 + 0.075 * depth],
+        foreground: [22 * depth, sceneHeight * 0.065 * depth, 1.1 + 0.19 * depth],
+      }
+      for (const layer of layers) {
+        const [x, y, scale] = transforms[layer.dataset.parallaxLayer ?? ""] ?? [0, 0, 1]
+        layer.style.setProperty("--layer-x", `${x}px`)
+        layer.style.setProperty("--layer-y", `${y}px`)
+        layer.style.setProperty("--layer-scale", `${scale}`)
+      }
+      copy?.style.setProperty("--copy-offset", `${-sceneHeight * 0.085 * depth}px`)
+      copy?.style.setProperty("--copy-opacity", `${1 - progress * 0.1}`)
+      copy?.style.setProperty("--logo-scale", `${1 - 0.04 * depth}`)
     }
 
-    const updateProgress = () => {
-      frame = null
-      const scene = track.querySelector<HTMLElement>("[data-parallax-scene]")
-      if (!scene) return
-
-      const trackTop = track.getBoundingClientRect().top + window.scrollY
-      const scrollDistance = Math.max(
-        track.offsetHeight - scene.offsetHeight,
-        1,
-      )
-      const progress = Math.min(
-        1,
-        Math.max(0, (window.scrollY - trackTop) / scrollDistance),
-      )
-
-      for (const layer of track.querySelectorAll<HTMLElement>(
-        "[data-parallax-layer]",
-      )) {
-        const depth = layerDistances[layer.dataset.parallaxLayer ?? ""] ?? 0
-        const offset = depth * progress
-        layer.style.setProperty("--parallax-offset", `${offset}px`)
-        layer.style.setProperty(
-          "--parallax-fade-size",
-          `${Math.abs(offset) + 24}px`,
-        )
-      }
-
-      const copy = track.querySelector<HTMLElement>("[data-parallax-copy]")
-      copy?.style.setProperty("--copy-offset", `${-24 * progress}px`)
-      copy?.style.setProperty("--copy-opacity", `${1 - progress * 0.12}`)
+    const animate = (time: number) => {
+      const elapsed = lastTime ? Math.min(time - lastTime, 64) : 16
+      lastTime = time
+      current += (target - current) * (1 - Math.exp(-elapsed / 65))
+      const settled = Math.abs(target - current) < 0.0001
+      if (settled) current = target
+      paint(current)
+      frame = settled ? null : window.requestAnimationFrame(animate)
+      if (settled) lastTime = 0
     }
 
     const scheduleUpdate = () => {
-      if (frame === null) frame = window.requestAnimationFrame(updateProgress)
+      const progress = Math.min(1, Math.max(0, -track.getBoundingClientRect().top / travel))
+      // A short ease-in avoids a sudden jump as the first scroll starts.
+      target = reducedMotion.matches ? 0 : (1.08 * progress * progress) / (progress + 0.08)
+      if (reducedMotion.matches) {
+        if (frame !== null) window.cancelAnimationFrame(frame)
+        frame = null
+        current = 0
+        lastTime = 0
+        paint(0)
+      } else if (frame === null && Math.abs(target - current) >= 0.0001) {
+        frame = window.requestAnimationFrame(animate)
+      }
     }
 
-    scheduleUpdate()
+    const measure = () => {
+      sceneHeight = scene.offsetHeight
+      travel = Math.max(track.offsetHeight - sceneHeight, 1)
+      paint(current)
+      scheduleUpdate()
+    }
+
+    measure()
+    current = target
+    paint(current)
+    const resizeObserver = new ResizeObserver(measure)
+    resizeObserver.observe(track)
+    resizeObserver.observe(scene)
     window.addEventListener("scroll", scheduleUpdate, { passive: true })
-    window.addEventListener("resize", scheduleUpdate)
+    window.addEventListener("resize", measure)
+    reducedMotion.addEventListener("change", measure)
 
     return () => {
       if (frame !== null) window.cancelAnimationFrame(frame)
+      resizeObserver.disconnect()
       window.removeEventListener("scroll", scheduleUpdate)
-      window.removeEventListener("resize", scheduleUpdate)
+      window.removeEventListener("resize", measure)
+      reducedMotion.removeEventListener("change", measure)
     }
   }, [])
 
@@ -345,10 +373,12 @@ export function LandingPage({
           ref={parallaxTrackRef}
           as="section"
           h={{ base: "160svh", md: "175svh" }}
+          minH={{ base: "calc(600px + 60svh)", md: "calc(600px + 75svh)" }}
           position="relative"
           sx={{
             "@media (prefers-reduced-motion: reduce)": {
               height: "100svh",
+              minHeight: "600px",
               "& [data-parallax-scene]": {
                 position: "relative",
                 top: "auto",
@@ -376,8 +406,8 @@ export function LandingPage({
               position="absolute"
               src={background}
               top={0}
-              transform="translate3d(0, var(--parallax-offset, 0px), 0) scale(1.08)"
-              transformOrigin="center"
+              transform="translate3d(var(--layer-x, 0px), var(--layer-y, 0px), 0) scale(var(--layer-scale, 1.08))"
+              transformOrigin="70% 70%"
               w="100%"
               zIndex={0}
             />
@@ -394,11 +424,12 @@ export function LandingPage({
               src={starscape}
               sx={{
                 maskImage:
-                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+                  "linear-gradient(to bottom, black calc(100% - 24px), transparent 100%)",
                 WebkitMaskImage:
-                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+                  "linear-gradient(to bottom, black calc(100% - 24px), transparent 100%)",
               }}
-              transform="translate3d(0, var(--parallax-offset, 0px), 0) scale(1.06)"
+              transform="translate3d(var(--layer-x, 0px), var(--layer-y, 0px), 0) scale(var(--layer-scale, 1.06))"
+              transformOrigin="70% 70%"
               w="100%"
               zIndex={1}
             />
@@ -415,11 +446,12 @@ export function LandingPage({
               src={midground}
               sx={{
                 maskImage:
-                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+                  "linear-gradient(to bottom, black calc(100% - 24px), transparent 100%)",
                 WebkitMaskImage:
-                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+                  "linear-gradient(to bottom, black calc(100% - 24px), transparent 100%)",
               }}
-              transform="translate3d(0, var(--parallax-offset, 0px), 0) scale(1.08)"
+              transform="translate3d(var(--layer-x, 0px), var(--layer-y, 0px), 0) scale(var(--layer-scale, 1.08))"
+              transformOrigin="70% 75%"
               w="100%"
               zIndex={2}
             />
@@ -504,6 +536,8 @@ export function LandingPage({
                     maxW="100%"
                     objectFit="contain"
                     src={memriPlaceTextLogo}
+                    transform="scale(var(--logo-scale, 1))"
+                    transformOrigin="left center"
                     w={{ base: "320px", sm: "430px", md: "650px" }}
                   />
                 </Heading>
@@ -514,16 +548,14 @@ export function LandingPage({
                   maxW="520px"
                   sx={storybookHeading}
                 >
-                  Your life is full of little stars.
+                  Life is full of memories and each one is a star.
                 </Text>
                 <Text
                   color="rgba(255, 248, 232, 0.78)"
                   lineHeight="1.7"
                   maxW="460px"
                 >
-                  Turn the moments you remember into stories to keep. Follow the
-                  connections, grow your constellation, and level up along the
-                  way.
+                  Turn the moments you remember into stories you'll want to keep.
                 </Text>
                 <HStack flexWrap="wrap" pt={2} spacing={3}>
                   <Button
@@ -539,7 +571,8 @@ export function LandingPage({
                 <HStack color="rgba(255,248,232,.85)" spacing={2} fontSize="sm">
                   <Icon as={FiLock} flexShrink={0} />
                   <Text>
-                    Your stories are private. Sharing is always your choice.
+                    Your constellation stays private. Share one story at a time,
+                    only when you choose.
                   </Text>
                 </HStack>
               </Stack>
@@ -559,11 +592,12 @@ export function LandingPage({
               src={foreground}
               sx={{
                 maskImage:
-                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+                  "linear-gradient(to bottom, black calc(100% - 24px), transparent 100%)",
                 WebkitMaskImage:
-                  "linear-gradient(to bottom, black calc(100% - var(--parallax-fade-size, 24px)), transparent 100%)",
+                  "linear-gradient(to bottom, black calc(100% - 24px), transparent 100%)",
               }}
-              transform="translate3d(0, var(--parallax-offset, 0px), 0) scale(1.1)"
+              transform="translate3d(var(--layer-x, 0px), var(--layer-y, 0px), 0) scale(var(--layer-scale, 1.1))"
+              transformOrigin="72% 100%"
               w="100%"
               zIndex={5}
             />
@@ -575,8 +609,6 @@ export function LandingPage({
           pb={{ base: 16, md: 24 }}
           pt={{ base: 10, md: 12 }}
           position="relative"
-          borderTopRadius={{ base: "32px", md: "56px" }}
-          mt="-32px"
         >
           <Stack
             maxW="7xl"
@@ -923,18 +955,19 @@ export function LandingPage({
                 lineHeight="1.1"
                 sx={storybookHeading}
               >
-                Your stories are private.
+                Your constellation stays private.
                 <br />
-                Your constellation is yours.
+                Share only the stories you choose.
               </Heading>
               <Text
                 color="#646071"
                 fontSize={{ base: "md", md: "lg" }}
                 lineHeight="1.8"
               >
-                Your stories are saved to your account, never published to a
-                public feed. Other members can’t browse your memories. You
-                decide if, when, and with whom to share a story.
+                Nothing is posted to a public feed, and other members can’t
+                browse your collection. When a memory feels worth passing on,
+                share that individual story with someone you love—without
+                opening the rest of your constellation.
               </Text>
             </Stack>
           </Flex>
@@ -991,7 +1024,7 @@ export function LandingPage({
             </Button>
             <HStack color="#D6E2D4" spacing={2} fontSize="sm">
               <Icon as={FiLock} />
-              <Text>Private stories. Your pace. Your little universe.</Text>
+              <Text>Private by default. Shared story by story.</Text>
             </HStack>
           </Stack>
         </Box>
