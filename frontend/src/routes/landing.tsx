@@ -6,6 +6,12 @@ import {
   Heading,
   Icon,
   Image,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
   SimpleGrid,
   Stack,
   Text,
@@ -241,6 +247,7 @@ export function LandingPage({
 } = {}) {
   const parallaxTrackRef = useRef<HTMLDivElement>(null)
   const storyStepsRef = useRef<HTMLDivElement>(null)
+  const [footerModal, setFooterModal] = useState<"contact" | "legal" | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -755,7 +762,7 @@ export function LandingPage({
             <ConstellationPreview />
             <Stack spacing={5}>
               <Text color="#52735E" fontSize="sm" fontWeight="800">
-                YOUR LIFE, CONNECTED
+                YOUR STORIES, CONNECTED
               </Text>
               <Heading
                 as="h2"
@@ -796,7 +803,7 @@ export function LandingPage({
           >
             <Stack spacing={5}>
               <Text color="#9A6927" fontSize="sm" fontWeight="800">
-                LITTLE MOMENTS. LOVELY MILESTONES.
+                LITTLE MOMENTS LEAD TO MILESTONES.
               </Text>
               <Heading
                 as="h2"
@@ -1041,8 +1048,111 @@ export function LandingPage({
         py={5}
       >
         <Text fontSize="sm">MemriPlace. Stories worth keeping.</Text>
-        <Text fontSize="sm">© {new Date().getFullYear()}</Text>
+        <HStack spacing={{ base: 4, md: 5 }} flexWrap="wrap" justify="center">
+          <Button
+            color="inherit"
+            fontSize="sm"
+            fontWeight="500"
+            minW="auto"
+            onClick={() => setFooterModal("contact")}
+            p={0}
+            textDecoration="underline"
+            textUnderlineOffset="3px"
+            variant="link"
+          >
+            Contact us
+          </Button>
+          <Button
+            color="inherit"
+            fontSize="sm"
+            fontWeight="500"
+            minW="auto"
+            onClick={() => setFooterModal("legal")}
+            p={0}
+            textDecoration="underline"
+            textUnderlineOffset="3px"
+            variant="link"
+          >
+            Privacy & terms
+          </Button>
+          <Text fontSize="sm">© {new Date().getFullYear()}</Text>
+        </HStack>
       </Flex>
+      <Modal isCentered isOpen={footerModal === "contact"} onClose={() => setFooterModal(null)}>
+        <ModalOverlay bg="rgba(3, 19, 24, 0.72)" backdropFilter="blur(8px)" />
+        <ModalContent bg="#FFFDF7" borderRadius="24px" mx={4}>
+          <ModalHeader color="#24483E" fontFamily="Georgia, serif" pt={7}>
+            Contact us
+          </ModalHeader>
+          <ModalCloseButton color="#526A70" top={5} />
+          <ModalBody color="#526A70" lineHeight="1.75" pb={7}>
+            <Text>
+              Questions, ideas, or a story about how MemriPlace is working for you?
+              We’d love to hear from you.
+            </Text>
+            <Button
+              as="a"
+              colorScheme="teal"
+              href="mailto:Lenehan3@gmail.com"
+              mt={5}
+              variant="outline"
+            >
+              Lenehan3@gmail.com
+            </Button>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+      <Modal isCentered isOpen={footerModal === "legal"} onClose={() => setFooterModal(null)} size={{ base: "sm", md: "lg" }}>
+        <ModalOverlay bg="rgba(3, 19, 24, 0.72)" backdropFilter="blur(8px)" />
+        <ModalContent bg="#FFFDF7" borderRadius="24px" mx={4}>
+          <ModalHeader color="#24483E" fontFamily="Georgia, serif" pt={7}>
+            Privacy & terms
+          </ModalHeader>
+          <ModalCloseButton color="#526A70" top={5} />
+          <ModalBody color="#526A70" lineHeight="1.75" pb={7}>
+            <Stack spacing={5}>
+              <Box>
+                <Heading as="h3" color="#24483E" fontSize="lg" mb={2} sx={storybookHeading}>
+                  Your privacy
+                </Heading>
+                <Text>
+                  Your stories are private by default and are not shown in a public feed.
+                  You choose whether to share an individual story. We use your account and
+                  story information to provide MemriPlace and keep your constellation available to you.
+                </Text>
+              </Box>
+              <Box>
+                <Heading as="h3" color="#24483E" fontSize="lg" mb={2} sx={storybookHeading}>
+                  Terms of use
+                </Heading>
+                <Text>
+                  Please use MemriPlace responsibly and only share stories you have the right to share.
+                  The service is designed to help you preserve memories; it does not replace professional,
+                  legal, medical, or emergency support.
+                </Text>
+              </Box>
+              <Text fontSize="sm">
+                Questions about privacy or these terms? Email {" "}
+                <Button
+                  as="a"
+                  color="#2E7A78"
+                  fontSize="inherit"
+                  fontWeight="600"
+                  href="mailto:Lenehan3@gmail.com"
+                  minW="auto"
+                  p={0}
+                  textDecoration="underline"
+                  textUnderlineOffset="3px"
+                  variant="link"
+                >
+                  Lenehan3@gmail.com
+                </Button>
+                .
+              </Text>
+            </Stack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
       {initialAuthMode && (
         <AuthModal
           isOpen
