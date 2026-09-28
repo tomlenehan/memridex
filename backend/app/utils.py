@@ -120,7 +120,7 @@ def verify_password_reset_token(token: str) -> str | None:
         return None
 
 
-def upload_image_to_s3(image: UploadFile) -> str:
+def _upload_image_to_s3(image: UploadFile, *, private: bool) -> str:
     try:
         s3_client = boto3.client(
             's3',
@@ -135,11 +135,20 @@ def upload_image_to_s3(image: UploadFile) -> str:
         # Generate a unique image name using uuid
         unique_image_name = f"{uuid4()}_{image.filename}"
 
-        # Upload the file to S3
-        s3_client.upload_fileobj(image.file, bucket_name, unique_image_name,
-                                 ExtraArgs={'ACL': 'public-read'})
+        extra_args: dict[str, str] = {}
+        if image.content_type:
+            extra_args["ContentType"] = image.content_type
+        if not private:
+            extra_args["ACL"] = "public-read"
+        s3_client.upload_fileobj(
+            image.file,
+            bucket_name,
+            unique_image_name,
+            ExtraArgs=extra_args,
+        )
 
-        # Construct the image URL
+        if private:
+            return f"s3-private://{unique_image_name}"
         image_url = f"https://{bucket_name}.s3.amazonaws.com/{unique_image_name}"
         return image_url
     except NoCredentialsError:
@@ -148,3 +157,35 @@ def upload_image_to_s3(image: UploadFile) -> str:
         raise Exception("Incomplete AWS credentials provided")
     except s3_client.exceptions.ClientError as e:
         raise Exception(f"Failed to upload image to S3: {e}")
+
+
+def upload_image_to_s3(image: UploadFile) -> str:
+    return _upload_image_to_s3(image, private=False)
+
+
+def upload_private_image_to_s3(image: UploadFile) -> str:
+    return _upload_image_to_s3(image, private=True)
+
+
+def get_private_image_url(image_url: str | None) -> str | None:
+    if not image_url or not image_url.startswith("s3-private://"):
+        return image_url
+
+    s3_client = boto3.client(
+        "s3",
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"),
+    )
+    try:
+        return s3_client.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": os.getenv("AWS_UPLOAD_BUCKET_NAME"),
+                "Key": image_url.removeprefix("s3-private://"),
+            },
+            ExpiresIn=3600,
+        )
+    except Exception:
+        logging.exception("Could not create a temporary URL for a private story image")
+        return None
