@@ -148,6 +148,7 @@ export type Conversation = {
 	branch_context?: string | null;
 	node_depth?: number;
 	user_turn_count?: number;
+	ready_to_save?: boolean;
 	created_at?: string;
 	status?: ConversationStatus;
 	token_total?: number;
@@ -172,6 +173,7 @@ export type ConversationPublic = {
 	branch_context?: string | null;
 	node_depth?: number;
 	user_turn_count?: number;
+	ready_to_save?: boolean;
 };
 
 

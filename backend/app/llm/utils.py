@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 MODEL_NAME = "gpt-4-turbo"
 # MODEL_NAME = "gpt-3.5-turbo"
-MAX_NODE_USER_TURNS = 4
+MIN_READY_USER_TURNS = 2
+MAX_NODE_USER_TURNS = 8
 
 def num_tokens_from_string(string: str) -> int:
     """Returns the number of tokens in a text string."""
@@ -57,4 +58,5 @@ def refresh_story_status(conversation: Conversation, session: Session) -> None:
         and conversation.status == ConversationStatus.ACTIVE
     ):
         conversation.status = ConversationStatus.READY_FOR_SUMMARY
+        conversation.ready_to_save = True
     session.add(conversation)

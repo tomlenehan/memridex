@@ -441,6 +441,10 @@ export const $Conversation = {
 	type: 'number',
 	default: 0,
 },
+		ready_to_save: {
+	type: 'boolean',
+	default: false,
+},
 		created_at: {
 	type: 'string',
 	format: 'date-time',
@@ -531,6 +535,10 @@ export const $ConversationPublic = {
 		user_turn_count: {
 	type: 'number',
 	default: 0,
+},
+		ready_to_save: {
+	type: 'boolean',
+	default: false,
 },
 	},
 } as const;

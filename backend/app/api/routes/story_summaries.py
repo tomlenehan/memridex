@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 import httpx
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from jose import JWTError, jwt
 from pydantic import BaseModel
@@ -18,10 +18,11 @@ from app.llm.story_embeddings import (
     ensure_story_embedding,
     ensure_user_story_embeddings,
 )
-from app.llm.story_nodes import get_conversation_prompt
+from app.llm.story_nodes import generate_story_branches_after_reply, get_conversation_prompt
 from app.llm.utils import get_formatted_history
 from app.models import (
     Conversation,
+    ConversationStatus,
     ChatMessage,
     ChatMessageSender,
     Message,
@@ -124,6 +125,7 @@ def read_story_summary(
 @router.post("/", response_model=StorySummaryPublic)
 async def create_story_summary(
     request: SummaryCreateRequest,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db_session: Session = Depends(get_db)
 ) -> StorySummaryPublic:
@@ -133,6 +135,7 @@ async def create_story_summary(
             raise HTTPException(status_code=404, detail="Conversation not found")
         if not current_user.is_superuser and conversation.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not enough permissions")
+        saved_while_active = conversation.status == ConversationStatus.ACTIVE
 
         chat_history, _ = get_formatted_history(request.conversation_id, db_session)
         summary_content = ""
@@ -184,9 +187,14 @@ async def create_story_summary(
             logger.exception("Story saved but its embedding could not be created")
 
         conversation.status = "complete"
+        conversation.ready_to_save = True
         db_session.add(conversation)
         db_session.commit()
         db_session.refresh(conversation)
+        if saved_while_active and conversation.user_turn_count > 0:
+            background_tasks.add_task(
+                generate_story_branches_after_reply, conversation.id
+            )
 
         # Convert StorySummary to StorySummaryPublic
         story_summary_public = _story_summary_public(story_summary)

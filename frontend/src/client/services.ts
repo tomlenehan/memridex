@@ -589,6 +589,10 @@ export type TDataRetryStoryBranches = {
                 id: number
 
             }
+export type TDataWrapUpStoryNode = {
+                id: number
+
+            }
 
 export class ConversationsService {
 
@@ -739,6 +743,16 @@ id,
 			errors: {
 				422: `Validation Error`,
 			},
+		});
+	}
+
+	/** Mark a story path ready to save at the storyteller's request. */
+	public static wrapUpStoryNode(data: TDataWrapUpStoryNode): CancelablePromise<ConversationPublic> {
+		const { id } = data;
+		return __request(OpenAPI, {
+			method: 'POST',
+			url: '/api/v1/conversations/{id}/wrap-up',
+			path: { id },
 		});
 	}
 

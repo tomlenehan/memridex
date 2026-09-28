@@ -2,11 +2,14 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
+import logging
 
+from app.core.db import engine
 from app.llm.utils import MAX_NODE_USER_TURNS, MODEL_NAME
 from app.models import ChatMessage, ChatMessageSender, Conversation, ConversationStatus
 
 MAX_NODE_DEPTH = 4
+logger = logging.getLogger(__name__)
 
 
 class StoryBranch(BaseModel):
@@ -123,3 +126,16 @@ Conversation transcript:
     for child in children:
         session.refresh(child)
     return children
+
+
+async def generate_story_branches_after_reply(conversation_id: int) -> None:
+    """Create child paths after the response has reached the storyteller."""
+    with Session(engine) as session:
+        conversation = session.get(Conversation, conversation_id)
+        if conversation is None:
+            return
+        try:
+            await create_story_branches(conversation, session)
+        except Exception:
+            session.rollback()
+            logger.exception("Unable to generate story branches for node %s", conversation_id)

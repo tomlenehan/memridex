@@ -8,7 +8,6 @@ import {
   Heading,
   HStack,
   Icon,
-  Progress,
   Spinner,
   Text,
   VStack,
@@ -32,10 +31,20 @@ function ConversationPage() {
   const id = Number(conversationId)
   const queryClient = useQueryClient()
   const branchPollDeadline = useRef<{ id: number; until: number } | null>(null)
+  const readinessPollDeadline = useRef<{ id: number; turns: number; until: number } | null>(null)
   const conversationQuery = useQuery({
     queryKey: ["conversationNode", id],
     queryFn: () => ConversationsService.readConversation({ id }),
     enabled: Number.isInteger(id) && id > 0,
+    refetchInterval: (query) => {
+      const conversation = query.state.data
+      const turns = conversation?.user_turn_count ?? 0
+      if (!conversation || conversation.status !== "active" || conversation.ready_to_save || turns < 2) return false
+      if (!readinessPollDeadline.current || readinessPollDeadline.current.id !== id || readinessPollDeadline.current.turns !== turns) {
+        readinessPollDeadline.current = { id, turns, until: Date.now() + 30_000 }
+      }
+      return Date.now() < readinessPollDeadline.current.until ? 2_500 : false
+    },
   })
   const mapQuery = useQuery({
     queryKey: ["conversationConstellation"],
@@ -43,7 +52,7 @@ function ConversationPage() {
     enabled: Number.isInteger(id) && id > 0,
     refetchInterval: (query) => {
       const conversation = conversationQuery.data
-      if (!conversation || (conversation.user_turn_count ?? 0) < 4 || (conversation.node_depth ?? 0) >= 4) return false
+      if (!conversation || !["ready_for_summary", "complete"].includes(conversation.status ?? "") || (conversation.node_depth ?? 0) >= 4) return false
       const hasNewPath = query.state.data?.data.some((item) => item.parent_conversation_id === id)
       if (hasNewPath) return false
       if (!branchPollDeadline.current || branchPollDeadline.current.id !== id) {
@@ -79,11 +88,11 @@ function ConversationPage() {
   }
 
   const conversation = conversationQuery.data
-  const turns = Math.min(conversation.user_turn_count ?? 0, 4)
-  const isFinished = conversation.status === "ready_for_summary" || conversation.status === "complete" || turns >= 4
+  const turns = conversation.user_turn_count ?? 0
+  const isFinished = conversation.status === "ready_for_summary" || conversation.status === "complete" || turns >= 8
+  const isReadyToSave = conversation.ready_to_save || isFinished
   const atLastDepth = (conversation.node_depth ?? 0) >= 4
   const branchCount = mapQuery.data?.data.filter((item) => item.parent_conversation_id === id).length ?? 0
-  const progress = (turns / 4) * 100
 
   return (
     <Flex direction="column" minH="640px" h={{ base: "calc(100svh - 120px)", md: "calc(100svh - 144px)" }} maxW="1050px" mx="auto" color="#17353B">
@@ -143,6 +152,8 @@ function ConversationPage() {
                   ? atLastDepth
                     ? "This story path is complete. You can save the memory or revisit your constellation."
                     : "This story path is complete. Your next paths are ready to explore."
+                  : isReadyToSave
+                    ? "This memory is ready to save. You can keep talking if there’s more to tell."
                   : "Take your time. There are no wrong details, and you can speak or type."}
               </Text>
             </Box>
@@ -151,29 +162,18 @@ function ConversationPage() {
               h={{ base: "42px", md: "50px" }}
               flexShrink={0}
               borderRadius="18px"
-              bg={isFinished ? "#E7F0E8" : "#F8EBD3"}
-              color={isFinished ? "#4B8D82" : "#D08B45"}
+              bg={isReadyToSave ? "#E7F0E8" : "#F8EBD3"}
+              color={isReadyToSave ? "#4B8D82" : "#D08B45"}
             >
-              {isFinished ? <Icon as={FiCheck} boxSize={5} /> : <ConstellationStar boxSize="76px" flexShrink={0} />}
+              {isReadyToSave ? <Icon as={FiCheck} boxSize={5} /> : <ConstellationStar boxSize="76px" flexShrink={0} />}
             </Center>
           </Flex>
-          <Flex align="center" gap={3} mt={5}>
-            <Text whiteSpace="nowrap" fontSize="xs" color="#66807E" fontWeight="700">
-              {isFinished ? "PATH COMPLETE" : `MOMENT ${turns} OF 4`}
+          <HStack mt={5} spacing={2} color={isReadyToSave ? "#477B70" : "#B57B3E"}>
+            <Icon as={isReadyToSave ? FiCheck : FiCompass} boxSize={3.5} />
+            <Text fontSize="xs" fontWeight="800" textTransform="uppercase" letterSpacing="0.12em">
+              {isFinished ? "Path complete" : isReadyToSave ? "Ready to save · keep exploring if you like" : turns ? `${turns} ${turns === 1 ? "moment" : "moments"} shared · follow the story` : "Your story starts here"}
             </Text>
-            <Progress
-              value={isFinished ? 100 : progress}
-              flex="1"
-              h="10px"
-              borderRadius="full"
-              bg="#E9E6DC"
-              colorScheme="green"
-              sx={{ "& > div": { borderRadius: "full" } }}
-            />
-            <Text whiteSpace="nowrap" fontSize="xs" color="#66807E">
-              {isFinished ? "✦" : `${Math.max(0, 4 - turns)} left`}
-            </Text>
-          </Flex>
+          </HStack>
         </Box>
 
         {isFinished && (
@@ -234,6 +234,7 @@ function ConversationPage() {
         <ChatInput
           conversationId={id}
           storyFinished={isFinished}
+          readyToSave={isReadyToSave}
           userTurnCount={conversation.user_turn_count ?? 0}
         />
       </Box>

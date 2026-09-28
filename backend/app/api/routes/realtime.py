@@ -53,7 +53,7 @@ async def create_realtime_session(
     ).all()
     story_prompt = get_conversation_prompt(conversation)
     session_config = build_realtime_session_config(
-        story_prompt, chat_messages, conversation.user_turn_count
+        story_prompt, chat_messages, conversation.user_turn_count, conversation.ready_to_save
     )
 
     files = {

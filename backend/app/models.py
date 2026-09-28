@@ -194,6 +194,7 @@ class Conversation(SQLModel, table=True):
     branch_context: Optional[str] = None
     node_depth: int = Field(default=0)
     user_turn_count: int = Field(default=0)
+    ready_to_save: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     chat_messages: List["ChatMessage"] = Relationship(back_populates="conversation")
     status: ConversationStatus = Field(default=ConversationStatus.INACTIVE)
@@ -323,6 +324,7 @@ class ConversationPublic(ConversationCreate):
     branch_context: Optional[str] = None
     node_depth: int = 0
     user_turn_count: int = 0
+    ready_to_save: bool = False
 
 class ChatMessageCreate(SQLModel):
     sender_type: ChatMessageSender

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from typing import List
 from sqlmodel import func, Session, select
 from typing import Any
@@ -17,7 +17,7 @@ from app.models import (
 )
 from app.api.deps import get_current_user, get_db
 from app.models import User
-from app.llm.story_nodes import MAX_NODE_USER_TURNS, create_story_branches
+from app.llm.story_nodes import MAX_NODE_USER_TURNS, create_story_branches, generate_story_branches_after_reply
 
 logger = logging.getLogger(__name__)
 
@@ -212,20 +212,15 @@ async def retry_story_branches(
         raise HTTPException(status_code=404, detail="Story node not found")
     if conversation.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    if conversation.user_turn_count < MAX_NODE_USER_TURNS:
-        raise HTTPException(status_code=409, detail="This story node is not ready to branch")
+    if conversation.user_turn_count < 1:
+        raise HTTPException(status_code=409, detail="Share a memory before opening new paths")
     if conversation.status not in {
-        ConversationStatus.ACTIVE,
         ConversationStatus.READY_FOR_SUMMARY,
         ConversationStatus.COMPLETE,
     }:
         raise HTTPException(status_code=409, detail="Finish this story node first")
 
     try:
-        if conversation.status == ConversationStatus.ACTIVE:
-            conversation.status = ConversationStatus.READY_FOR_SUMMARY
-            session.add(conversation)
-            session.commit()
         return await create_story_branches(conversation, session)
     except Exception as error:
         logger.exception("Unable to generate story branches for node %s", id)
@@ -234,3 +229,40 @@ async def retry_story_branches(
             status_code=502,
             detail="We couldn't find the next story paths. Please try again.",
         ) from error
+
+
+@router.post("/{id}/wrap-up", response_model=ConversationPublic)
+def wrap_up_story_node(
+    *,
+    id: int,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Conversation:
+    conversation = session.get(Conversation, id)
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Story node not found")
+    if conversation.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    if conversation.status == ConversationStatus.READY_FOR_SUMMARY:
+        return conversation
+    if conversation.status != ConversationStatus.ACTIVE:
+        raise HTTPException(status_code=409, detail="This story path cannot be wrapped up")
+    if conversation.user_turn_count < 1:
+        raise HTTPException(status_code=409, detail="Share a memory before wrapping up")
+
+    conversation.status = ConversationStatus.READY_FOR_SUMMARY
+    conversation.ready_to_save = True
+    session.add(conversation)
+    session.add(
+        ChatMessage(
+            conversation_id=id,
+            sender_id=current_user.id,
+            sender_type=ChatMessageSender.AI,
+            content="We can pause here. Thank you for sharing this memory with me. It's ready to keep whenever you are.",
+        )
+    )
+    session.commit()
+    session.refresh(conversation)
+    background_tasks.add_task(generate_story_branches_after_reply, id)
+    return conversation

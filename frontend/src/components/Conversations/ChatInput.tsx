@@ -19,11 +19,11 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
-import { FiEdit3, FiHeadphones, FiMic, FiMicOff, FiSend, FiVolume2 } from "react-icons/fi"
+import { FiCheck, FiEdit3, FiHeadphones, FiMic, FiMicOff, FiSend, FiVolume2 } from "react-icons/fi"
 import { GiSecretBook } from "react-icons/gi"
 import { useDispatch, useSelector } from "react-redux"
 
-import { SummariesService, type ChatMessageCreate, type ChatMessagePublic } from "../../client"
+import { ConversationsService, SummariesService, type ChatMessageCreate, type ChatMessagePublic } from "../../client"
 import { API_BASE_URL } from "../../config"
 import useCustomToast from "../../hooks/useCustomToast"
 import { useRealtimeStory } from "../../hooks/useRealtimeStory"
@@ -42,6 +42,7 @@ import type { RootState } from "../../redux/store"
 interface ChatInputProps {
   conversationId: number
   storyFinished: boolean
+  readyToSave: boolean
   userTurnCount: number
 }
 
@@ -53,7 +54,7 @@ const statusLabels = {
   thinking: "MemriPlace is gathering its next question…",
 } as const
 
-const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputProps) => {
+const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }: ChatInputProps) => {
   const {
     register,
     handleSubmit,
@@ -74,7 +75,10 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [startMode, setStartMode] = useState<"choose" | "voice" | "type">("choose")
   const [isSavingMemory, setIsSavingMemory] = useState(false)
+  const [isWrapping, setIsWrapping] = useState(false)
+  const [voiceWrapRequested, setVoiceWrapRequested] = useState(false)
   const savingMemory = useRef(false)
+  const wrapping = useRef(false)
   const sendingMessage = useRef(false)
   const streamingMessageId = useRef<number | null>(null)
   const assistantVoiceMessageId = useRef<number | null>(null)
@@ -256,12 +260,14 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
     onAssistantComplete: handleVoiceAssistantComplete,
     onAssistantCancelled: handleVoiceAssistantCancelled,
     onConversationChanged: refreshConversation,
+    canWrapUp: userTurnCount > 0,
+    onWrapRequested: () => setVoiceWrapRequested(true),
     onError: handleVoiceError,
   })
   const showWelcomeChoice = isFirstTurn && startMode === "choose" && !isVoiceActive
 
   const handleSaveMemory = async () => {
-    if (savingMemory.current || (isVoiceActive && voiceStatus !== "connected")) return
+    if (savingMemory.current || sendingMessage.current || !readyToSave || (isVoiceActive && voiceStatus !== "connected")) return
     savingMemory.current = true
     setIsSavingMemory(true)
     try {
@@ -292,9 +298,38 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
     }
   }
 
+  const handleWrapUp = async () => {
+    if (wrapping.current || sendingMessage.current || userTurnCount < 1 || (isVoiceActive && voiceStatus !== "connected")) return
+    wrapping.current = true
+    setIsWrapping(true)
+    try {
+      if (isVoiceActive) stop()
+      await ConversationsService.wrapUpStoryNode({ id: conversationId })
+      await dispatch(fetchMessages(conversationId))
+      refreshConversation(false)
+      showToast("Your story is ready", "Save this memory now, or revisit your map.", "success")
+    } catch (error) {
+      showToast("Could not wrap up", error instanceof Error ? error.message : "Please try again.", "error")
+    } finally {
+      wrapping.current = false
+      setIsWrapping(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!voiceWrapRequested) return
+    setVoiceWrapRequested(false)
+    void handleWrapUp()
+  }, [voiceWrapRequested])
+
   const onSubmit: SubmitHandler<ChatMessageCreate> = async (data) => {
     const content = data.content.trim()
     if (!content || sendingMessage.current) return
+    if (userTurnCount > 0 && /^(let['’]s\s+)?wrap\s+this\s+up[.!?]?$/i.test(content)) {
+      reset()
+      await handleWrapUp()
+      return
+    }
     sendingMessage.current = true
 
     try {
@@ -358,7 +393,7 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
 
   const contentField = register("content", { required: true })
 
-  const voiceStatusLabel = isStoryFinished && voiceStatus === "connected"
+  const voiceStatusLabel = readyToSave && voiceStatus === "connected"
     ? "Your conversation is ready to save."
     : voiceStatus in statusLabels
       ? statusLabels[voiceStatus as keyof typeof statusLabels]
@@ -375,6 +410,40 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
       width="100%"
     >
       <VStack align="stretch" spacing={3}>
+        {readyToSave && !showWelcomeChoice && (
+          <Flex
+            align={{ base: "stretch", sm: "center" }}
+            justify="space-between"
+            direction={{ base: "column", sm: "row" }}
+            gap={3}
+            p={4}
+            borderRadius="2xl"
+            bg="#FFF3D8"
+            border="1px solid #E9CB80"
+          >
+            <HStack align="start" spacing={3}>
+              <Icon as={FiCheck} mt={1} color="#477B70" />
+              <Box>
+                <Text fontWeight="800" color="#244D4C">This memory is ready to save</Text>
+                <Text fontSize="sm" color="#58746C">
+                  {isStoryFinished ? "Give it a place in your constellation." : "Save it now, or keep talking while the details are fresh."}
+                </Text>
+              </Box>
+            </HStack>
+            <Button
+              type="button"
+              variant="accent"
+              onClick={handleSaveMemory}
+              isLoading={isSavingMemory}
+              isDisabled={isWrapping || isSubmitting || (isVoiceActive && voiceStatus !== "connected")}
+              rightIcon={<GiSecretBook />}
+              minH="48px"
+              flexShrink={0}
+            >
+              Save memory
+            </Button>
+          </Flex>
+        )}
         {!showWelcomeChoice && (!isStoryFinished || isVoiceActive) && (
         <Flex
           align={{ base: "stretch", sm: "center" }}
@@ -423,15 +492,14 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
         </Flex>
         )}
 
-        {!showWelcomeChoice && (
+        {!showWelcomeChoice && !isStoryFinished && (
           <Flex
             gap={2}
             align="center"
             direction={{ base: "column", sm: "row" }}
             w="full"
           >
-            {!isStoryFinished && (
-              <>
+            <>
             <Input
               {...contentField}
               ref={(element) => {
@@ -465,23 +533,22 @@ const ChatInput = ({ conversationId, storyFinished, userTurnCount }: ChatInputPr
             >
               Send
             </Button>
-              </>
-            )}
-            {isStoryFinished && (
-              <Button
+            </>
+          </Flex>
+        )}
+        {!isStoryFinished && userTurnCount > 0 && !showWelcomeChoice && (
+          <Flex justify="flex-end">
+            <Button
               type="button"
-              variant="accent"
-              onClick={handleSaveMemory}
-              isLoading={isSavingMemory}
-              isDisabled={isSavingMemory || (isVoiceActive && voiceStatus !== "connected")}
-              rightIcon={<GiSecretBook />}
-                minH="54px"
-                w={{ base: "full", sm: "auto" }}
-                px={6}
-              >
-                {isSavingMemory ? "Saving your memory…" : isVoiceActive && voiceStatus !== "connected" ? "Finishing conversation…" : "Save this memory"}
-              </Button>
-            )}
+              size="sm"
+              variant="ghost"
+              color="#477B70"
+              onClick={handleWrapUp}
+              isLoading={isWrapping}
+              isDisabled={isSavingMemory || isSubmitting || (isVoiceActive && voiceStatus !== "connected")}
+            >
+              Wrap this up
+            </Button>
           </Flex>
         )}
       </VStack>

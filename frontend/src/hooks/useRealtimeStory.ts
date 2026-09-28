@@ -23,6 +23,7 @@ interface RealtimeEvent {
 interface UseRealtimeStoryOptions {
   conversationId: number
   suppressFirstAssistantTranscript: boolean
+  canWrapUp: boolean
   onUserMessage: (message: ChatMessagePublic, itemId?: string) => void
   onUserTranscriptDelta: (itemId: string, delta: string) => void
   onUserTranscriptFailed: (itemId: string) => void
@@ -31,6 +32,7 @@ interface UseRealtimeStoryOptions {
   onAssistantComplete: () => void
   onAssistantCancelled: () => void
   onConversationChanged: (includeChatMessages?: boolean) => void
+  onWrapRequested: () => void
   onError: (message: string) => void
 }
 
@@ -58,6 +60,7 @@ const waitForIceGathering = (connection: RTCPeerConnection) => {
 export function useRealtimeStory({
   conversationId,
   suppressFirstAssistantTranscript,
+  canWrapUp,
   onUserMessage,
   onUserTranscriptDelta,
   onUserTranscriptFailed,
@@ -66,6 +69,7 @@ export function useRealtimeStory({
   onAssistantComplete,
   onAssistantCancelled,
   onConversationChanged,
+  onWrapRequested,
   onError,
 }: UseRealtimeStoryOptions) {
   const [status, setStatus] = useState<VoiceStoryStatus>("idle")
@@ -79,6 +83,8 @@ export function useRealtimeStory({
     onAssistantComplete,
     onAssistantCancelled,
     onConversationChanged,
+    canWrapUp,
+    onWrapRequested,
     onError,
   })
   const connectionRef = useRef<RTCPeerConnection | null>(null)
@@ -106,6 +112,8 @@ export function useRealtimeStory({
       onAssistantComplete,
       onAssistantCancelled,
       onConversationChanged,
+      canWrapUp,
+      onWrapRequested,
       onError,
     }
   }, [
@@ -114,6 +122,8 @@ export function useRealtimeStory({
     onAssistantStart,
     onAssistantCancelled,
     onConversationChanged,
+    canWrapUp,
+    onWrapRequested,
     onError,
     onUserMessage,
     onUserTranscriptDelta,
@@ -239,6 +249,7 @@ export function useRealtimeStory({
 
   const handleRealtimeEvent = useCallback(
     async (event: RealtimeEvent) => {
+      if (!connectionRef.current) return
       try {
         switch (event.type) {
           case "session.created":
@@ -269,6 +280,16 @@ export function useRealtimeStory({
               userTranscriptsRef.current.delete(event.item_id)
               callbacksRef.current.onUserTranscriptFailed(event.item_id)
               failVoiceSession("We couldn't transcribe that answer. Please say it again or type it.")
+              return
+            }
+            if (callbacksRef.current.canWrapUp && /^(let['’]s\s+)?wrap\s+this\s+up[.!?]?$/i.test(event.transcript.trim())) {
+              callbacksRef.current.onUserTranscriptFailed(event.item_id)
+              const assistantWasStreaming = assistantStreamingRef.current
+              clearConnection()
+              if (assistantWasStreaming) callbacksRef.current.onAssistantCancelled()
+              setError(null)
+              setStatus("idle")
+              callbacksRef.current.onWrapRequested()
               return
             }
             setStatus("thinking")
@@ -340,7 +361,7 @@ export function useRealtimeStory({
         failVoiceSession(message)
       }
     },
-    [failVoiceSession, persistUserTranscript, saveAssistantTranscript, saveDeferredAssistantTranscripts],
+    [clearConnection, failVoiceSession, persistUserTranscript, saveAssistantTranscript, saveDeferredAssistantTranscripts],
   )
 
   const start = useCallback(async () => {

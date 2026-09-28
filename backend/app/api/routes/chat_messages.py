@@ -5,14 +5,14 @@ from fastapi.responses import StreamingResponse
 from sqlmodel import Session, func, select
 
 from app.api.deps import get_current_user, get_db
-from app.core.db import engine
 from app.llm.conversation_agent import send_message
 from app.llm.story_nodes import (
     MAX_NODE_USER_TURNS,
-    create_story_branches,
+    generate_story_branches_after_reply,
     get_conversation_prompt,
 )
-from app.llm.utils import get_formatted_history, refresh_story_status
+from app.llm.story_readiness import assess_story_readiness_after_reply
+from app.llm.utils import MIN_READY_USER_TURNS, get_formatted_history, refresh_story_status
 from app.models import (
     ChatMessage,
     ChatMessageCreate,
@@ -29,19 +29,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-async def generate_story_branches_after_reply(conversation_id: int) -> None:
-    """Create the next paths after the reply has reached the storyteller."""
-    with Session(engine) as session:
-        conversation = session.get(Conversation, conversation_id)
-        if conversation is None:
-            return
-        try:
-            await create_story_branches(conversation, session)
-        except Exception:
-            session.rollback()
-            logger.exception("Unable to generate story branches for node %s", conversation_id)
 
 
 @router.post("/{conversation_id}/messages", response_model=ChatMessagePublic)
@@ -68,6 +55,7 @@ async def create_chat_message(
     conversation.user_turn_count += 1
     if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
         conversation.status = ConversationStatus.READY_FOR_SUMMARY
+        conversation.ready_to_save = True
     chat_message = ChatMessage(
         conversation_id=conversation_id,
         sender_id=current_user.id,
@@ -94,16 +82,20 @@ async def create_chat_message(
                 "ask another question. Let them know that new story paths are opening from "
                 "the details they shared."
             )
-        elif conversation.user_turn_count == MAX_NODE_USER_TURNS - 1:
-            pacing = "Ask one last open-ended follow-up before this story path wraps."
+        elif conversation.ready_to_save:
+            pacing = (
+                "The storyteller already has enough detail to save this memory. "
+                "They chose to continue, so ask one fresh, optional follow-up about "
+                "a specific detail. Do not pressure them to end."
+            )
         else:
             pacing = "Ask one thoughtful, open-ended follow-up about a detail they shared."
 
         system_message = (
             "You are MemriPlace, a warm oral-history guide. Help the storyteller preserve "
             f"a meaningful memory around this question: {story_prompt}\n\n"
-            f"The storyteller has answered {conversation.user_turn_count} of "
-            f"{MAX_NODE_USER_TURNS} turns in this node. {pacing}\n"
+            f"The storyteller has answered {conversation.user_turn_count} questions in "
+            f"this node. {pacing}\n"
             "Use only facts the storyteller gave you. Keep responses concise, personal, "
             "and natural."
         )
@@ -126,6 +118,15 @@ async def create_chat_message(
         db_session.commit()
         if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
             background_tasks.add_task(generate_story_branches_after_reply, conversation_id)
+        elif (
+            conversation.user_turn_count >= MIN_READY_USER_TURNS
+            and not conversation.ready_to_save
+        ):
+            background_tasks.add_task(
+                assess_story_readiness_after_reply,
+                conversation_id,
+                conversation.user_turn_count,
+            )
 
     current_user_id = current_user.id
 
@@ -185,6 +186,16 @@ async def persist_realtime_message(
         and conversation.user_turn_count >= MAX_NODE_USER_TURNS
     ):
         background_tasks.add_task(generate_story_branches_after_reply, conversation_id)
+    elif (
+        chat_message_in.sender_type == ChatMessageSender.AI
+        and conversation.user_turn_count >= MIN_READY_USER_TURNS
+        and not conversation.ready_to_save
+    ):
+        background_tasks.add_task(
+            assess_story_readiness_after_reply,
+            conversation_id,
+            conversation.user_turn_count,
+        )
     return chat_message
 
 

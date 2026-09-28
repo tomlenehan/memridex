@@ -28,12 +28,12 @@ import {
   FiSun,
 } from "react-icons/fi"
 
-import background from "../assets/images/homepage_parallax/background.png"
-import foreground from "../assets/images/homepage_parallax/foreground.png"
-import midground from "../assets/images/homepage_parallax/midground.png"
+import background from "../assets/images/homepage_parallax_flat/background.png"
+import foreground from "../assets/images/homepage_parallax_flat/foreground3.png"
+import midground from "../assets/images/homepage_parallax_flat/midground.png"
 import memriPlaceLogo from "../assets/images/MemriPlaceLighterLogo.png"
 import memriPlaceTextLogo from "../assets/images/MemriPlaceTextLogoFlat.png"
-import starscape from "../assets/images/homepage_parallax/starscape.png"
+import starscape from "../assets/images/homepage_parallax_flat/starscape.png"
 import AuthModal from "../components/Auth/AuthModal"
 import ConstellationStar from "../components/Common/ConstellationStar"
 
@@ -650,29 +650,32 @@ export function LandingPage({
                   gentle question, and a little curiosity are all it takes.
                 </Text>
               </Stack>
-              <Flex
-                align="center"
-                direction="column"
-                flexShrink={0}
-                pr={{ md: 8 }}
-              >
-                <ConstellationStar
-                  w={{ base: "150px", md: "210px" }}
-                  h={{ base: "150px", md: "210px" }}
-                  label="Your smiling star companion"
-                />
-                <Text
-                  fontSize="sm"
-                  color="#52735E"
-                  bg="white"
-                  border="1px solid #E0E7D6"
-                  borderRadius="full"
-                  px={5}
-                  py={2}
-                >
-                  One memory at a time.
-                </Text>
-              </Flex>
+
+              {/*Sparkly*/}
+              {/*<Flex*/}
+              {/*  align="center"*/}
+              {/*  direction="column"*/}
+              {/*  flexShrink={0}*/}
+              {/*  pr={{ md: 8 }}*/}
+              {/*>*/}
+              {/*  <ConstellationStar*/}
+              {/*    w={{ base: "150px", md: "210px" }}*/}
+              {/*    h={{ base: "150px", md: "210px" }}*/}
+              {/*    label="Your smiling star companion"*/}
+              {/*  />*/}
+              {/*  <Text*/}
+              {/*    fontSize="sm"*/}
+              {/*    color="#52735E"*/}
+              {/*    bg="white"*/}
+              {/*    border="1px solid #E0E7D6"*/}
+              {/*    borderRadius="full"*/}
+              {/*    px={5}*/}
+              {/*    py={2}*/}
+              {/*  >*/}
+              {/*    One memory at a time.*/}
+              {/*  </Text>*/}
+              {/*</Flex>*/}
+
             </Flex>
 
             <SimpleGrid

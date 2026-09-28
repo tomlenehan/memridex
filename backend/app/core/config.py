@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
     OPENAI_API_KEY: str | None = None
+    STORY_READINESS_MODEL: str = "gpt-4o-mini"
     OPENAI_REALTIME_MODEL: str = "gpt-realtime-2.1"
     OPENAI_REALTIME_VOICE: str = "marin"
     OPENAI_TRANSCRIPTION_MODEL: str = "gpt-transcribe"

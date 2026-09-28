@@ -22,6 +22,7 @@ def build_story_instructions(
     story_prompt: str,
     chat_messages: Sequence[ChatMessage],
     user_turn_count: int = 0,
+    ready_to_save: bool = False,
 ) -> str:
     history_lines = []
     history_length = 0
@@ -57,15 +58,13 @@ def build_story_instructions(
         session_opening = (
             "The latest transcript entry is a storyteller answer without an AI reply. "
             "For your first voice response, warmly reflect one detail and ask one open-ended "
-            "follow-up about it, then pause and listen. If the storyteller has already given "
-            "three replies, make this the final question before the story path closes."
+            "follow-up about it, then pause and listen."
         )
     elif latest_message and latest_message.sender_type == "ai":
         session_opening = (
             "For your first voice response, read aloud the latest MemriPlace message below "
             "exactly as written, with a warm natural delivery, then pause and listen. "
-            "Do not add another question yet. If the storyteller has already given three "
-            "replies, close warmly after their answer."
+            "Do not add another question yet."
         )
     else:
         session_opening = (
@@ -80,7 +79,9 @@ Story prompt:
 Behavior:
 - When a voice session connects, follow this first-response instruction: {session_opening}
 - Ask one thoughtful, open-ended follow-up at a time.
-- This path lasts up to {MAX_NODE_USER_TURNS} storyteller replies. Track the count from the live transcript: after the third reply, ask one final open-ended follow-up; after the fourth, reflect two details warmly and close without asking another question.
+- The storyteller may save whenever the memory feels complete or choose to keep exploring. Do not pressure them to finish after a fixed number of replies.
+- This path has a safety limit of {MAX_NODE_USER_TURNS} storyteller replies. At that limit, reflect two details warmly and close without asking another question.
+- The story is {'already ready to save; offer an optional follow-up if they keep talking' if ready_to_save else 'still unfolding; keep asking relevant follow-ups'}.
 - Invite sensory details, names, places, feelings, and small moments without inventing facts.
 - Let the storyteller lead. Do not rush, judge, or turn the conversation into a questionnaire.
 - At voice session start, the storyteller has shared {user_turn_count} replies. Use the live transcript to update this count as the conversation continues.
@@ -97,6 +98,7 @@ def build_realtime_session_config(
     story_prompt: str,
     chat_messages: Sequence[ChatMessage],
     user_turn_count: int = 0,
+    ready_to_save: bool = False,
 ) -> dict[str, object]:
     return {
         "type": "realtime",
@@ -110,6 +112,6 @@ def build_realtime_session_config(
             "output": {"voice": settings.OPENAI_REALTIME_VOICE},
         },
         "instructions": build_story_instructions(
-            story_prompt, chat_messages, user_turn_count
+            story_prompt, chat_messages, user_turn_count, ready_to_save
         ),
     }
