@@ -562,7 +562,7 @@ export function LandingPage({
                   lineHeight="1.7"
                   maxW="460px"
                 >
-                  Turn the moments you remember into stories you'll want to keep.
+                  Turn the moments you remember into stories you can keep.
                 </Text>
                 <HStack flexWrap="wrap" pt={2} spacing={3}>
                   <Button
