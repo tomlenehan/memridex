@@ -30,7 +30,7 @@ function Star({ data }: NodeProps<StarNode>) {
     <Handle type="target" position={Position.Left} className="sky-node-handle" />
     <button type="button" className="sky-node-hit nodrag nopan"
       aria-label={`${data.crafting ? "Choose" : "Explore"} ${title}`}
-      aria-pressed={data.active || data.picked}>
+      aria-pressed={data.active || data.picked} title={title}>
       <span className="sky-node-button" style={{ "--node-tint": data.tint } as CSSProperties}>
         {data.story.image_url ? <img src={data.story.image_url} alt="" /> : <FiStar aria-hidden="true" />}
         <span className="sky-node-spark" aria-hidden="true">✦</span>
@@ -99,6 +99,7 @@ export default function ConstellationMap({ stories, relationships, groups = [] }
   const startCrafting = () => { setCrafting(true); setPicked(selectedId === null ? [] : [selectedId]) }
   const nodes = stories.map((story, i): StarNode => ({
     id: String(story.id), type: "star", position: positions.get(story.id)!, draggable: false, selectable: false,
+    className: selectedId === story.id || picked.includes(story.id) ? "sky-flow-node-selected" : "",
     data: { story, tint: starColors[i % starColors.length], active: selectedId === story.id && !crafting,
       picked: picked.includes(story.id), crafting },
   }))
