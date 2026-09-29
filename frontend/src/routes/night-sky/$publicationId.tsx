@@ -44,7 +44,7 @@ function PublicConstellationPage() {
   return <Box bg="#FFFDF5" minH="100vh" color="#17353B">
     <Flex as="header" px={{ base: 5, md: 10 }} py={4} align="center" justify="space-between" gap={3}>
       <HStack as={Link} to="/landing" spacing={3}><Image src={memriPlaceMark} alt="MemriPlace" boxSize="45px" objectFit="contain" /><Text fontWeight="800">MemriPlace</Text></HStack>
-      <Button as={Link} to="/night-sky" variant="ghost" leftIcon={<FiArrowLeft />}>Public night sky</Button>
+      <Button as={Link} to="/night-sky" variant="ghost" leftIcon={<FiArrowLeft />}>Global Night Sky</Button>
     </Flex>
     <Container maxW="6xl" pb={16} px={{ base: 4, md: 8 }}>
       {query.isLoading && <Flex minH="65vh" align="center" justify="center"><Spinner size="xl" color="#4B8D82" /></Flex>}

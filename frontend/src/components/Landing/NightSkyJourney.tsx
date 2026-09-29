@@ -32,7 +32,7 @@ const steps = [
   {
     title: "Share if you choose",
     detail: "Preview it, then publish your constellation to the global sky.",
-    sky: "PUBLIC NIGHT SKY",
+    sky: "GLOBAL NIGHT SKY",
     status: "SHARED BY CHOICE",
     caption: "Grandma’s summers",
     note: "Only the constellation you choose is shared.",

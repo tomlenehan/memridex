@@ -331,7 +331,7 @@ export function LandingPage({
               />
               <HStack spacing={{ base: 1, md: 3 }}>
                 {PUBLIC_SKY_ENABLED && <Button as={Link} to="/night-sky" color="#FFF8E8" size={{ base: "sm", md: "md" }} variant="ghost" display={{ base: "none", md: "inline-flex" }}>
-                  Public night sky
+                  Global Night Sky
                 </Button>}
                 <Button
                   _hover={{ bg: "whiteAlpha.200" }}
@@ -844,7 +844,7 @@ export function LandingPage({
         <Text fontSize="sm">MemriPlace. Stories worth keeping.</Text>
         <HStack spacing={{ base: 4, md: 5 }} flexWrap="wrap" justify="center">
           {PUBLIC_SKY_ENABLED && <Button as={Link} to="/night-sky" color="inherit" fontSize="sm" fontWeight="500" minW="auto" p={0} variant="link" textDecoration="underline" textUnderlineOffset="3px">
-            Public night sky
+            Global Night Sky
           </Button>}
           <Button
             color="inherit"

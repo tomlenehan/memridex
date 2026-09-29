@@ -28,7 +28,7 @@ function PublicSky() {
     <Box className="public-night-sky" color="#FFF9E8" pb={16}>
       <Flex maxW="7xl" mx="auto" px={{ base: 5, md: 10 }} pt={{ base: 10, md: 16 }} pb={8} align="center" justify="space-between" gap={5}>
         <Box><HStack color="#F5D785" fontSize="xs" fontWeight="800" letterSpacing=".13em"><Icon as={FiMoon} /> STORIES SHARED BY CHOICE</HStack>
-          <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize={{ base: "4xl", md: "6xl" }} mt={3}>The public night sky</Heading>
+          <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize={{ base: "4xl", md: "6xl" }} mt={3}>The Global Night Sky</Heading>
           <Text color="#D4E7DF" maxW="640px" fontSize={{ base: "md", md: "lg" }} mt={4} lineHeight="1.7">{query.isSuccess && !hasSharedStories
             ? "Shared constellations will appear here. Your own memories stay private unless you choose to share."
             : "Each glow is a constellation someone chose to share. Select one to read its story."}</Text>
@@ -45,7 +45,7 @@ function PublicSky() {
       </Flex>}
       <Box maxW="7xl" mx="auto" px={{ base: 5, md: 10 }}>
         {query.isLoading && <Flex minH="300px" align="center" justify="center"><Spinner size="xl" color="#F5D785" /></Flex>}
-        {query.isError && <Alert status="info" borderRadius="2xl" color="#17353B"><AlertIcon />The public night sky is being prepared. Your private sky is still here when you sign in.</Alert>}
+        {query.isError && <Alert status="info" borderRadius="2xl" color="#17353B"><AlertIcon />The Global Night Sky is being prepared. Your private sky is still here when you sign in.</Alert>}
         {query.isSuccess && !hasSharedStories && <Flex minH="320px" direction="column" align="center" justify="center" textAlign="center" gap={3}><Icon as={FiStar} boxSize={12} color="#F5D785" /><Heading size="md">A quiet sky, for now.</Heading><Text color="#D4E7DF">Start with a memory in your own private night sky.</Text>
           <Button as={Link} to={signedIn ? "/conversations" : "/signup"} variant="accent" size="lg" rightIcon={<FiArrowRight />} mt={3}>{signedIn ? "Go to my night sky" : "Start your night sky"}</Button>
         </Flex>}
@@ -90,7 +90,7 @@ function PublicSkyCanvas({ data }: { data: SkyCluster[] }) {
     },
     data: { item },
   }))
-  return <Box className="public-sky-viewport" aria-label="Public night sky. Drag to discover shared constellations and open one to read its stories.">
+  return <Box className="public-sky-viewport" aria-label="Global Night Sky. Drag to discover shared constellations and open one to read its stories.">
     <ReactFlow key={compact ? "compact" : "wide"} nodes={nodes} edges={[]} nodeTypes={clusterNodeTypes}
       fitView={!compact && data.length <= 2} fitViewOptions={{ padding: .25, maxZoom: 1 }}
       defaultViewport={compact ? { x: 15, y: 65, zoom: .9 } : { x: 35, y: 40, zoom: .9 }}
