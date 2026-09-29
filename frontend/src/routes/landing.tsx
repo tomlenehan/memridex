@@ -62,7 +62,7 @@ const storySteps = [
     icon: FiBookOpen,
     index: "01",
     text: "A childhood kitchen. A familiar laugh. Start with a gentle question or a moment already on your mind.",
-    title: "Find a little spark",
+    title: "Find a spark",
     color: "#FFF0BF",
   },
   {
@@ -485,7 +485,7 @@ export function LandingPage({
                   lineHeight="1"
                   sx={storybookHeading}
                 >
-                  A familiar voice to help find a little spark.
+                  A familiar voice to help find a spark.
                 </Heading>
                 <Text
                   color="#526A70"
