@@ -1,11 +1,11 @@
 import {
-  Box, Button, Flex, Heading, HStack, Input, Modal, ModalBody, ModalCloseButton,
+  Box, Button, Flex, Heading, HStack, IconButton, Input, Modal, ModalBody, ModalCloseButton,
   ModalContent, ModalFooter, ModalHeader, ModalOverlay, Stack, Text,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { Controls, Handle, Position, ReactFlow, type Edge, type Node, type NodeProps } from "@xyflow/react"
-import { useEffect, useMemo, useState, type CSSProperties } from "react"
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { FiArrowRight, FiPlus, FiStar, FiX } from "react-icons/fi"
 import { type StoryRelationshipPublic, type StorySummaryPublic } from "../../client"
 import { celebrateConnection } from "../../lib/celebration"
@@ -22,6 +22,7 @@ type StarNode = Node<{
   active: boolean
   picked: boolean
   crafting: boolean
+  onChoose: (id: number) => void
 }, "star">
 
 function Star({ data }: NodeProps<StarNode>) {
@@ -30,7 +31,7 @@ function Star({ data }: NodeProps<StarNode>) {
     <Handle type="target" position={Position.Left} className="sky-node-handle" />
     <button type="button" className="sky-node-hit nodrag nopan"
       aria-label={`${data.crafting ? "Choose" : "Explore"} ${title}`}
-      aria-pressed={data.active || data.picked} title={title}>
+      aria-pressed={data.active || data.picked} onClick={() => data.onChoose(data.story.id)} title={title}>
       <span className="sky-node-button" style={{ "--node-tint": data.tint } as CSSProperties}>
         {data.story.image_url ? <img src={data.story.image_url} alt="" /> : <FiStar aria-hidden="true" />}
         <span className="sky-node-spark" aria-hidden="true">✦</span>
@@ -52,16 +53,19 @@ function layout(stories: StorySummaryPublic[], compact: boolean, narrow: boolean
   }]))
 }
 
-export default function ConstellationMap({ stories, relationships, groups = [] }: {
+export default function ConstellationMap({ stories, relationships, groups = [], onAddMemory, isAddingMemory }: {
   stories: StorySummaryPublic[]
   relationships: StoryRelationshipPublic[]
   groups?: Constellation[]
+  onAddMemory: () => void
+  isAddingMemory: boolean
 }) {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [crafting, setCrafting] = useState(false)
   const [picked, setPicked] = useState<number[]>([])
   const [naming, setNaming] = useState(false)
   const [name, setName] = useState("")
+  const previewRef = useRef<HTMLDivElement | null>(null)
   const [compact, setCompact] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 600px)").matches)
   const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 350px)").matches)
   useEffect(() => {
@@ -75,6 +79,25 @@ export default function ConstellationMap({ stories, relationships, groups = [] }
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const selected = stories.find((story) => story.id === selectedId) ?? null
+  useEffect(() => {
+    if (selectedId === null || crafting) return
+    const frame = window.requestAnimationFrame(() => {
+      previewRef.current?.scrollIntoView({
+        block: "nearest",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [selectedId, crafting])
+  const guidance = crafting
+    ? picked.length === 0
+      ? "Tap two stars to connect them."
+      : picked.length === 1
+        ? "Tap one more star to continue."
+        : `${picked.length} stars chosen. Add more, or name your constellation.`
+    : stories.length < 2
+      ? "Add one more memory to make a constellation."
+      : "Tap a star to read its memory, or connect stars into a constellation."
   const positions = useMemo(() => layout(stories, compact, narrow), [stories, compact, narrow])
   const create = useMutation({
     mutationFn: () => nightSkyApi.create({
@@ -101,7 +124,7 @@ export default function ConstellationMap({ stories, relationships, groups = [] }
     id: String(story.id), type: "star", position: positions.get(story.id)!, draggable: false, selectable: false,
     className: selectedId === story.id || picked.includes(story.id) ? "sky-flow-node-selected" : "",
     data: { story, tint: starColors[i % starColors.length], active: selectedId === story.id && !crafting,
-      picked: picked.includes(story.id), crafting },
+      picked: picked.includes(story.id), crafting, onChoose: choose },
   }))
   const savedEdges: Edge[] = relationships.filter((r) => positions.has(r.story_a_id) && positions.has(r.story_b_id)).map((r) => {
     const groupIndex = groups.findIndex((group) => group.links.some((link) =>
@@ -120,18 +143,19 @@ export default function ConstellationMap({ stories, relationships, groups = [] }
   return <Stack spacing={6}>
     <Box className="personal-sky">
       <Flex className="personal-sky-header" justify="space-between" align={{ base: "start", md: "center" }} direction={{ base: "column", md: "row" }} gap={4}>
-        <Box><Text className="sky-overline">✦ &nbsp;YOUR PRIVATE UNIVERSE</Text>
+        <Box><Text className="sky-overline">✦ &nbsp;YOUR PRIVATE NIGHT SKY</Text>
           <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" color="#FFF9EA" mt={1}>Your memories, drawn in starlight</Heading>
-          <Text color="#D0E2D9" fontSize="sm" mt={1}>{crafting
-            ? `${picked.length} selected · Tap stars to add or remove them`
-            : "Tap a star to preview it. Make a constellation from two or more."}</Text></Box>
-        {crafting ? <HStack w={{ base: "full", md: "auto" }}><Button className="sky-quiet" size="sm" leftIcon={<FiX />} onClick={() => { setCrafting(false); setPicked([]) }}>Cancel</Button>
-          <Button className="sky-gold" size="sm" onClick={() => setNaming(true)} isDisabled={picked.length < 2}>{picked.length < 2 ? "Choose 2 stars" : "Name constellation"}</Button></HStack>
-          : <Button className="sky-gold sky-make" size="sm" leftIcon={<FiPlus />} onClick={startCrafting} isDisabled={stories.length < 2}>Make a constellation</Button>}
+          <Text color="#D0E2D9" fontSize="md" mt={2} aria-live="polite">{guidance}</Text></Box>
+        {crafting ? <HStack w={{ base: "full", md: "auto" }} flexWrap="wrap" spacing={2}>
+          <Button className="sky-quiet" size="md" leftIcon={<FiX />} onClick={() => { setCrafting(false); setPicked([]) }}>Cancel</Button>
+          <Button className="sky-gold" size="md" rightIcon={<FiArrowRight />} onClick={() => setNaming(true)} isDisabled={picked.length < 2}>Name constellation</Button>
+        </HStack>
+          : stories.length < 2
+            ? <Button className="sky-gold sky-make" size="md" leftIcon={<FiPlus />} onClick={onAddMemory} isLoading={isAddingMemory}>Add another memory</Button>
+            : <Button className="sky-gold sky-make" size="md" leftIcon={<FiPlus />} onClick={startCrafting}>Make a constellation</Button>}
       </Flex>
       <Box className="personal-sky-viewport" aria-label="Your personal night sky. Tap a star to choose it. Drag to move and use the zoom controls to explore.">
         <ReactFlow key={narrow ? "narrow" : compact ? "compact" : "wide"} nodes={nodes} edges={[...savedEdges, ...draftEdges]} nodeTypes={nodeTypes}
-          onNodeClick={(_, node) => choose(Number(node.id))}
           fitView={!compact && stories.length <= 8} fitViewOptions={{ padding: .25, maxZoom: 1.1 }}
           defaultViewport={compact ? { x: narrow ? 30 : 12, y: 50, zoom: narrow ? .9 : .8 } : { x: 25, y: 45, zoom: .9 }} minZoom={.3} maxZoom={1.8}
           nodesDraggable={false} nodesConnectable={false} elementsSelectable={false}
@@ -139,16 +163,20 @@ export default function ConstellationMap({ stories, relationships, groups = [] }
           preventScrolling={false} proOptions={{ hideAttribution: true }}>
           <Controls position={compact ? "top-left" : "bottom-right"} showInteractive={false} />
         </ReactFlow>
-        <Text className="sky-hint">Drag to explore · Pinch or use + / − to zoom</Text>
+        {!crafting && selected && <Box ref={previewRef} className="sky-preview" role="region" aria-label="Selected memory">
+          <Flex align="start" justify="space-between" gap={3}>
+            <Box minW={0}>
+              <Text className="sky-preview-label">YOUR MEMORY</Text>
+              <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} size="sm" mt={1} noOfLines={2}>{selected.title || "A remembered moment"}</Heading>
+            </Box>
+            <IconButton aria-label="Close memory preview" icon={<FiX size={20} />} className="sky-preview-close" color="#FFF9E9" _hover={{ bg: "#285461" }} onClick={() => setSelectedId(null)} variant="ghost" />
+          </Flex>
+          <Text className="sky-preview-summary" noOfLines={2} mt={2}>{selected.summary_text}</Text>
+          <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(selected.id) }} className="sky-preview-open" rightIcon={<FiArrowRight />} mt={3}>Read this memory</Button>
+        </Box>}
+        {!selected && <Text className="sky-hint">{crafting ? "Tap stars to choose them" : "Tap a star to see its memory"}</Text>}
       </Box>
     </Box>
-
-    {!crafting && selected && <Box className="sky-sheet">
-      <Flex gap={4} align="start"><Box className="sheet-star"><FiStar /></Box><Box flex="1" minW={0}>
-        <Text className="sheet-overline">SELECTED MEMORY</Text><Heading fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={1}>{selected.title || "A remembered moment"}</Heading>
-        <Text color="#617773" fontSize="sm" noOfLines={2} mt={2}>{selected.summary_text}</Text></Box></Flex>
-      <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(selected.id) }} className="sheet-primary" rightIcon={<FiArrowRight />} mt={5}>Open memory</Button>
-    </Box>}
 
     {groups.length > 0 && <Box><Text className="sheet-overline">SHAPES YOU'VE SAVED</Text><Heading size="md" mb={3} mt={1}>Your constellations</Heading>
       <Flex gap={3} overflowX="auto" pb={2} sx={{ scrollbarWidth: "thin" }}>{groups.map((group, i) =>

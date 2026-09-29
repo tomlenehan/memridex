@@ -22,6 +22,7 @@ import {
   FiAward,
   FiHome,
   FiMapPin,
+  FiStar,
   FiUsers,
 } from "react-icons/fi"
 
@@ -125,18 +126,22 @@ function Dashboard() {
               Your next star could be a person, a place, or a tiny moment that
               stayed with you.
             </Text>
-            <Button
-              variant="accent"
-              size="lg"
-              mt={6}
-              rightIcon={<FiArrowRight />}
-              onClick={() => startStoryFromPrompt()}
-              isLoading={startStory.isPending}
-            >
-              Let’s find a memory
-            </Button>
-            <Text fontSize="xs" color="ui.muted" mt={4}>
-              Speak or type. A few questions, at your own pace.
+            <Flex align="center" flexWrap="wrap" gap={3} mt={6}>
+              <Button
+                variant="accent"
+                size="lg"
+                rightIcon={<FiArrowRight />}
+                onClick={() => startStoryFromPrompt()}
+                isLoading={startStory.isPending}
+              >
+                Tell a memory
+              </Button>
+              <Button as={Link} to="/conversations" variant="outline" size="lg" leftIcon={<FiStar />}>
+                My night sky
+              </Button>
+            </Flex>
+            <Text fontSize="sm" color="ui.muted" mt={4}>
+              Speak or type at your own pace. Your memories stay private.
             </Text>
           </Box>
           <ConstellationStar
@@ -240,27 +245,6 @@ function Dashboard() {
           </Alert>
         )}
 
-        <Flex
-          align={{ base: "flex-start", sm: "center" }}
-          justify="space-between"
-          gap={4}
-          direction={{ base: "column", sm: "row" }}
-          borderTop="1px solid"
-          borderColor="ui.line"
-          pt={5}
-        >
-          <Text color="ui.muted" fontSize="md">
-            Your stories are saved privately to your account.
-          </Text>
-          <Button
-            as={Link}
-            to="/conversations"
-            variant="outline"
-            rightIcon={<FiArrowRight />}
-          >
-            See my memories
-          </Button>
-        </Flex>
       </Stack>
     </Container>
   )

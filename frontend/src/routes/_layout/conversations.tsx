@@ -135,6 +135,19 @@ function MemoryMap() {
     )
   }
 
+  if (storiesQuery.isError && !storiesQuery.data) {
+    return <Box maxW="700px" mx="auto" pt={10}>
+      <Alert status="error" borderRadius="12px" alignItems="flex-start">
+        <AlertIcon mt={1} />
+        <Box>
+          <Text fontWeight="bold">Your memories could not be loaded.</Text>
+          <Text mt={1}>They are still saved. Please try again.</Text>
+          <Button mt={4} size="md" onClick={() => void storiesQuery.refetch()}>Try again</Button>
+        </Box>
+      </Alert>
+    </Box>
+  }
+
   return (
     <Box color={ink} maxW="1280px" mx="auto" pb={{ base: 12, md: 20 }}>
       <Flex
@@ -212,7 +225,7 @@ function MemoryMap() {
             fontFamily={'"Iowan Old Style", Georgia, serif'}
             fontSize="2xl"
           >
-            Every night sky starts with one star.
+            Start your night sky with one memory.
           </Heading>
           <Text
             color={muted}
@@ -222,8 +235,8 @@ function MemoryMap() {
             mb={6}
             lineHeight="1.7"
           >
-            A childhood kitchen. Someone’s laugh. Start with one little moment
-            and watch your universe grow.
+            Tell us about a person, place, or moment you remember. We’ll help
+            you save it as your first star.
           </Text>
           {inProgress.length > 0 ? (
             <Box maxW="420px" mx="auto" textAlign="left">
@@ -238,7 +251,7 @@ function MemoryMap() {
               size="lg"
               px={8}
             >
-              Light your first star
+              Tell your first memory
             </Button>
           )}
           <Text fontSize="xs" color={muted} mt={4}>
@@ -246,7 +259,13 @@ function MemoryMap() {
           </Text>
         </Box>
       ) : view === "sky" ? (
-        <ConstellationMap stories={stories} relationships={relationships} groups={groupsQuery.data ?? []} />
+        <ConstellationMap
+          stories={stories}
+          relationships={relationships}
+          groups={groupsQuery.data ?? []}
+          onAddMemory={startStory}
+          isAddingMemory={createConversation.isPending}
+        />
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={4}>
           {stories.map((story, index) => (

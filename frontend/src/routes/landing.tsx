@@ -484,7 +484,7 @@ export function LandingPage({
                   lineHeight="1"
                   sx={storybookHeading}
                 >
-                  A familiar voice. A favorite place. A little spark.
+                  A familiar voice to help find a little spark.
                 </Heading>
                 <Text
                   color="#526A70"

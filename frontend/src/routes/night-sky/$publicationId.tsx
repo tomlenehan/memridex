@@ -5,7 +5,7 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { FiArrowLeft, FiFlag, FiHeart, FiStar } from "react-icons/fi"
 import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import SkyScene from "../../components/MemoryMap/SkyScene"
@@ -18,6 +18,7 @@ function PublicConstellationPage() {
   const id = Number(publicationId)
   const queryClient = useQueryClient()
   const [selected, setSelected] = useState<number | null>(0)
+  const storyRef = useRef<HTMLDivElement | null>(null)
   const [reportOpen, setReportOpen] = useState(false)
   const [reason, setReason] = useState("")
   const signedIn = !!localStorage.getItem("access_token")
@@ -36,6 +37,15 @@ function PublicConstellationPage() {
   } })
   const constellation = query.data
   const star = selected == null ? null : constellation?.stars[selected]
+  const selectStar = (index: number) => {
+    setSelected(index)
+    if (window.matchMedia("(max-width: 600px)").matches) {
+      window.requestAnimationFrame(() => storyRef.current?.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      }))
+    }
+  }
   return <Box bg="#FFFDF5" minH="100vh" color="#17353B">
     <Flex as="header" px={{ base: 5, md: 10 }} py={4} align="center" justify="space-between" gap={3}>
       <HStack as={Link} to="/landing" spacing={3}><Image src={memriPlaceMark} alt="MemriPlace" boxSize="45px" objectFit="contain" /><Text fontWeight="800">MemriPlace</Text></HStack>
@@ -50,13 +60,13 @@ function PublicConstellationPage() {
           <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize={{ base: "3xl", md: "5xl" }} mt={3}>{constellation.title}</Heading>
           <Text color="#61777A" mt={3}>{constellation.author_name} · Level {constellation.author_level} · {constellation.stars.length} stars</Text>
         </Box>
-        <SkyScene stars={constellation.stars} links={constellation.links} selected={selected} onSelect={setSelected} label={`Constellation: ${constellation.title}`} />
+        <SkyScene stars={constellation.stars} links={constellation.links} selected={selected} onSelect={selectStar} label={`Constellation: ${constellation.title}`} />
         <Flex direction={{ base: "column", lg: "row" }} gap={6} mt={7} align="start">
           <Box flex="1" bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={{ base: 5, md: 8 }}>
             <Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">THE STORY OF THIS CONSTELLATION</Text>
             <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
           </Box>
-          <Box w={{ base: "full", lg: "340px" }} bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={6}>
+          <Box ref={storyRef} w={{ base: "full", lg: "340px" }} bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={6} scrollMarginTop="20px">
             <Heading size="sm">{star?.title || "Choose a star"}</Heading>
             {star?.story_text ? <Text mt={4} lineHeight="1.8" whiteSpace="pre-wrap">{star.story_text}</Text> :
               <Text color="ui.muted" mt={3}>This storyteller kept the memory itself private. Its star still belongs to the shared shape.</Text>}
