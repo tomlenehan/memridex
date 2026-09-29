@@ -21,6 +21,7 @@ import {
   FiArrowRight,
   FiBookOpen,
   FiGitBranch,
+  FiList,
   FiPlus,
   FiStar,
 } from "react-icons/fi"
@@ -35,6 +36,7 @@ import {
 import ProgressTrail from "../../components/Progress/ProgressTrail"
 import ConstellationMap from "../../components/MemoryMap/ConstellationMap"
 import ConstellationStar from "../../components/Common/ConstellationStar"
+import { nightSkyApi } from "../../lib/nightSkyApi"
 
 export const Route = createFileRoute("/_layout/conversations")({
   component: MemoryMap,
@@ -61,6 +63,11 @@ function MemoryMap() {
   const relationshipsQuery = useQuery({
     queryKey: ["storyRelationships"],
     queryFn: () => SummariesService.readStoryRelationships(),
+    enabled: storiesQuery.isSuccess,
+  })
+  const groupsQuery = useQuery({
+    queryKey: ["constellations"],
+    queryFn: nightSkyApi.list,
     enabled: storiesQuery.isSuccess,
   })
   const createConversation = useMutation({
@@ -146,7 +153,7 @@ function MemoryMap() {
               letterSpacing="0.13em"
               textTransform="uppercase"
             >
-              Your memory map
+              Your personal night sky
             </Text>
           </HStack>
           <Heading
@@ -156,70 +163,13 @@ function MemoryMap() {
             fontSize={{ base: "3xl", md: "5xl" }}
             lineHeight="1.08"
           >
-            A constellation of you.
+            Your night sky.
           </Heading>
-          <Text
-            color={muted}
-            mt={3}
-            fontSize={{ base: "md", md: "lg" }}
-            lineHeight="1.7"
-          >
-            Every memory adds a little light. Follow a thread and see where it
-            takes you.
-          </Text>
         </Box>
-        <ConstellationStar
-          h="120px"
-          w="120px"
-          display={{ base: "none", md: "block" }}
-        />
+        {stories.length > 0 && (inProgress.length > 0
+          ? <ContinueStory node={inProgress[0]} compact />
+          : <Button variant={stories.length < 2 ? "accent" : "outline"} size="md" rightIcon={<FiPlus />} onClick={startStory} isLoading={createConversation.isPending}>Add a memory</Button>)}
       </Flex>
-      <ProgressTrail />
-      {stories.length > 0 && (
-        <Flex
-          align="center"
-          justify="space-between"
-          gap={4}
-          mb={7}
-          p={5}
-          bg="#EDF4E7"
-          borderRadius="22px"
-          flexWrap="wrap"
-        >
-          <Box>
-            <Text
-              fontSize="xs"
-              color="#53755E"
-              fontWeight="800"
-              letterSpacing=".08em"
-            >
-              YOUR NEXT LITTLE ADVENTURE
-            </Text>
-            <Heading size="md" mt={1}>
-              {inProgress.length
-                ? "There’s more to this story."
-                : "Make room for another memory."}
-            </Heading>
-            <Text fontSize="sm" color={muted} mt={1}>
-              A few moments today. A story to keep forever.
-            </Text>
-          </Box>
-          {inProgress.length === 0 && (
-            <Button
-              variant="accent"
-              size="lg"
-              rightIcon={<FiPlus />}
-              onClick={startStory}
-              isLoading={createConversation.isPending}
-            >
-              Add a memory
-            </Button>
-          )}
-          {inProgress.length > 0 && (
-            <ContinueStory node={inProgress[0]} primary />
-          )}
-        </Flex>
-      )}
 
       {hasError && (
         <Alert status="error" borderRadius="xl" mb={6}>
@@ -235,65 +185,12 @@ function MemoryMap() {
         </Alert>
       )}
 
-      {(inProgress.length > 1 ||
-        (inProgress.length > 0 && stories.length === 0)) && (
-        <Box mb={10}>
-          <Flex align="center" gap={2} mb={4}>
-            <Icon as={FiBookOpen} color="#4B8D82" />
-            <Heading size="md">Paths to explore</Heading>
-          </Flex>
-          <Stack spacing={3}>
-            {inProgress.slice(stories.length > 0 ? 1 : 0).map((node, index) => (
-              <ContinueStory
-                key={node.id}
-                node={node}
-                primary={stories.length === 0 && index === 0}
-              />
-            ))}
-          </Stack>
-        </Box>
-      )}
-
-      <Flex
-        align="center"
-        justify="space-between"
-        gap={3}
-        mb={4}
-        flexWrap="wrap"
-      >
-        <HStack spacing={2}>
-          <Icon as={FiStar} color="#D88B4A" />
-          <Heading size="md">Your stars</Heading>
-        </HStack>
-        {stories.length > 0 && (
-          <HStack
-            bg="#EDEFE5"
-            p={1}
-            borderRadius="full"
-            spacing={1}
-            aria-label="Map view"
-          >
-            <Button
-              size="sm"
-              borderRadius="full"
-              variant={view === "sky" ? "outline" : "ghost"}
-              aria-pressed={view === "sky"}
-              onClick={() => setView("sky")}
-            >
-              Constellation
-            </Button>
-            <Button
-              size="sm"
-              borderRadius="full"
-              variant={view === "cards" ? "outline" : "ghost"}
-              aria-pressed={view === "cards"}
-              onClick={() => setView("cards")}
-            >
-              Cards
-            </Button>
-          </HStack>
-        )}
-      </Flex>
+      {stories.length > 0 && <Flex justify="flex-end" mb={3}>
+        <Button size="sm" variant="ghost" leftIcon={<FiList />} color="#426C68"
+          onClick={() => setView(view === "sky" ? "cards" : "sky")}>
+          {view === "sky" ? "View as list" : "Back to sky"}
+        </Button>
+      </Flex>}
 
       {stories.length === 0 ? (
         <Box
@@ -315,7 +212,7 @@ function MemoryMap() {
             fontFamily={'"Iowan Old Style", Georgia, serif'}
             fontSize="2xl"
           >
-            Every constellation starts with one star.
+            Every night sky starts with one star.
           </Heading>
           <Text
             color={muted}
@@ -328,7 +225,11 @@ function MemoryMap() {
             A childhood kitchen. Someone’s laugh. Start with one little moment
             and watch your universe grow.
           </Text>
-          {inProgress.length === 0 && (
+          {inProgress.length > 0 ? (
+            <Box maxW="420px" mx="auto" textAlign="left">
+              <ContinueStory node={inProgress[0]} primary />
+            </Box>
+          ) : (
             <Button
               onClick={startStory}
               isLoading={createConversation.isPending}
@@ -345,7 +246,7 @@ function MemoryMap() {
           </Text>
         </Box>
       ) : view === "sky" ? (
-        <ConstellationMap stories={stories} relationships={relationships} />
+        <ConstellationMap stories={stories} relationships={relationships} groups={groupsQuery.data ?? []} />
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={4}>
           {stories.map((story, index) => (
@@ -365,6 +266,21 @@ function MemoryMap() {
           Saved memories are here. Connections are temporarily unavailable.
         </Text>
       )}
+      {groupsQuery.isError && stories.length > 0 && <Text color={muted} fontSize="sm" mt={4}>Your memories are here, but saved constellations are temporarily unavailable.</Text>}
+      <Box mt={8}><ProgressTrail /></Box>
+      {inProgress.length > 1 && (
+        <Box mt={8}>
+          <Flex align="center" gap={2} mb={4}>
+            <Icon as={FiBookOpen} color="#4B8D82" />
+            <Heading size="md">Stories in progress</Heading>
+          </Flex>
+          <Stack spacing={3}>
+            {inProgress.slice(1).map((node) => (
+              <ContinueStory key={node.id} node={node} />
+            ))}
+          </Stack>
+        </Box>
+      )}
     </Box>
   )
 }
@@ -372,7 +288,8 @@ function MemoryMap() {
 function ContinueStory({
   node,
   primary = false,
-}: { node: ConversationPublic; primary?: boolean }) {
+  compact = false,
+}: { node: ConversationPublic; primary?: boolean; compact?: boolean }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const activate = useMutation({
@@ -397,7 +314,7 @@ function ContinueStory({
   }
 
   return (
-    <Box w={primary ? { base: "full", md: "auto" } : "full"}>
+    <Box w={compact ? { base: "full", md: "auto" } : primary ? { base: "full", md: "auto" } : "full"}>
       <Flex
         as="button"
         type="button"
@@ -406,12 +323,13 @@ function ContinueStory({
         align="center"
         justify="space-between"
         gap={4}
-        minH="76px"
+        minH={compact ? "48px" : "76px"}
         w="full"
         textAlign="left"
-        p={4}
-        bg={primary ? "#F7D783" : "white"}
-        boxShadow={primary ? "0 4px 0 #C9AA59" : "0 2px 0 #E7EADF"}
+        px={compact ? 5 : 4}
+        py={compact ? 2 : 4}
+        bg={primary ? "#F7D783" : compact ? "#F3F8EF" : "white"}
+        boxShadow={primary ? "0 4px 0 #C9AA59" : compact ? "none" : "0 2px 0 #E7EADF"}
         border="1px solid #D6E7E2"
         borderRadius="16px"
         _hover={{ borderColor: "#4B8D82", bg: "#F8FBF8" }}
@@ -419,7 +337,7 @@ function ContinueStory({
         aria-label={`Continue ${node.node_title || "your story"}`}
       >
         <Box minW={0}>
-          {primary && (
+          {primary && !compact && (
             <Text fontSize="xs" color="#6D592D" mb={1}>
               {node.status === "inactive"
                 ? "EXPLORE THIS PATH"
@@ -427,11 +345,11 @@ function ContinueStory({
             </Text>
           )}
           <Text fontWeight="800" noOfLines={1}>
-            {node.node_title || "A story in progress"}
+            {compact ? `Continue: ${node.node_title || "your story"}` : node.node_title || "A story in progress"}
           </Text>
-          <Text color={muted} fontSize="sm" mt={1} noOfLines={1}>
+          {!compact && <Text color={muted} fontSize="sm" mt={1} noOfLines={1}>
             {node.branch_context || "Pick up where you left off"}
-          </Text>
+          </Text>}
         </Box>
         {activate.isPending ? (
           <Spinner size="sm" color="#4B8D82" />

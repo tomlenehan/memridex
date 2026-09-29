@@ -1,0 +1,237 @@
+.personal-sky {
+  overflow: hidden;
+  border: 1px solid #355b64;
+  border-radius: 30px;
+  background: #0c2635;
+  box-shadow: 0 18px 48px rgba(20, 53, 58, .17), inset 0 1px rgba(255,255,255,.12);
+}
+
+.scene-sky { overflow: hidden; border: 1px solid #355b64; border-radius: 26px; background: #0c2635; }
+.scene-viewport { height: 390px; }
+
+.personal-sky-header {
+  padding: 22px 26px;
+  background: linear-gradient(105deg, #173e4a, #102e3d 75%);
+  border-bottom: 1px solid rgba(206, 231, 222, .16);
+}
+
+.sky-overline {
+  color: #f7d581;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .15em;
+}
+
+.personal-sky-viewport {
+  position: relative;
+  height: clamp(400px, 48vw, 560px);
+  background:
+    radial-gradient(ellipse at 22% 25%, rgba(80, 142, 137, .31), transparent 36%),
+    radial-gradient(ellipse at 82% 70%, rgba(96, 92, 151, .25), transparent 42%),
+    radial-gradient(circle at 51% 60%, #17394a 0, #0a2534 72%);
+}
+
+.personal-sky-viewport::before,
+.personal-sky-viewport::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.personal-sky-viewport::before {
+  opacity: .38;
+  background-image:
+    radial-gradient(circle, #f7e8bc 1px, transparent 1.5px),
+    radial-gradient(circle, #93c9bd .75px, transparent 1.2px);
+  background-size: 81px 83px, 137px 139px;
+  background-position: 12px 15px, 60px 58px;
+}
+
+.personal-sky-viewport::after {
+  background: linear-gradient(180deg, rgba(4, 25, 36, .16), transparent 18%, transparent 75%, rgba(4, 25, 36, .28));
+}
+
+.personal-sky-viewport .react-flow {
+  z-index: 1;
+}
+
+.personal-sky-viewport .react-flow__edge path {
+  filter: drop-shadow(0 0 6px rgba(255, 221, 151, .65));
+  transition: stroke .2s ease, opacity .2s ease;
+}
+
+.personal-sky-viewport .react-flow__controls {
+  right: 18px;
+  bottom: 24px;
+  border: 1px solid rgba(242, 239, 212, .35);
+  border-radius: 17px;
+  overflow: hidden;
+  background: rgba(28, 62, 70, .88);
+  box-shadow: 0 8px 22px rgba(0, 12, 21, .22);
+  backdrop-filter: blur(12px);
+}
+
+.personal-sky-viewport .react-flow__controls-button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  fill: #fff8e9;
+  color: #fff8e9;
+}
+
+.personal-sky-viewport .react-flow__controls-button + .react-flow__controls-button {
+  border-top: 1px solid rgba(242, 239, 212, .25);
+}
+
+.personal-sky-viewport .react-flow__controls-button:hover {
+  background: rgba(249, 223, 162, .17);
+}
+
+.personal-sky-viewport .react-flow__controls-button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.sky-node {
+  width: 168px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.sky-node-hit {
+  display: flex;
+  width: 168px;
+  flex-direction: column;
+  align-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sky-node-handle {
+  width: 1px;
+  height: 1px;
+  min-width: 1px;
+  min-height: 1px;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  top: 42%;
+}
+
+.sky-node-handle.react-flow__handle-left { left: 50%; }
+.sky-node-handle.react-flow__handle-right { right: 50%; }
+
+.sky-node-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 78px;
+  height: 78px;
+  border-radius: 27px;
+  border: 3px solid #fff9e9;
+  color: #28494a;
+  background: radial-gradient(circle at 30% 22%, #fff8df, var(--node-tint) 54%, #8db9aa);
+  box-shadow: 0 4px 0 rgba(5, 24, 30, .38), 0 0 0 8px rgba(250, 229, 175, .08), 0 0 30px rgba(255, 214, 137, .32);
+  transform: rotate(-7deg);
+  transition: transform .2s ease, box-shadow .2s ease;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.sky-node-hit:hover .sky-node-button,
+.sky-node-hit:focus-visible .sky-node-button,
+.sky-node.active .sky-node-button,
+.sky-node.picked .sky-node-button {
+  transform: rotate(0deg) translateY(-4px) scale(1.05);
+  box-shadow: 0 5px 0 rgba(5, 24, 30, .38), 0 0 0 6px #f8d881, 0 0 35px rgba(255, 219, 135, .7);
+}
+
+.sky-node-hit:focus-visible { outline: 3px solid #f9db83; outline-offset: 8px; border-radius: 16px; }
+.sky-node-button > svg { width: 34px; height: 34px; fill: #fff8e0; stroke-width: 1.5; }
+.sky-node-button > img { width: 100%; height: 100%; border-radius: 24px; object-fit: cover; }
+
+.sky-node-spark {
+  position: absolute;
+  top: -14px;
+  right: -12px;
+  color: #ffe4a4;
+  font-size: 28px;
+  text-shadow: 0 0 8px rgba(255, 219, 132, .8);
+}
+
+.sky-node-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 160px;
+  margin-top: 13px;
+  padding: 5px 9px;
+  border: 1px solid rgba(214, 237, 224, .17);
+  border-radius: 11px;
+  background: rgba(10, 36, 47, .83);
+  color: #fff9ea;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.32;
+  text-shadow: 0 1px 4px #081b25;
+}
+
+.sky-hint {
+  position: absolute;
+  z-index: 2;
+  bottom: 20px;
+  left: 22px;
+  max-width: calc(100% - 180px);
+  padding: 7px 11px;
+  border: 1px solid rgba(210, 235, 224, .18);
+  border-radius: 999px;
+  background: rgba(13, 45, 55, .72);
+  color: #e4f0e5;
+  font-size: 11px;
+  backdrop-filter: blur(10px);
+}
+
+.sky-mobile-connect { display: none !important; }
+
+.sky-gold, .sky-gold:hover { background: #f8d881 !important; color: #193e41 !important; border-radius: 999px !important; min-height: 44px; }
+.sky-quiet, .sky-quiet:hover { background: rgba(221, 239, 227, .12) !important; color: #fff9e9 !important; border-radius: 999px !important; min-height: 44px; }
+.sheet-primary, .sheet-primary:hover { background: #205e61 !important; color: #fffdf5 !important; border-radius: 999px !important; min-height: 46px; }
+
+.sky-sheet {
+  border: 1px solid #e0e9da;
+  border-radius: 27px;
+  background: #fffdf7;
+  padding: 24px;
+  box-shadow: 0 5px 18px rgba(24, 53, 51, .05);
+}
+.sheet-overline { color: #4f8679; font-size: 11px; font-weight: 900; letter-spacing: .13em; }
+.sheet-star { width: 46px; height: 46px; display: grid; place-items: center; flex: 0 0 46px; border-radius: 17px; background: #f9df95; color: #32665d; font-size: 24px; }
+.sky-picked-list { padding: 12px 15px; border-radius: 14px; background: #f4f8ee; color: #325d55; font-size: 14px; }
+.sky-picked-list p + p { margin-top: 5px; }
+.sky-group { align-items: center; gap: 16px; width: min(320px, 82vw); min-height: 106px; padding: 17px; border: 1px solid #dce9db; border-radius: 21px; background: #fffdf7; color: #173d3e; box-shadow: 0 3px 0 #e0e9da; text-decoration: none; }
+.sky-group:hover { border-color: #8cbca7; transform: translateY(-2px); }
+.sky-group-stars { display: flex; width: 74px; flex: 0 0 74px; align-items: center; gap: 0; font-size: 21px; }
+.sky-group-stars svg:nth-child(2) { transform: translateY(-12px); }
+
+@media (max-width: 600px) {
+  .personal-sky { border-radius: 25px; }
+  .personal-sky-header { padding: 20px; }
+  .personal-sky-viewport { height: 500px; }
+  .scene-viewport { height: 390px; }
+  .personal-sky-viewport .react-flow__controls { left: 13px; top: 13px; right: auto; bottom: auto; }
+  .sky-hint { display: none; }
+  .sky-sheet { padding: 19px; border-radius: 23px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sky-node-button, .sky-group, .personal-sky-viewport .react-flow__edge path { transition: none; }
+}

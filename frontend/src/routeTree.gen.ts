@@ -14,10 +14,13 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as SignupImport } from './routes/signup'
 import { Route as ResetPasswordImport } from './routes/reset-password'
 import { Route as RecoverPasswordImport } from './routes/recover-password'
+import { Route as NightSkyImport } from './routes/night-sky'
 import { Route as LoginImport } from './routes/login'
 import { Route as LandingImport } from './routes/landing'
 import { Route as LayoutImport } from './routes/_layout'
+import { Route as NightSkyIndexImport } from './routes/night-sky.index'
 import { Route as LayoutIndexImport } from './routes/_layout/index'
+import { Route as NightSkyPublicationIdImport } from './routes/night-sky/$publicationId'
 import { Route as LayoutUserstorypromptsImport } from './routes/_layout/user_story_prompts'
 import { Route as LayoutStoriesImport } from './routes/_layout/stories'
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
@@ -26,6 +29,7 @@ import { Route as LayoutConversationsImport } from './routes/_layout/conversatio
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 import { Route as LayoutSummarySummaryIdImport } from './routes/_layout/summary/$summaryId'
 import { Route as LayoutConversationConversationIdImport } from './routes/_layout/conversation/$conversationId'
+import { Route as LayoutConstellationConstellationIdImport } from './routes/_layout/constellation/$constellationId'
 
 // Create/Update Routes
 
@@ -44,6 +48,11 @@ const RecoverPasswordRoute = RecoverPasswordImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const NightSkyRoute = NightSkyImport.update({
+  path: '/night-sky',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const LoginRoute = LoginImport.update({
   path: '/login',
   getParentRoute: () => rootRoute,
@@ -59,9 +68,19 @@ const LayoutRoute = LayoutImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const NightSkyIndexRoute = NightSkyIndexImport.update({
+  path: '/',
+  getParentRoute: () => NightSkyRoute,
+} as any)
+
 const LayoutIndexRoute = LayoutIndexImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
+} as any)
+
+const NightSkyPublicationIdRoute = NightSkyPublicationIdImport.update({
+  path: '/$publicationId',
+  getParentRoute: () => NightSkyRoute,
 } as any)
 
 const LayoutUserstorypromptsRoute = LayoutUserstorypromptsImport.update({
@@ -105,6 +124,12 @@ const LayoutConversationConversationIdRoute =
     getParentRoute: () => LayoutRoute,
   } as any)
 
+const LayoutConstellationConstellationIdRoute =
+  LayoutConstellationConstellationIdImport.update({
+    path: '/constellation/$constellationId',
+    getParentRoute: () => LayoutRoute,
+  } as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -119,6 +144,10 @@ declare module '@tanstack/react-router' {
     }
     '/login': {
       preLoaderRoute: typeof LoginImport
+      parentRoute: typeof rootRoute
+    }
+    '/night-sky': {
+      preLoaderRoute: typeof NightSkyImport
       parentRoute: typeof rootRoute
     }
     '/recover-password': {
@@ -157,8 +186,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutUserstorypromptsImport
       parentRoute: typeof LayoutImport
     }
+    '/night-sky/$publicationId': {
+      preLoaderRoute: typeof NightSkyPublicationIdImport
+      parentRoute: typeof NightSkyImport
+    }
     '/_layout/': {
       preLoaderRoute: typeof LayoutIndexImport
+      parentRoute: typeof LayoutImport
+    }
+    '/night-sky/': {
+      preLoaderRoute: typeof NightSkyIndexImport
+      parentRoute: typeof NightSkyImport
+    }
+    '/_layout/constellation/$constellationId': {
+      preLoaderRoute: typeof LayoutConstellationConstellationIdImport
       parentRoute: typeof LayoutImport
     }
     '/_layout/conversation/$conversationId': {
@@ -183,11 +224,13 @@ export const routeTree = rootRoute.addChildren([
     LayoutStoriesRoute,
     LayoutUserstorypromptsRoute,
     LayoutIndexRoute,
+    LayoutConstellationConstellationIdRoute,
     LayoutConversationConversationIdRoute,
     LayoutSummarySummaryIdRoute,
   ]),
   LandingRoute,
   LoginRoute,
+  NightSkyRoute.addChildren([NightSkyPublicationIdRoute, NightSkyIndexRoute]),
   RecoverPasswordRoute,
   ResetPasswordRoute,
   SignupRoute,

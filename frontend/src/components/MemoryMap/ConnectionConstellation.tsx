@@ -87,7 +87,7 @@ export default function ConnectionConstellation({
       >
         <Box>
           <Text color="#52775C" fontSize="xs" fontWeight="800" letterSpacing=".12em">
-            YOUR CONSTELLATION IS GROWING
+            YOUR NIGHT SKY IS GROWING
           </Text>
           <Heading color="#23483F" fontSize={{ base: "xl", md: "2xl" }} mt={1}>
             Follow the threads of your story
@@ -103,7 +103,7 @@ export default function ConnectionConstellation({
       </Flex>
 
       <Box
-        aria-label="Nearby memories in your constellation"
+        aria-label="Nearby memories in your night sky"
         bg="#F8FAEF"
         backgroundImage="radial-gradient(#C5D4BC 1px, transparent 1px), radial-gradient(circle at 50% 50%, rgba(255,238,177,.55), transparent 27%), radial-gradient(circle at 80% 12%, rgba(190,221,207,.3), transparent 28%)"
         backgroundSize="28px 28px"
@@ -309,15 +309,15 @@ export default function ConnectionConstellation({
               <Text color="#61777A" fontSize="sm" mt={2}>Save more memories and new paths will appear here.</Text>
             </Box>
             <Button as={Link} rightIcon={<FiArrowRight />} size="sm" to="/conversations" variant="secondary">
-              Explore your constellation
+              Explore your night sky
             </Button>
           </Flex>
         )}
         {(hiddenConnectionCount > 0 || satellites.length > 0) && (
           <Flex align="center" color="#61777A" fontSize="xs" justify="space-between" mt={4} gap={3} flexWrap="wrap">
-            <Text>{hiddenConnectionCount > 0 ? `+${hiddenConnectionCount} more saved ${hiddenConnectionCount === 1 ? "connection" : "connections"} in your full constellation` : "Every connection is your choice."}</Text>
+            <Text>{hiddenConnectionCount > 0 ? `+${hiddenConnectionCount} more saved ${hiddenConnectionCount === 1 ? "connection" : "connections"} in your night sky` : "Every connection is your choice."}</Text>
             <Button as={Link} color="#356D63" fontSize="xs" minW="auto" p={0} rightIcon={<FiArrowRight />} to="/conversations" variant="link">
-              View full constellation
+              View my night sky
             </Button>
           </Flex>
         )}

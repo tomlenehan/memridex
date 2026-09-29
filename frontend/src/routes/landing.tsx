@@ -36,6 +36,8 @@ import memriPlaceTextLogo from "../assets/images/MemriPlaceTextLogoFlat.png"
 import starscape from "../assets/images/homepage_parallax_flat/starscape.png"
 import AuthModal from "../components/Auth/AuthModal"
 import ConstellationStar from "../components/Common/ConstellationStar"
+import NightSkyJourney from "../components/Landing/NightSkyJourney"
+import { PUBLIC_SKY_ENABLED } from "../config"
 
 export type AuthModalMode = "login" | "signup"
 
@@ -65,180 +67,18 @@ const storySteps = [
   {
     icon: FiMic,
     index: "02",
-    text: "Your AI companion will ask you a few thoughtful questions help bring the little details back.",
+    text: "Your AI companion asks thoughtful questions to help bring the little details back.",
     title: "Follow the memory",
     color: "#DDEDE1",
   },
   {
     icon: FiStar,
     index: "03",
-    text: "Save your story to add a star to your constellation. Come back whenever a new memory finds you.",
-    title: "Watch your sky grow",
+    text: "Save your story and a new star appears in your private night sky.",
+    title: "Light your first star",
     color: "#E9DFF1",
   },
 ]
-
-const exampleMemories = [
-  {
-    title: "Grandma’s kitchen",
-    color: "#F5D785",
-    x: 25,
-    y: 22,
-    text: "There was always flour on the kitchen table, and somehow she never minded how much of it ended up on me.",
-  },
-  {
-    title: "The garden gate",
-    color: "#B9DDCF",
-    x: 74,
-    y: 33,
-    text: "Beyond the little green gate was a garden that felt like a whole other world. Grandma knew the name of every flower.",
-  },
-  {
-    title: "Sunday pancakes",
-    color: "#F2C6AE",
-    x: 29,
-    y: 65,
-    text: "On Sundays we took our time. Dad made the first pancake too big, every single week, and we laughed every single time.",
-  },
-  {
-    title: "A summer of stories",
-    color: "#D8C9E6",
-    x: 72,
-    y: 70,
-    text: "We spent the long afternoons under the apple tree, listening to stories we would ask to hear all over again tomorrow.",
-  },
-]
-
-function ConstellationPreview() {
-  const [selected, setSelected] = useState(0)
-  const memory = exampleMemories[selected]
-  return (
-    <Box
-      bg="#FCFDF6"
-      border="1px solid #DCE5D1"
-      borderRadius="30px"
-      overflow="hidden"
-      boxShadow="0 7px 0 #E2E8D5, 0 20px 50px rgba(44,74,52,.07)"
-    >
-      <Flex
-        px={{ base: 5, md: 7 }}
-        pt={6}
-        justify="space-between"
-        align="center"
-        gap={3}
-      >
-        <HStack color="#426858">
-          <Icon as={FiStar} />
-          <Text fontWeight="800" fontSize="sm">
-            A little universe of memories
-          </Text>
-        </HStack>
-        <Text fontSize="xs" color="#617569" whiteSpace="nowrap">
-          Example map
-        </Text>
-      </Flex>
-      <Box
-        position="relative"
-        h={{ base: "310px", md: "350px" }}
-        mx={3}
-        mt={3}
-        bgImage="radial-gradient(#CCD8C1 1px, transparent 1px)"
-        bgSize="24px 24px"
-      >
-        <svg
-          aria-hidden="true"
-          width="100%"
-          height="100%"
-          style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-        >
-          {[
-            [0, 1],
-            [0, 2],
-            [1, 3],
-            [2, 3],
-          ].map(([a, b]) => (
-            <line
-              key={`${a}-${b}`}
-              x1={`${exampleMemories[a].x}%`}
-              y1={`${exampleMemories[a].y}%`}
-              x2={`${exampleMemories[b].x}%`}
-              y2={`${exampleMemories[b].y}%`}
-              stroke={selected === a || selected === b ? "#7FA284" : "#CAD6BE"}
-              strokeWidth="2"
-              strokeDasharray="5 7"
-            />
-          ))}
-        </svg>
-        {exampleMemories.map((item, index) => (
-          <Box
-            key={item.title}
-            position="absolute"
-            left={`${item.x}%`}
-            top={`${item.y}%`}
-            transform="translate(-50%, -32px)"
-            w={{ base: "120px", md: "150px" }}
-            textAlign="center"
-          >
-            <Button
-              aria-label={`Preview ${item.title}`}
-              aria-pressed={index === selected}
-              onClick={() => setSelected(index)}
-              variant="unstyled"
-              display="inline-flex"
-              alignItems="center"
-              justifyContent="center"
-              boxSize="64px"
-              borderRadius="22px"
-              bg={item.color}
-              border="3px solid white"
-              color="#426454"
-              transform={`rotate(${index % 2 ? 7 : -7}deg)`}
-              boxShadow={
-                selected === index
-                  ? "0 0 0 3px #729479, 0 6px 0 #C5D2BB"
-                  : "0 5px 0 #D2DBC4"
-              }
-              _hover={{ transform: "rotate(0deg) translateY(-3px)" }}
-            >
-              <Icon as={FiStar} boxSize={7} fill="rgba(255,255,255,.6)" />
-            </Button>
-            <Text
-              mt={3}
-              fontWeight="700"
-              fontSize="sm"
-              lineHeight="1.4"
-              color="#365846"
-              bg="#FCFDF6"
-              borderRadius="lg"
-            >
-              {item.title}
-            </Text>
-          </Box>
-        ))}
-      </Box>
-      <Box
-        px={{ base: 5, md: 7 }}
-        pt={5}
-        pb={6}
-        bg="white"
-        borderTop="1px solid #E3E9DA"
-        minH={{ base: "184px", md: "168px" }}
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        <Text fontSize="xs" color="#617569" mb={2}>
-          Tap a star. There’s a story behind each one.
-        </Text>
-        <Heading as="h3" fontSize="xl" sx={storybookHeading}>
-          {memory.title}
-        </Heading>
-        <Text color="#617569" fontSize="sm" lineHeight="1.7" mt={2}>
-          {memory.text}
-        </Text>
-      </Box>
-    </Box>
-  )
-}
 
 export function LandingPage({
   initialAuthMode = null,
@@ -489,6 +329,9 @@ export function LandingPage({
                 src={memriPlaceLogo}
               />
               <HStack spacing={{ base: 1, md: 3 }}>
+                {PUBLIC_SKY_ENABLED && <Button as={Link} to="/night-sky" color="#FFF8E8" size={{ base: "sm", md: "md" }} variant="ghost" display={{ base: "none", md: "inline-flex" }}>
+                  Public night sky
+                </Button>}
                 <Button
                   _hover={{ bg: "whiteAlpha.200" }}
                   as={Link}
@@ -555,14 +398,16 @@ export function LandingPage({
                   maxW="520px"
                   sx={storybookHeading}
                 >
-                  Life is full of memories and each one is a star.
+                  Every memory begins as a star.
                 </Text>
                 <Text
                   color="rgba(255, 248, 232, 0.78)"
                   lineHeight="1.7"
                   maxW="460px"
                 >
-                  Turn the moments you remember into stories you can keep.
+                  Connect your stars into constellations. {PUBLIC_SKY_ENABLED
+                    ? "Keep them close, or share one with the public night sky."
+                    : "Keep them close while the public night sky takes shape."}
                 </Text>
                 <HStack flexWrap="wrap" pt={2} spacing={3}>
                   <Button
@@ -754,42 +599,7 @@ export function LandingPage({
           py={{ base: 16, md: 24 }}
           borderY="1px solid #E1E8D6"
         >
-          <SimpleGrid
-            columns={{ base: 1, lg: 2 }}
-            maxW="7xl"
-            mx="auto"
-            px={{ base: 5, md: 8 }}
-            gap={{ base: 10, md: 16 }}
-            alignItems="center"
-          >
-            <ConstellationPreview />
-            <Stack spacing={5}>
-              <Text color="#52735E" fontSize="sm" fontWeight="800">
-                YOUR STORIES, CONNECTED
-              </Text>
-              <Heading
-                as="h2"
-                fontSize={{ base: "38px", md: "54px" }}
-                lineHeight="1.08"
-                sx={storybookHeading}
-              >
-                One memory leads to another.
-              </Heading>
-              <Text color="#617569" fontSize="lg" lineHeight="1.8">
-                The kitchen reminds you of the garden. The garden brings back a
-                summer. Each story becomes a star, and the connections you make
-                become your own constellation.
-              </Text>
-              <Text color="#617569" lineHeight="1.8">
-                Follow new questions inspired by the details you share. Revisit
-                an old favorite, or wander down a path you haven’t explored yet.
-              </Text>
-              <HStack color="#426858" fontWeight="700" pt={2}>
-                <Icon as={FiStar} />
-                <Text>A map that grows with you.</Text>
-              </HStack>
-            </Stack>
-          </SimpleGrid>
+          <NightSkyJourney publicSkyEnabled={PUBLIC_SKY_ENABLED} />
         </Box>
 
         <Box
@@ -965,19 +775,25 @@ export function LandingPage({
                 lineHeight="1.1"
                 sx={storybookHeading}
               >
-                Your constellation stays private.
+                Your night sky stays private.
                 <br />
-                Share only the stories you choose.
+                {PUBLIC_SKY_ENABLED
+                  ? "Share a constellation when you choose."
+                  : "Every constellation starts there."}
               </Heading>
               <Text
                 color="#646071"
                 fontSize={{ base: "md", md: "lg" }}
                 lineHeight="1.8"
               >
-                Nothing is posted to a public feed, and other members can’t
-                browse your collection. When a memory feels worth passing on,
-                share that individual story with someone you love—without
-                opening the rest of your constellation.
+                {PUBLIC_SKY_ENABLED ? (
+                  <>Nothing is posted automatically. Before publishing a constellation,
+                    you can preview it and choose which story texts and images readers
+                    can open. The rest of your sky stays yours.</>
+                ) : (
+                  <>Nothing is posted to a public feed. Share an individual story with
+                    someone you love without opening the rest of your night sky.</>
+                )}
               </Text>
             </Stack>
           </Flex>
@@ -1015,9 +831,11 @@ export function LandingPage({
               lineHeight="1.05"
               sx={storybookHeading}
             >
-              There’s a whole sky
+              Start filling your
               <br />
-              of stories in you.
+              Night Sky with stories
+              <br />
+              that illuminate
             </Heading>
             <Text color="#D6E2D4" fontSize="lg" lineHeight="1.7">
               Let’s find the first one.
@@ -1030,11 +848,11 @@ export function LandingPage({
               variant="accent"
               mt={2}
             >
-              Begin your constellation
+              Begin your story
             </Button>
             <HStack color="#D6E2D4" spacing={2} fontSize="sm">
               <Icon as={FiLock} />
-              <Text>Private by default. Shared story by story.</Text>
+              <Text>Private by default. Shared on your terms.</Text>
             </HStack>
           </Stack>
         </Box>
@@ -1052,6 +870,9 @@ export function LandingPage({
       >
         <Text fontSize="sm">MemriPlace. Stories worth keeping.</Text>
         <HStack spacing={{ base: 4, md: 5 }} flexWrap="wrap" justify="center">
+          {PUBLIC_SKY_ENABLED && <Button as={Link} to="/night-sky" color="inherit" fontSize="sm" fontWeight="500" minW="auto" p={0} variant="link" textDecoration="underline" textUnderlineOffset="3px">
+            Public night sky
+          </Button>}
           <Button
             color="inherit"
             fontSize="sm"
@@ -1119,9 +940,17 @@ export function LandingPage({
                   Your privacy
                 </Heading>
                 <Text>
-                  Your stories are private by default and are not shown in a public feed.
-                  You choose whether to share an individual story. We use your account and
-                  story information to provide MemriPlace and keep your constellation available to you.
+                  {PUBLIC_SKY_ENABLED ? (
+                    <>Your stories and personal night sky are private by default. You may
+                      share an individual story or explicitly publish a reviewed constellation
+                      to the public night sky. Only its overview and the story texts and images
+                      you select are included. Original conversations and voice transcripts
+                      remain private. You can remove a published constellation at any time.</>
+                  ) : (
+                    <>Your stories are private by default and are not shown in a public feed.
+                      You choose whether to share an individual story. We use your account and
+                      story information to provide MemriPlace and keep your night sky available to you.</>
+                  )}
                 </Text>
               </Box>
               <Box>

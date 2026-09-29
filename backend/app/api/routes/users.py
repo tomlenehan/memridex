@@ -1,7 +1,8 @@
 from typing import Any
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import col, delete, func, select
+from sqlmodel import delete, func, select, update
 
 from app import crud
 from app.api.deps import (
@@ -13,7 +14,20 @@ from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import (
     Item,
+    ChatMessage,
+    Constellation,
+    ConstellationReport,
+    ConstellationVote,
+    Contact,
+    Conversation,
+    MemoryDay,
+    MemoryXP,
     Message,
+    PublishedConstellation,
+    PublishedMemory,
+    StoryEmbedding,
+    StoryRelationship,
+    StorySummary,
     UpdatePassword,
     User,
     UserCreate,
@@ -25,15 +39,57 @@ from app.models import (
     UserStoryPrompt,
     StockStoryPrompt,
 )
-from app.utils import generate_new_account_email, send_email
+from app.utils import generate_new_account_email, get_local_uploads_directory, send_email
 from app.api.deps import get_current_user
 
 router = APIRouter()
 
 
+def _delete_account_data(session: SessionDep, user_id: int) -> None:
+    """Remove both private records and public copies in one database transaction."""
+    public_files = session.exec(select(PublishedMemory.image_filename)
+        .join(PublishedConstellation, PublishedMemory.publication_id == PublishedConstellation.id)
+        .where(PublishedConstellation.owner_id == user_id,
+               PublishedMemory.image_filename.is_not(None))).all()
+    private_files = session.exec(select(StorySummary.image_url).where(
+        StorySummary.user_id == user_id,
+        StorySummary.image_url.startswith("disk-private://"),
+    )).all()
+    try:
+        session.exec(delete(ConstellationVote).where(ConstellationVote.user_id == user_id))
+        session.exec(delete(ConstellationReport).where(ConstellationReport.user_id == user_id))
+        session.exec(delete(PublishedConstellation).where(PublishedConstellation.owner_id == user_id))
+        session.exec(delete(Constellation).where(Constellation.owner_id == user_id))
+        session.exec(delete(StoryEmbedding).where(StoryEmbedding.user_id == user_id))
+        session.exec(delete(StoryRelationship).where(StoryRelationship.user_id == user_id))
+        session.exec(delete(MemoryDay).where(MemoryDay.user_id == user_id))
+        session.exec(delete(MemoryXP).where(MemoryXP.user_id == user_id))
+        session.exec(delete(Contact).where(Contact.user_id == user_id))
+        session.exec(delete(Item).where(Item.owner_id == user_id))
+        session.exec(delete(StorySummary).where(StorySummary.user_id == user_id))
+        session.exec(delete(ChatMessage).where(ChatMessage.sender_id == user_id))
+        session.exec(update(Conversation).where(Conversation.user_id == user_id).values(parent_conversation_id=None))
+        session.exec(delete(Conversation).where(Conversation.user_id == user_id))
+        session.exec(delete(UserStoryPrompt).where(UserStoryPrompt.user_id == user_id))
+        session.exec(delete(User).where(User.id == user_id))
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    directory = get_local_uploads_directory()
+    for filename in public_files:
+        if filename and Path(filename).name == filename:
+            (directory / "public_sky" / filename).unlink(missing_ok=True)
+    for image_url in private_files:
+        if image_url:
+            filename = image_url.removeprefix("disk-private://")
+            if Path(filename).name == filename:
+                (directory / filename).unlink(missing_ok=True)
+
+
 @router.get(
     "/",
-    # dependencies=[Depends(get_current_active_superuser)],
+    dependencies=[Depends(get_current_active_superuser)],
     response_model=UsersPublic,
 )
 def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
@@ -52,6 +108,7 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
 
 @router.post(
     "/",
+    dependencies=[Depends(get_current_active_superuser)],
     response_model=UserPublic,
     operation_id="create_user"
 )
@@ -149,10 +206,7 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
-    statement = delete(Item).where(col(Item.owner_id) == current_user.id)
-    session.exec(statement)  # type: ignore
-    session.delete(current_user)
-    session.commit()
+    _delete_account_data(session, current_user.id)
     return Message(message="User deleted successfully")
 
 
@@ -241,8 +295,5 @@ def delete_user(
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
-    statement = delete(Item).where(col(Item.owner_id) == user_id)
-    session.exec(statement)  # type: ignore
-    session.delete(user)
-    session.commit()
+    _delete_account_data(session, user_id)
     return Message(message="User deleted successfully")

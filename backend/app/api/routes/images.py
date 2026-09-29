@@ -1,12 +1,12 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import func, select, Session
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models import Image, ImagePublic, ImagesPublic, ImageCreate, ImageUpdate, Message
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_active_superuser)])
 
 
 @router.get("/", response_model=ImagesPublic)

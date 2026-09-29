@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 
 from app.api.routes import (items, login, users, utils, user_story_prompts, categories, images,
-                            conversations, chat_messages, story_summaries, contacts, realtime, progress)
+                            conversations, chat_messages, story_summaries, contacts, realtime, progress,
+                            constellations, public_sky)
 
 api_router = APIRouter()
 api_router.include_router(login.router, tags=["login"])
@@ -18,3 +19,5 @@ api_router.include_router(images.router, prefix="/images", tags=["images"])
 api_router.include_router(contacts.router, prefix="/contacts", tags=["contacts"])
 
 api_router.include_router(progress.router, prefix="/progress", tags=["progress"])
+api_router.include_router(constellations.router, prefix="/constellations", tags=["constellations"])
+api_router.include_router(public_sky.router, prefix="/night-sky", tags=["night-sky"])

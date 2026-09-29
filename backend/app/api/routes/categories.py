@@ -1,9 +1,9 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import func, select
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models import Category, CategoryCreate, CategoryPublic, CategoriesPublic, CategoryUpdate, Message
 
 router = APIRouter()
@@ -33,7 +33,7 @@ def read_category(session: SessionDep, current_user: CurrentUser, id: int) -> An
     return category
 
 
-@router.post("/", response_model=CategoryPublic)
+@router.post("/", response_model=CategoryPublic, dependencies=[Depends(get_current_active_superuser)])
 def create_category(
     *, session: SessionDep, current_user: CurrentUser, category_in: CategoryCreate
 ) -> Any:
@@ -47,7 +47,7 @@ def create_category(
     return category
 
 
-@router.put("/{id}", response_model=CategoryPublic)
+@router.put("/{id}", response_model=CategoryPublic, dependencies=[Depends(get_current_active_superuser)])
 def update_category(
     *, session: SessionDep, current_user: CurrentUser, id: int, category_in: CategoryUpdate
 ) -> Any:
@@ -65,7 +65,7 @@ def update_category(
     return category
 
 
-@router.delete("/{id}")
+@router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_category(session: SessionDep, current_user: CurrentUser, id: int) -> Message:
     """
     Delete a category.
