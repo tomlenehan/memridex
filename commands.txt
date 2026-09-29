@@ -1,0 +1,19 @@
+###COMMON COMMANDS###
+
+#LOCAL
+{
+  "email": "evelyn.demo@memriplace.test",
+  "password": "KGDbo2MCUoXaf-Z5F9Ihaq1xXTwlprjn"
+}
+
+#RENDER
+{
+  "email": "evelyn.demo@memriplace.test",
+  "password": "KGDbo2MCUoXaf-Z5F9Ihaq1xXTwlprjn"
+}
+
+# Add demo data
+docker compose exec -T backend python -m app.demo_data seed
+
+# Clear demo data
+docker compose exec -T backend python -m app.demo_data clear --confirm-email evelyn.demo@memriplace.test

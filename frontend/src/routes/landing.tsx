@@ -399,16 +399,14 @@ export function LandingPage({
                   maxW="520px"
                   sx={storybookHeading}
                 >
-                  Every memory begins as a star.
+                  A lifetime of moments. Your story in the stars
                 </Text>
                 <Text
                   color="rgba(255, 248, 232, 0.78)"
                   lineHeight="1.7"
                   maxW="460px"
                 >
-                  Connect your stars into constellations. {PUBLIC_SKY_ENABLED
-                    ? "Keep them close, or share one with the Global Night Sky."
-                    : "Keep them close while the Global Night Sky takes shape."}
+                  Capture the memories that matter, connect the ones that belong together, and build a night sky that’s uniquely yours.
                 </Text>
                 <HStack flexWrap="wrap" pt={2} spacing={3}>
                   <Button
