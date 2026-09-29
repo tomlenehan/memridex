@@ -396,7 +396,7 @@ export function LandingPage({
                   color="rgba(255, 248, 232, 0.92)"
                   fontSize={{ base: "lg", md: "2xl" }}
                   lineHeight="1.35"
-                  maxW="520px"
+                  maxW="560px"
                   sx={storybookHeading}
                 >
                   A lifetime of moments. Your story in the stars
@@ -483,7 +483,7 @@ export function LandingPage({
                   lineHeight="1"
                   sx={storybookHeading}
                 >
-                  A familiar voice to help find a spark.
+                  A familiar voice to help you find a spark.
                 </Heading>
                 <Text
                   color="#526A70"
@@ -598,12 +598,10 @@ export function LandingPage({
                 lineHeight="1.08"
                 sx={storybookHeading}
               >
-                Keep remembering.
-                <br />
                 Keep leveling up.
               </Heading>
               <Text color="#617569" fontSize="lg" lineHeight="1.8">
-                Every new story you Experience Points (XP).
+                Every new story earns you Experience Points (XP).
                 As you level up, your constellations shine brigher in the Global Night Sky.
               </Text>
               <HStack spacing={3} align="start">
