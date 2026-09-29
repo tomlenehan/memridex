@@ -59,6 +59,8 @@ export type SkyCluster = {
   star_count: number
   votes: number
   published_at: string
+  preview_stars: { x: number; y: number }[]
+  preview_links: { a: number; b: number }[]
 }
 export type SkyPage = { data: SkyCluster[]; count: number }
 export type SkyReport = { id: number; publication_id: number; user_id: number; reason: string; status: string; created_at: string }

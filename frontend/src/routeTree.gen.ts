@@ -18,6 +18,7 @@ import { Route as NightSkyImport } from './routes/night-sky'
 import { Route as LoginImport } from './routes/login'
 import { Route as LandingImport } from './routes/landing'
 import { Route as LayoutImport } from './routes/_layout'
+import { Route as NightSkyIndexImport } from './routes/night-sky.index'
 import { Route as LayoutIndexImport } from './routes/_layout/index'
 import { Route as NightSkyPublicationIdImport } from './routes/night-sky/$publicationId'
 import { Route as LayoutUserstorypromptsImport } from './routes/_layout/user_story_prompts'
@@ -65,6 +66,11 @@ const LandingRoute = LandingImport.update({
 const LayoutRoute = LayoutImport.update({
   id: '/_layout',
   getParentRoute: () => rootRoute,
+} as any)
+
+const NightSkyIndexRoute = NightSkyIndexImport.update({
+  path: '/',
+  getParentRoute: () => NightSkyRoute,
 } as any)
 
 const LayoutIndexRoute = LayoutIndexImport.update({
@@ -188,6 +194,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexImport
       parentRoute: typeof LayoutImport
     }
+    '/night-sky/': {
+      preLoaderRoute: typeof NightSkyIndexImport
+      parentRoute: typeof NightSkyImport
+    }
     '/_layout/constellation/$constellationId': {
       preLoaderRoute: typeof LayoutConstellationConstellationIdImport
       parentRoute: typeof LayoutImport
@@ -220,7 +230,7 @@ export const routeTree = rootRoute.addChildren([
   ]),
   LandingRoute,
   LoginRoute,
-  NightSkyRoute.addChildren([NightSkyPublicationIdRoute]),
+  NightSkyRoute.addChildren([NightSkyPublicationIdRoute, NightSkyIndexRoute]),
   RecoverPasswordRoute,
   ResetPasswordRoute,
   SignupRoute,

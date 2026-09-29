@@ -105,6 +105,7 @@ function ConstellationEditor() {
       setDirty(true)
     }
     setLinkAnchor(null)
+    setLinking(false)
   }
   const canRemoveLink = (index: number) => {
     const remaining = links.filter((_, i) => i !== index)
@@ -157,12 +158,11 @@ function ConstellationEditor() {
   }
   const moveStar = (dx: number, dy: number) => {
     if (selected == null || !members[selected]) return
-    const columns = Math.min(4, Math.max(2, Math.ceil(Math.sqrt(members.length))))
-    const sceneHeight = Math.max(360, Math.ceil(members.length / 4) * 170 + 120)
+    const columns = Math.max(2, Math.ceil(Math.sqrt(members.length * 1.4)))
     const item = members[selected]
-    const x = item.x ?? ((selected % columns) + .5) / columns
-    const y = item.y ?? (90 + Math.floor(selected / columns) * 170 + (selected % 2) * 25) / sceneHeight
-    changeMember(selected, { x: Math.max(.1, Math.min(.9, x + dx)), y: Math.max(.13, Math.min(.87, y + dy)) })
+    const x = item.x ?? (80 + (selected % columns) * 215 + (Math.floor(selected / columns) % 2 ? 45 : 0) - 70) / 760
+    const y = item.y ?? (55 + Math.floor(selected / columns) * 185 + (selected % 2 ? 24 : 0) - 45) / 480
+    changeMember(selected, { x: Math.max(.02, Math.min(.95, x + dx)), y: Math.max(.02, Math.min(.95, y + dy)) })
   }
 
   if (groupQuery.isLoading) return <Flex minH="55vh" align="center" justify="center"><Spinner size="xl" color="#4B8D82" /></Flex>
@@ -177,11 +177,18 @@ function ConstellationEditor() {
         <Text color="ui.muted" mt={2}>{members.length} memories, one shape only you could make.</Text>
       </Box>
     </Flex>
-    <Box mb={3}><HStack flexWrap="wrap"><Button size="sm" variant={linking ? "primary" : "outline"} onClick={() => { setLinking(!linking); setLinkAnchor(null) }}>
-      {linking ? "Finish linking" : "Draw connections"}
-    </Button><Text color="ui.muted" fontSize="sm">{linking ? linkAnchor == null ? "Tap the first star, then the second." : "Now tap the star to connect it to." : "Tap a star to explore it."}</Text></HStack></Box>
+    <Flex mb={3} justify="space-between" gap={3} align="center" flexWrap="wrap">
+      <Text color="ui.muted" fontSize="sm">{linking ? "Tap the second star to add a connection." : "Tap a star to explore it. Drag the sky to look around."}</Text>
+      {linking && <Button size="sm" variant="outline" onClick={() => { setLinking(false); setLinkAnchor(null) }}>Cancel connection</Button>}
+    </Flex>
     <SkyScene stars={members} links={links.map((link) => ({ a: members.findIndex((item) => item.story_id === link.story_a_id), b: members.findIndex((item) => item.story_id === link.story_b_id) }))}
       selected={selected} onSelect={choose} label="Your private constellation" />
+    {member && <Flex bg="#FFFDF7" border="1px solid #DFE9DA" borderRadius="22px" mt={3} p={{ base: 4, md: 5 }} align={{ base: "start", md: "center" }} justify="space-between" gap={4} direction={{ base: "column", md: "row" }}>
+      <Box><Text color="#4F8679" fontSize="xs" fontWeight="800" letterSpacing=".1em">SELECTED STAR</Text>
+        <Heading size="sm" mt={1}>{member.title}</Heading><Text fontSize="sm" color="ui.muted" noOfLines={2} mt={1}>{member.summary_text}</Text></Box>
+      <HStack flexShrink={0} flexWrap="wrap"><Button size="sm" variant="secondary" onClick={() => { setLinking(true); setLinkAnchor(member.story_id) }} isDisabled={linking}>Connect this star</Button>
+        {dirty && <Button size="sm" variant="accent" onClick={() => save.mutate()} isLoading={save.isPending}>Save draft</Button>}</HStack>
+    </Flex>}
     <Flex gap={2} flexWrap="wrap" mt={3}>
       {links.map((link, index) => <Button key={`${link.story_a_id}-${link.story_b_id}`} size="xs" variant="outline" isDisabled={!canRemoveLink(index)}
         onClick={() => { setLinks((current) => current.filter((_, i) => i !== index)); setDirty(true) }}>

@@ -2,6 +2,7 @@
 import hashlib
 import json
 import shutil
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Literal, Optional
@@ -64,6 +65,11 @@ class PublicConstellation(BaseModel):
     preview_token: Optional[str] = None
 
 
+class SkyPoint(BaseModel):
+    x: float
+    y: float
+
+
 class SkyCluster(BaseModel):
     id: int
     title: str
@@ -73,6 +79,8 @@ class SkyCluster(BaseModel):
     star_count: int
     votes: int
     published_at: datetime
+    preview_stars: list[SkyPoint] = PydanticField(default_factory=list)
+    preview_links: list[SkyLink] = PydanticField(default_factory=list)
 
 
 class SkyPage(BaseModel):
@@ -333,13 +341,36 @@ def browse_sky(session: SessionDep, skip: int = 0, limit: int = 24,
         statement = statement.order_by(PublishedConstellation.published_at.desc())
     rows = session.exec(statement.offset(skip).limit(limit)).all()
     count = session.exec(select(func.count(PublishedConstellation.id))).one()
+    publication_ids = [publication.id for publication, _, _ in rows]
+    members_by_publication: dict[int, list[PublishedMemory]] = defaultdict(list)
+    links_by_publication: dict[int, list[PublishedLink]] = defaultdict(list)
+    if publication_ids:
+        for member in session.exec(select(PublishedMemory).where(
+            PublishedMemory.publication_id.in_(publication_ids),
+        ).order_by(PublishedMemory.publication_id, PublishedMemory.display_order)).all():
+            members_by_publication[member.publication_id].append(member)
+        for link in session.exec(select(PublishedLink).where(
+            PublishedLink.publication_id.in_(publication_ids),
+        )).all():
+            links_by_publication[link.publication_id].append(link)
     data = []
     for publication, votes, stars in rows:
+        members = members_by_publication[publication.id]
+        visible = members[:6]
+        indices = {member.source_story_id: index for index, member in enumerate(visible)}
+        points = [SkyPoint(
+            x=member.x if member.x is not None else (index + 1) / (len(members) + 1),
+            y=member.y if member.y is not None else (.28 if index % 2 else .68),
+        ) for index, member in enumerate(visible)]
+        preview_links = [SkyLink(a=indices[link.story_a_id], b=indices[link.story_b_id])
+                         for link in links_by_publication[publication.id]
+                         if link.story_a_id in indices and link.story_b_id in indices]
         data.append(SkyCluster(
             id=publication.id, title=publication.title,
             overview_excerpt=publication.overview[:260],
             author_name=publication.author_name, author_level=publication.author_level,
             star_count=stars, votes=votes, published_at=publication.published_at,
+            preview_stars=points, preview_links=preview_links,
         ))
     return SkyPage(data=data, count=count)
 
