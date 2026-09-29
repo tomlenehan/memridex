@@ -602,7 +602,7 @@ export function LandingPage({
               </Heading>
               <Text color="#617569" fontSize="lg" lineHeight="1.8">
                 Every new story earns you Experience Points (XP).
-                As you level up, your constellations shine brigher in the Global Night Sky.
+                As you level up, your constellations shine brighter in the Global Night Sky.
               </Text>
               <HStack spacing={3} align="start">
                 <Icon as={FiSun} color="#A87930" mt={1} boxSize={5} />
