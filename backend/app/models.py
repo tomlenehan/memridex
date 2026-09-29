@@ -271,6 +271,91 @@ class StoryRelationship(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class Constellation(SQLModel, table=True):
+    """A named, private group of the owner's saved memories."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    owner_id: int = Field(sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True))
+    title: str
+    overview: str = ""
+    source_hash: Optional[str] = None
+    proposal_source_hash: Optional[str] = None
+    proposal_text: Optional[str] = None
+    proposal_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    modified_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ConstellationMemory(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("constellation_id", "story_id"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    constellation_id: int = Field(sa_column=Column(Integer, ForeignKey("constellation.id", ondelete="CASCADE"), nullable=False, index=True))
+    story_id: int = Field(sa_column=Column(Integer, ForeignKey("storysummary.id", ondelete="CASCADE"), nullable=False, index=True))
+    display_order: int = 0
+    x: Optional[float] = None
+    y: Optional[float] = None
+    share_story: bool = False
+    share_image: bool = False
+
+
+class ConstellationLink(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("constellation_id", "relationship_id"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    constellation_id: int = Field(sa_column=Column(Integer, ForeignKey("constellation.id", ondelete="CASCADE"), nullable=False, index=True))
+    relationship_id: int = Field(sa_column=Column(Integer, ForeignKey("storyrelationship.id", ondelete="CASCADE"), nullable=False, index=True))
+
+
+class PublishedConstellation(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("constellation_id"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    constellation_id: int = Field(sa_column=Column(Integer, ForeignKey("constellation.id", ondelete="CASCADE"), nullable=False, index=True))
+    owner_id: int = Field(sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True))
+    revision: int = 1
+    title: str
+    overview: str
+    author_name: str
+    author_level: int
+    published_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+
+class PublishedMemory(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("publication_id", "source_story_id"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    publication_id: int = Field(sa_column=Column(Integer, ForeignKey("publishedconstellation.id", ondelete="CASCADE"), nullable=False, index=True))
+    source_story_id: int  # Snapshot provenance; public reads never join a private story.
+    display_order: int
+    title: str
+    story_text: Optional[str] = None
+    image_filename: Optional[str] = None
+    x: Optional[float] = None
+    y: Optional[float] = None
+
+
+class PublishedLink(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("publication_id", "story_a_id", "story_b_id"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    publication_id: int = Field(sa_column=Column(Integer, ForeignKey("publishedconstellation.id", ondelete="CASCADE"), nullable=False, index=True))
+    story_a_id: int
+    story_b_id: int
+
+
+class ConstellationVote(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("publication_id", "user_id"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    publication_id: int = Field(sa_column=Column(Integer, ForeignKey("publishedconstellation.id", ondelete="CASCADE"), nullable=False, index=True))
+    user_id: int = Field(sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ConstellationReport(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("publication_id", "user_id"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    publication_id: int = Field(sa_column=Column(Integer, ForeignKey("publishedconstellation.id", ondelete="CASCADE"), nullable=False, index=True))
+    user_id: int = Field(sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True))
+    reason: str
+    status: str = "open"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class StoryRelationshipCreate(SQLModel):
     note: Optional[str] = None
 

@@ -60,6 +60,7 @@ class Settings(BaseSettings):
     OPENAI_REALTIME_MODEL: str = "gpt-realtime-2.1"
     OPENAI_REALTIME_VOICE: str = "marin"
     OPENAI_TRANSCRIPTION_MODEL: str = "gpt-transcribe"
+    PUBLIC_SKY_ENABLED: bool = False
     DATABASE_URL: str | None = None
     POSTGRES_SERVER: str = "db"
     POSTGRES_PORT: int = 5432

@@ -17,6 +17,7 @@ import {
 import { Link } from "@tanstack/react-router"
 import {
   FiGitBranch,
+  FiStar,
   FiHome,
   FiLogOut,
   FiMenu,
@@ -27,10 +28,12 @@ import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import useAuth from "../../hooks/useAuth"
 import SoundToggle from "../Progress/SoundToggle"
 import UserMenu from "./UserMenu"
+import { PUBLIC_SKY_ENABLED } from "../../config"
 
 const links = [
   { label: "Home", to: "/", icon: FiHome },
-  { label: "My constellation", to: "/conversations", icon: FiGitBranch },
+  { label: "My night sky", to: "/conversations", icon: FiGitBranch },
+  { label: "Public night sky", to: "/night-sky", icon: FiStar },
 ] as const
 
 function AppHeader() {
@@ -75,7 +78,7 @@ function AppHeader() {
           justify="center"
           spacing={1}
         >
-          {links.map((item) => (
+          {links.filter((item) => item.to !== "/night-sky" || PUBLIC_SKY_ENABLED).map((item) => (
             <Button
               key={item.label}
               as={Link}
@@ -143,7 +146,7 @@ function AppHeader() {
           <DrawerCloseButton minW="44px" minH="44px" />
           <DrawerBody pt={12}>
             <Stack as="nav" aria-label="Main navigation" spacing={2}>
-              {links.map((item) => (
+              {links.filter((item) => item.to !== "/night-sky" || PUBLIC_SKY_ENABLED).map((item) => (
                 <Button
                   key={item.label}
                   as={Link}

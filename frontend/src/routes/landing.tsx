@@ -36,6 +36,7 @@ import memriPlaceTextLogo from "../assets/images/MemriPlaceTextLogoFlat.png"
 import starscape from "../assets/images/homepage_parallax_flat/starscape.png"
 import AuthModal from "../components/Auth/AuthModal"
 import ConstellationStar from "../components/Common/ConstellationStar"
+import { PUBLIC_SKY_ENABLED } from "../config"
 
 export type AuthModalMode = "login" | "signup"
 
@@ -72,7 +73,7 @@ const storySteps = [
   {
     icon: FiStar,
     index: "03",
-    text: "Save your story to add a star to your constellation. Come back whenever a new memory finds you.",
+    text: "Save your story to add a star to your night sky. Come back whenever a new memory finds you.",
     title: "Watch your sky grow",
     color: "#E9DFF1",
   },
@@ -489,6 +490,9 @@ export function LandingPage({
                 src={memriPlaceLogo}
               />
               <HStack spacing={{ base: 1, md: 3 }}>
+                {PUBLIC_SKY_ENABLED && <Button as={Link} to="/night-sky" color="#FFF8E8" size={{ base: "sm", md: "md" }} variant="ghost" display={{ base: "none", md: "inline-flex" }}>
+                  Public night sky
+                </Button>}
                 <Button
                   _hover={{ bg: "whiteAlpha.200" }}
                   as={Link}
@@ -965,7 +969,7 @@ export function LandingPage({
                 lineHeight="1.1"
                 sx={storybookHeading}
               >
-                Your constellation stays private.
+                Your night sky stays private.
                 <br />
                 Share only the stories you choose.
               </Heading>
@@ -974,10 +978,14 @@ export function LandingPage({
                 fontSize={{ base: "md", md: "lg" }}
                 lineHeight="1.8"
               >
-                Nothing is posted to a public feed, and other members can’t
-                browse your collection. When a memory feels worth passing on,
-                share that individual story with someone you love—without
-                opening the rest of your constellation.
+                {PUBLIC_SKY_ENABLED ? (
+                  <>Nothing is posted automatically. Share a story with someone you love,
+                    or choose to publish a constellation after reviewing exactly which
+                    story texts and images others can open. The rest of your sky stays yours.</>
+                ) : (
+                  <>Nothing is posted to a public feed. Share an individual story with
+                    someone you love without opening the rest of your night sky.</>
+                )}
               </Text>
             </Stack>
           </Flex>
@@ -1052,6 +1060,9 @@ export function LandingPage({
       >
         <Text fontSize="sm">MemriPlace. Stories worth keeping.</Text>
         <HStack spacing={{ base: 4, md: 5 }} flexWrap="wrap" justify="center">
+          {PUBLIC_SKY_ENABLED && <Button as={Link} to="/night-sky" color="inherit" fontSize="sm" fontWeight="500" minW="auto" p={0} variant="link" textDecoration="underline" textUnderlineOffset="3px">
+            Public night sky
+          </Button>}
           <Button
             color="inherit"
             fontSize="sm"
@@ -1119,9 +1130,17 @@ export function LandingPage({
                   Your privacy
                 </Heading>
                 <Text>
-                  Your stories are private by default and are not shown in a public feed.
-                  You choose whether to share an individual story. We use your account and
-                  story information to provide MemriPlace and keep your constellation available to you.
+                  {PUBLIC_SKY_ENABLED ? (
+                    <>Your stories and personal night sky are private by default. You may
+                      share an individual story or explicitly publish a reviewed constellation
+                      to the public night sky. Only its overview and the story texts and images
+                      you select are included. Original conversations and voice transcripts
+                      remain private. You can remove a published constellation at any time.</>
+                  ) : (
+                    <>Your stories are private by default and are not shown in a public feed.
+                      You choose whether to share an individual story. We use your account and
+                      story information to provide MemriPlace and keep your night sky available to you.</>
+                  )}
                 </Text>
               </Box>
               <Box>

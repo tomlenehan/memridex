@@ -27,7 +27,8 @@ def test_email(email_to: EmailStr) -> Message:
     )
     return Message(message="Test email sent")
 
-@router.post("/send-contact-email/", status_code=201)
+@router.post("/send-contact-email/", status_code=201,
+             dependencies=[Depends(get_current_active_superuser)])
 async def send_contact_email(
     email_data: ContactEmailSchema, background_tasks: BackgroundTasks
 ) -> Message:

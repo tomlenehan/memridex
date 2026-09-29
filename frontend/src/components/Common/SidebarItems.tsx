@@ -3,12 +3,14 @@ import { Link } from "@tanstack/react-router";
 import {
   FiGitBranch,
   FiHome,
-  FiSettings, FiUsers } from "react-icons/fi";
+  FiSettings, FiStar, FiUsers } from "react-icons/fi";
 import useAuth from "../../hooks/useAuth";
+import { PUBLIC_SKY_ENABLED } from "../../config";
 
 const items = [
   { icon: FiHome, title: "Home", path: "/" },
-  { icon: FiGitBranch, title: "Story map", path: "/conversations" },
+  { icon: FiGitBranch, title: "My night sky", path: "/conversations" },
+  { icon: FiStar, title: "Public night sky", path: "/night-sky" },
   { icon: FiSettings, title: "Settings", path: "/settings" },
 ];
 
@@ -27,7 +29,7 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
     return <Text>Loading...</Text>;
   }
 
-  const finalItems = [...items];
+  const finalItems = items.filter((item) => item.path !== "/night-sky" || PUBLIC_SKY_ENABLED);
 
   if (user?.is_superuser) {
     finalItems.push({ icon: FiUsers, title: "Admin", path: "/admin" });

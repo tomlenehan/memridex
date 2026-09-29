@@ -1,6 +1,7 @@
 import {
   Badge,
   Box,
+  Button,
   Container,
   Flex,
   Heading,
@@ -13,13 +14,14 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react"
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
+import { createFileRoute, Link } from "@tanstack/react-router"
 
 import { Suspense } from "react"
 import { type UserPublic, UsersService } from "../../client"
 import ActionsMenu from "../../components/Common/ActionsMenu"
 import Navbar from "../../components/Common/Navbar"
+import { nightSkyApi } from "../../lib/nightSkyApi"
 
 export const Route = createFileRoute("/_layout/admin")({
   component: Admin,
@@ -110,6 +112,28 @@ function Admin() {
           </Suspense>
         </Table>
       </TableContainer>
+      <ReportsQueue />
     </Container>
   )
+}
+
+function ReportsQueue() {
+  const queryClient = useQueryClient()
+  const reports = useQuery({ queryKey: ["skyReports"], queryFn: nightSkyApi.reports })
+  const resolve = useMutation({ mutationFn: nightSkyApi.resolveReport, onSuccess: () => queryClient.invalidateQueries({ queryKey: ["skyReports"] }) })
+  const hide = useMutation({ mutationFn: nightSkyApi.hidePublication, onSuccess: () => queryClient.invalidateQueries({ queryKey: ["skyReports"] }) })
+  return <Box mt={12} mb={12}>
+    <Heading size="md" mb={4}>Public sky reports</Heading>
+    {reports.isLoading && <Box color="ui.muted">Loading reports…</Box>}
+    {reports.isError && <Box color="red.600">Couldn’t load reports.</Box>}
+    {reports.data?.filter((report) => report.status === "open").length === 0 && <Box color="ui.muted">No open reports.</Box>}
+    {reports.data?.filter((report) => report.status === "open").map((report) =>
+      <Flex key={report.id} p={4} mb={3} border="1px solid #DCE7D5" borderRadius="xl" align="center" justify="space-between" gap={4} flexWrap="wrap">
+        <Box><Box fontWeight="800">Constellation #{report.publication_id}</Box><Box mt={1}>{report.reason}</Box></Box>
+        <Flex gap={2}><Button as={Link} to="/night-sky/$publicationId" params={{ publicationId: String(report.publication_id) }} size="sm" variant="outline">Review</Button>
+          <Button size="sm" onClick={() => resolve.mutate(report.id)} isLoading={resolve.isPending}>Resolve</Button>
+          <Button size="sm" colorScheme="red" onClick={() => { if (window.confirm("Remove this constellation from the public sky?")) hide.mutate(report.publication_id) }} isLoading={hide.isPending}>Remove from public sky</Button></Flex>
+      </Flex>)}
+      {(hide.isError || resolve.isError) && <Box color="red.600">Couldn’t update the report. Try again.</Box>}
+  </Box>
 }

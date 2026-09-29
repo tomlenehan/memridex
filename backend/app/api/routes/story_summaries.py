@@ -22,6 +22,8 @@ from app.llm.story_nodes import generate_story_branches_after_reply, get_convers
 from app.llm.utils import get_formatted_history
 from app.models import (
     Conversation,
+    ConstellationMemory,
+    ConstellationLink,
     ConversationStatus,
     ChatMessage,
     ChatMessageSender,
@@ -305,6 +307,15 @@ def delete_story_summary(
     if not current_user.is_superuser and (conversation.user_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
+    membership = session.exec(select(ConstellationMemory.id).where(
+        ConstellationMemory.story_id == id,
+    )).first()
+    if membership:
+        raise HTTPException(
+            status_code=409,
+            detail="Remove this memory from its saved constellations before deleting it.",
+        )
+
     session.delete(summary)
     session.commit()
     return Message(message="Story summary deleted successfully")
@@ -484,6 +495,14 @@ def delete_story_relationship(
     ).first()
     if not record:
         raise HTTPException(status_code=404, detail="Story relationship not found")
+    in_group = session.exec(select(ConstellationLink.id).where(
+        ConstellationLink.relationship_id == record.id,
+    )).first()
+    if in_group:
+        raise HTTPException(
+            status_code=409,
+            detail="This connection belongs to a saved constellation. Edit that constellation before removing the connection.",
+        )
     session.delete(record)
     session.commit()
     return Message(message="Story relationship removed")

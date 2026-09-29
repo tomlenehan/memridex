@@ -35,6 +35,7 @@ import {
 import ProgressTrail from "../../components/Progress/ProgressTrail"
 import ConstellationMap from "../../components/MemoryMap/ConstellationMap"
 import ConstellationStar from "../../components/Common/ConstellationStar"
+import { nightSkyApi } from "../../lib/nightSkyApi"
 
 export const Route = createFileRoute("/_layout/conversations")({
   component: MemoryMap,
@@ -61,6 +62,11 @@ function MemoryMap() {
   const relationshipsQuery = useQuery({
     queryKey: ["storyRelationships"],
     queryFn: () => SummariesService.readStoryRelationships(),
+    enabled: storiesQuery.isSuccess,
+  })
+  const groupsQuery = useQuery({
+    queryKey: ["constellations"],
+    queryFn: nightSkyApi.list,
     enabled: storiesQuery.isSuccess,
   })
   const createConversation = useMutation({
@@ -146,7 +152,7 @@ function MemoryMap() {
               letterSpacing="0.13em"
               textTransform="uppercase"
             >
-              Your memory map
+              Your personal night sky
             </Text>
           </HStack>
           <Heading
@@ -156,7 +162,7 @@ function MemoryMap() {
             fontSize={{ base: "3xl", md: "5xl" }}
             lineHeight="1.08"
           >
-            A constellation of you.
+            Your sky, one story at a time.
           </Heading>
           <Text
             color={muted}
@@ -280,7 +286,7 @@ function MemoryMap() {
               aria-pressed={view === "sky"}
               onClick={() => setView("sky")}
             >
-              Constellation
+              Night sky
             </Button>
             <Button
               size="sm"
@@ -315,7 +321,7 @@ function MemoryMap() {
             fontFamily={'"Iowan Old Style", Georgia, serif'}
             fontSize="2xl"
           >
-            Every constellation starts with one star.
+            Every night sky starts with one star.
           </Heading>
           <Text
             color={muted}
@@ -345,7 +351,7 @@ function MemoryMap() {
           </Text>
         </Box>
       ) : view === "sky" ? (
-        <ConstellationMap stories={stories} relationships={relationships} />
+        <ConstellationMap stories={stories} relationships={relationships} groups={groupsQuery.data ?? []} />
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={4}>
           {stories.map((story, index) => (
@@ -365,6 +371,7 @@ function MemoryMap() {
           Saved memories are here. Connections are temporarily unavailable.
         </Text>
       )}
+      {groupsQuery.isError && stories.length > 0 && <Text color={muted} fontSize="sm" mt={4}>Your memories are here, but saved constellations are temporarily unavailable.</Text>}
     </Box>
   )
 }

@@ -41,6 +41,8 @@ services:
         value: memriplace.com
       - key: ENVIRONMENT
         value: production
+      - key: PUBLIC_SKY_ENABLED
+        value: "false"
       - key: BACKEND_CORS_ORIGINS
         value: https://memriplace.com,https://www.memriplace.com
       - key: DATABASE_URL
