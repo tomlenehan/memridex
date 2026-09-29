@@ -35,7 +35,7 @@ FastAPI docs are proxied through the frontend at http://localhost:5173/docs.
 
 ## Demo Account
 
-To populate a fictional example account and the public Night Sky locally, after
+To populate a fictional example account and the Global Night Sky locally, after
 the stack is running:
 
 ```sh
@@ -60,7 +60,7 @@ Clearing removes the login, its private memories/transcripts, and its public
 constellation snapshots; it does not reset the database or delete customers.
 The local credentials file is removed too. Run `seed` again to recreate the demo.
 
-On Render, deploy the code (the Blueprint enables the public Night Sky), set a
+On Render, deploy the code (the Blueprint enables the Global Night Sky), set a
 strong `DEMO_PASSWORD` environment variable on the API service, then run this
 in the API service's Shell:
 

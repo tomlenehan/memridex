@@ -251,7 +251,7 @@ function ConstellationEditor() {
       </Stack>
     </Flex>
     {PUBLIC_SKY_ENABLED && <Box mt={8} bg="#EAF2E8" borderRadius="24px" p={{ base: 5, md: 7 }}>
-      <HStack mb={2}><FiGlobe color="#4B8D82" /><Heading size="md">Share with the public night sky</Heading></HStack>
+      <HStack mb={2}><FiGlobe color="#4B8D82" /><Heading size="md">Share with the Global Night Sky</Heading></HStack>
       <Text color="ui.muted" mb={5}>Preview exactly what readers will see. Story text and images are included only when you select them above.</Text>
       <FormControl maxW="350px"><FormLabel>Public display name or pseudonym</FormLabel><Input value={authorName} maxLength={60} onChange={(e) => setAuthorName(e.target.value)} placeholder="How should readers know you?" /></FormControl>
       <HStack mt={4} flexWrap="wrap"><Button onClick={() => previewMutation.mutate()} isLoading={previewMutation.isPending}
