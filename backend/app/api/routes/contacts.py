@@ -1,34 +1,44 @@
-from typing import Any, List
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import func, select
+from sqlmodel import select
+
 from app.api.deps import CurrentUser, SessionDep
 from app.models import Contact, ContactCreate, ContactRead, Message
 
 router = APIRouter()
 
-@router.get("/", response_model=List[ContactRead])
-def read_contacts(session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100) -> Any:
+
+@router.get("/", response_model=list[ContactRead])
+def read_contacts(
+    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+) -> Any:
     """
     Retrieve contacts.
     """
-    statement = select(Contact).where(Contact.user_id == current_user.id).offset(skip).limit(limit)
+    statement = (
+        select(Contact)
+        .where(Contact.user_id == current_user.id)
+        .offset(skip)
+        .limit(limit)
+    )
     contacts = session.exec(statement).all()
     return contacts
 
+
 @router.post("/", response_model=ContactRead)
-def create_contact(*, session: SessionDep, current_user: CurrentUser, contact_in: ContactCreate) -> Any:
+def create_contact(
+    *, session: SessionDep, current_user: CurrentUser, contact_in: ContactCreate
+) -> Any:
     """
     Create new contact.
     """
-    contact = Contact(
-        email=contact_in.email,
-        user_id=current_user.id
-    )
+    contact = Contact(email=contact_in.email, user_id=current_user.id)
     session.add(contact)
     session.commit()
     session.refresh(contact)
     return contact
+
 
 @router.delete("/{id}", response_model=Message)
 def delete_contact(session: SessionDep, current_user: CurrentUser, id: int) -> Message:

@@ -1,8 +1,10 @@
 import logging
+from collections.abc import AsyncIterator
+from typing import cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from sqlmodel import Session, func, select
+from sqlmodel import Session, col, func, select
 
 from app.api.deps import get_current_user, get_db
 from app.llm.conversation_agent import send_message
@@ -12,7 +14,11 @@ from app.llm.story_nodes import (
     get_conversation_prompt,
 )
 from app.llm.story_readiness import assess_story_readiness_after_reply
-from app.llm.utils import MIN_READY_USER_TURNS, get_formatted_history, refresh_story_status
+from app.llm.utils import (
+    MIN_READY_USER_TURNS,
+    get_formatted_history,
+    refresh_story_status,
+)
 from app.models import (
     ChatMessage,
     ChatMessageCreate,
@@ -33,12 +39,12 @@ router = APIRouter()
 
 @router.post("/{conversation_id}/messages", response_model=ChatMessagePublic)
 async def create_chat_message(
-        *,
-        conversation_id: int,
-        chat_message_in: ChatMessageCreate,
-        background_tasks: BackgroundTasks,
-        current_user: User = Depends(get_current_user),
-        db_session: Session = Depends(get_db)
+    *,
+    conversation_id: int,
+    chat_message_in: ChatMessageCreate,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db_session: Session = Depends(get_db),
 ) -> StreamingResponse:
     conversation = db_session.get(Conversation, conversation_id)
     if not conversation:
@@ -46,11 +52,15 @@ async def create_chat_message(
     if conversation.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     if chat_message_in.sender_type != ChatMessageSender.USER:
-        raise HTTPException(status_code=422, detail="Only user messages can start a response")
+        raise HTTPException(
+            status_code=422, detail="Only user messages can start a response"
+        )
     if conversation.status != ConversationStatus.ACTIVE:
         raise HTTPException(status_code=409, detail="This story node is finished")
     if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
-        raise HTTPException(status_code=409, detail="This story node has reached its turn limit")
+        raise HTTPException(
+            status_code=409, detail="This story node has reached its turn limit"
+        )
 
     conversation.user_turn_count += 1
     if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
@@ -60,16 +70,20 @@ async def create_chat_message(
         conversation_id=conversation_id,
         sender_id=current_user.id,
         sender_type=chat_message_in.sender_type,
-        content=chat_message_in.content
+        content=chat_message_in.content,
     )
     db_session.add(chat_message)
     db_session.commit()
     db_session.refresh(chat_message)
 
-    async def message_generator(db_session: Session, current_user_id: int):
+    async def message_generator(
+        db_session: Session, current_user_id: int
+    ) -> AsyncIterator[str]:
         response_content = ""
 
-        conversation = db_session.get(Conversation, conversation_id)
+        # The row was loaded and committed above. Re-fetch after commit; a missing
+        # row still fails on attribute access, same as before this annotation.
+        conversation = cast(Conversation, db_session.get(Conversation, conversation_id))
         story_prompt = get_conversation_prompt(conversation)
         chat_history, _ = get_formatted_history(conversation_id, db_session)
         if chat_history:
@@ -89,7 +103,9 @@ async def create_chat_message(
                 "a specific detail. Do not pressure them to end."
             )
         else:
-            pacing = "Ask one thoughtful, open-ended follow-up about a detail they shared."
+            pacing = (
+                "Ask one thoughtful, open-ended follow-up about a detail they shared."
+            )
 
         system_message = (
             "You are MemriPlace, a warm oral-history guide. Help the storyteller preserve "
@@ -100,7 +116,9 @@ async def create_chat_message(
             "and natural."
         )
 
-        async for token in send_message(chat_message_in.content, system_message, chat_history):
+        async for token in send_message(
+            chat_message_in.content, system_message, chat_history
+        ):
             response_content += token
             yield token
 
@@ -109,7 +127,7 @@ async def create_chat_message(
             conversation_id=conversation_id,
             sender_id=current_user_id,
             sender_type="AI",
-            content=response_content
+            content=response_content,
         )
         db_session.add(ai_message)
         db_session.commit()
@@ -117,7 +135,9 @@ async def create_chat_message(
         refresh_story_status(conversation, db_session)
         db_session.commit()
         if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
-            background_tasks.add_task(generate_story_branches_after_reply, conversation_id)
+            background_tasks.add_task(
+                generate_story_branches_after_reply, conversation_id
+            )
         elif (
             conversation.user_turn_count >= MIN_READY_USER_TURNS
             and not conversation.ready_to_save
@@ -139,12 +159,12 @@ async def create_chat_message(
 
 @router.post("/{conversation_id}/messages/persist", response_model=ChatMessagePublic)
 async def persist_realtime_message(
-        *,
-        conversation_id: int,
-        chat_message_in: ChatMessageCreate,
-        background_tasks: BackgroundTasks,
-        current_user: User = Depends(get_current_user),
-        db_session: Session = Depends(get_db),
+    *,
+    conversation_id: int,
+    chat_message_in: ChatMessageCreate,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db_session: Session = Depends(get_db),
 ) -> ChatMessage:
     """Persist a finalized Realtime transcript without generating a second reply."""
     conversation = db_session.get(Conversation, conversation_id)
@@ -152,8 +172,13 @@ async def persist_realtime_message(
         raise HTTPException(status_code=404, detail="Conversation not found")
     if conversation.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    if chat_message_in.sender_type not in {ChatMessageSender.USER, ChatMessageSender.AI}:
-        raise HTTPException(status_code=422, detail="Only user or AI transcripts can be stored")
+    if chat_message_in.sender_type not in {
+        ChatMessageSender.USER,
+        ChatMessageSender.AI,
+    }:
+        raise HTTPException(
+            status_code=422, detail="Only user or AI transcripts can be stored"
+        )
     if not chat_message_in.content.strip():
         raise HTTPException(status_code=422, detail="Message content cannot be empty")
     if (
@@ -165,7 +190,9 @@ async def persist_realtime_message(
         chat_message_in.sender_type == ChatMessageSender.USER
         and conversation.user_turn_count >= MAX_NODE_USER_TURNS
     ):
-        raise HTTPException(status_code=409, detail="This story node has reached its turn limit")
+        raise HTTPException(
+            status_code=409, detail="This story node has reached its turn limit"
+        )
 
     if chat_message_in.sender_type == ChatMessageSender.USER:
         conversation.user_turn_count += 1
@@ -201,11 +228,11 @@ async def persist_realtime_message(
 
 @router.get("/{conversation_id}/messages", response_model=ChatMessagesPublic)
 def read_chat_messages(
-        conversation_id: int,
-        session: Session = Depends(get_db),
-        skip: int = 0,
-        limit: int = 100,
-        current_user: User = Depends(get_current_user),
+    conversation_id: int,
+    session: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user),
 ) -> ChatMessagesPublic:
     conversation = session.get(Conversation, conversation_id)
     if not conversation:
@@ -216,7 +243,7 @@ def read_chat_messages(
     chat_messages = session.exec(
         select(ChatMessage)
         .where(ChatMessage.conversation_id == conversation_id)
-        .order_by(ChatMessage.id.asc())
+        .order_by(col(ChatMessage.id).asc())
         .offset(skip)
         .limit(limit)
     ).all()
@@ -230,12 +257,14 @@ def read_chat_messages(
     return ChatMessagesPublic(data=chat_messages, count=count)
 
 
-@router.get("/{conversation_id}/messages/{message_id}", response_model=ChatMessagePublic)
+@router.get(
+    "/{conversation_id}/messages/{message_id}", response_model=ChatMessagePublic
+)
 def read_chat_message(
-        conversation_id: int,
-        message_id: int,
-        session: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user),
+    conversation_id: int,
+    message_id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ChatMessage:
     conversation = session.get(Conversation, conversation_id)
     if not conversation:
@@ -251,10 +280,10 @@ def read_chat_message(
 
 @router.delete("/{conversation_id}/messages/{message_id}", response_model=Message)
 def delete_chat_message(
-        conversation_id: int,
-        message_id: int,
-        session: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+    conversation_id: int,
+    message_id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> Message:
     conversation = session.get(Conversation, conversation_id)
     if not conversation:

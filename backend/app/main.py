@@ -1,13 +1,15 @@
 import os
+
 import sentry_sdk
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
-from starlette.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import FileResponse
+
 from app.api.main import api_router
 from app.core.config import settings
-from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
@@ -17,6 +19,7 @@ def custom_generate_unique_id(route: APIRoute) -> str:
     if route.tags:
         return f"{route.tags[0]}-{route.name}"
     return route.name  # Fallback if no tags are present
+
 
 if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
     sentry_sdk.init(dsn=str(settings.SENTRY_DSN), enable_tracing=True)
@@ -35,14 +38,17 @@ if os.path.isdir(static_files_path):
     app.mount("/static", StaticFiles(directory=static_files_path), name="static")
 
     @app.get("/", include_in_schema=False)
-    async def serve_root():
+    async def serve_root() -> FileResponse:
         return FileResponse(os.path.join(static_files_path, "index.html"))
+
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[str(origin).strip("/") for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_origins=[
+            str(origin).strip("/") for origin in settings.BACKEND_CORS_ORIGINS
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

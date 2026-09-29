@@ -1,11 +1,14 @@
-from pydantic import BaseModel, Field
-from sqlmodel import Session, select
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
 import logging
+from typing import cast
+
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
+from sqlmodel import Session, col, select
 
 from app.core.db import engine
-from app.llm.utils import MAX_NODE_USER_TURNS, MODEL_NAME
+from app.llm.utils import MAX_NODE_USER_TURNS as MAX_NODE_USER_TURNS
+from app.llm.utils import MODEL_NAME
 from app.models import ChatMessage, ChatMessageSender, Conversation, ConversationStatus
 
 MAX_NODE_DEPTH = 4
@@ -25,7 +28,11 @@ class StoryBranchPlan(BaseModel):
 def get_conversation_prompt(conversation: Conversation) -> str:
     return (
         conversation.node_prompt
-        or (conversation.user_story_prompt.prompt if conversation.user_story_prompt else None)
+        or (
+            conversation.user_story_prompt.prompt
+            if conversation.user_story_prompt
+            else None
+        )
         or "Tell me about your childhood. What's one early moment you still remember?"
     )
 
@@ -33,7 +40,11 @@ def get_conversation_prompt(conversation: Conversation) -> str:
 def get_conversation_title(conversation: Conversation) -> str:
     return (
         conversation.node_title
-        or (conversation.user_story_prompt.prompt if conversation.user_story_prompt else None)
+        or (
+            conversation.user_story_prompt.prompt
+            if conversation.user_story_prompt
+            else None
+        )
         or "A remembered moment"
     )
 
@@ -48,10 +59,10 @@ async def create_story_branches(
     existing_children = session.exec(
         select(Conversation)
         .where(Conversation.parent_conversation_id == conversation.id)
-        .order_by(Conversation.id.asc())
+        .order_by(col(Conversation.id).asc())
     ).all()
     if existing_children:
-        return existing_children
+        return list(existing_children)
 
     if conversation.node_depth >= MAX_NODE_DEPTH:
         return []
@@ -59,7 +70,7 @@ async def create_story_branches(
     messages = session.exec(
         select(ChatMessage)
         .where(ChatMessage.conversation_id == conversation.id)
-        .order_by(ChatMessage.id.asc())
+        .order_by(col(ChatMessage.id).asc())
     ).all()
     transcript_lines = []
     for message in messages:
@@ -94,18 +105,21 @@ Conversation transcript:
     model = ChatOpenAI(model=MODEL_NAME, temperature=0.35).with_structured_output(
         StoryBranchPlan
     )
-    plan = await model.ainvoke(
-        [SystemMessage(content=instructions), HumanMessage(content=request)]
+    plan = cast(
+        StoryBranchPlan,
+        await model.ainvoke(
+            [SystemMessage(content=instructions), HumanMessage(content=request)]
+        ),
     )
 
     # A manual retry may have finished while the automatic request was generating.
     existing_children = session.exec(
         select(Conversation)
         .where(Conversation.parent_conversation_id == conversation.id)
-        .order_by(Conversation.id.asc())
+        .order_by(col(Conversation.id).asc())
     ).all()
     if existing_children:
-        return existing_children
+        return list(existing_children)
 
     children = []
     for branch in plan.branches[:3]:
@@ -138,4 +152,6 @@ async def generate_story_branches_after_reply(conversation_id: int) -> None:
             await create_story_branches(conversation, session)
         except Exception:
             session.rollback()
-            logger.exception("Unable to generate story branches for node %s", conversation_id)
+            logger.exception(
+                "Unable to generate story branches for node %s", conversation_id
+            )

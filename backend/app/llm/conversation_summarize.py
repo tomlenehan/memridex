@@ -1,17 +1,22 @@
-from typing import AsyncIterable, List
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.schema import HumanMessage, AIMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_community.vectorstores import FAISS
 import logging
+from collections.abc import AsyncIterable, Sequence
+from typing import cast
+
+from langchain.schema import AIMessage, HumanMessage, SystemMessage
+from langchain_community.vectorstores import FAISS
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MODEL_NAME = "gpt-4-turbo"
 
-async def index_messages(messages: List[HumanMessage]) -> FAISS:
-    message_texts = [message.content for message in messages]
+
+async def index_messages(
+    messages: Sequence[HumanMessage | AIMessage | SystemMessage],
+) -> FAISS:
+    message_texts = [cast(str, message.content) for message in messages]
 
     embeddings = OpenAIEmbeddings()
 
@@ -19,24 +24,31 @@ async def index_messages(messages: List[HumanMessage]) -> FAISS:
 
     return index
 
-async def get_relevant_messages(index: FAISS, query: str, k: int = 20) -> List[HumanMessage]:
+
+async def get_relevant_messages(
+    index: FAISS, query: str, k: int = 20
+) -> list[HumanMessage]:
     docs = index.similarity_search(query, k=k)
 
     relevant_messages = [HumanMessage(content=doc.page_content) for doc in docs]
 
     return relevant_messages
 
-async def generate_summary(system_prompt: str, chat_history: List[str], tone: int) -> AsyncIterable[str]:
+
+async def generate_summary(
+    system_prompt: str,
+    chat_history: Sequence[HumanMessage | AIMessage | SystemMessage],
+    tone: int,
+) -> AsyncIterable[str]:
     index = await index_messages(chat_history)
-    relevant_messages = await get_relevant_messages(index, "Please summarize this conversation")
+    relevant_messages = await get_relevant_messages(
+        index, "Please summarize this conversation"
+    )
 
     temperature = tone / 100
 
     model = ChatOpenAI(
-        model=MODEL_NAME,
-        streaming=True,
-        verbose=True,
-        temperature=temperature
+        model=MODEL_NAME, streaming=True, verbose=True, temperature=temperature
     )
 
     prompt = ChatPromptTemplate.from_messages(
@@ -48,15 +60,16 @@ async def generate_summary(system_prompt: str, chat_history: List[str], tone: in
     chain = prompt | model
 
     try:
-        async for chunk in chain.astream({"system": system_prompt, "history": relevant_messages}):
-            yield chunk.content
+        async for chunk in chain.astream(
+            {"system": system_prompt, "history": relevant_messages}
+        ):
+            yield cast(str, chunk.content)
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
         raise e
 
 
 def generate_title(system_prompt: str, summary: str) -> str:
-
     model = ChatOpenAI(
         model=MODEL_NAME,
         streaming=True,
@@ -66,14 +79,14 @@ def generate_title(system_prompt: str, summary: str) -> str:
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", "{system}"),
-            HumanMessage(summary),
+            HumanMessage(content=summary),
         ]
     )
     chain = prompt | model
 
     try:
         result = chain.invoke({"system": system_prompt})
-        return result.content
+        return cast(str, result.content)
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
         raise e

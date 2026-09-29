@@ -1,11 +1,12 @@
 """Offer saving when the storyteller has shared a usable, specific memory."""
 
 import logging
+from typing import cast
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.core.config import settings
 from app.core.db import engine
@@ -43,7 +44,7 @@ async def assess_story_readiness_after_reply(
                 ChatMessage.conversation_id == conversation_id,
                 ChatMessage.sender_type == ChatMessageSender.USER,
             )
-            .order_by(ChatMessage.id.asc())
+            .order_by(col(ChatMessage.id).asc())
         ).all()
         storyteller_words = "\n".join(
             f"Reply {index}: {message.content.strip()}"
@@ -72,8 +73,11 @@ async def assess_story_readiness_after_reply(
         model = ChatOpenAI(
             model=settings.STORY_READINESS_MODEL, temperature=0
         ).with_structured_output(StoryReadiness)
-        decision = await model.ainvoke(
-            [SystemMessage(content=instructions), HumanMessage(content=request)]
+        decision = cast(
+            StoryReadiness,
+            await model.ainvoke(
+                [SystemMessage(content=instructions), HumanMessage(content=request)]
+            ),
         )
         if not decision.ready:
             return
@@ -89,4 +93,6 @@ async def assess_story_readiness_after_reply(
                 session.add(conversation)
                 session.commit()
     except Exception:
-        logger.exception("Unable to assess readiness for story node %s", conversation_id)
+        logger.exception(
+            "Unable to assess readiness for story node %s", conversation_id
+        )

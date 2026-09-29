@@ -1,20 +1,23 @@
-import os
 import logging
+import os
 import shutil
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
-from fastapi import UploadFile
+
+import boto3  # type: ignore
 import emails  # type: ignore
+from botocore.exceptions import (  # type: ignore
+    NoCredentialsError,
+    PartialCredentialsError,
+)
+from fastapi import UploadFile
 from jinja2 import Template
 from jose import JWTError, jwt
-import boto3
-from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
 from app.core.config import settings
-
 
 LOCAL_UPLOADS_DIRECTORY = Path(__file__).resolve().parent.parent / "uploads"
 
@@ -91,7 +94,9 @@ def generate_reset_password_email(email_to: str, email: str, token: str) -> Emai
 
 
 def generate_new_account_email(
-    email_to: str, username: str, password: str
+    email_to: str,
+    username: str,
+    password: str,  # noqa: ARG001
 ) -> EmailData:
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - New account for user {username}"
@@ -132,12 +137,12 @@ def verify_password_reset_token(token: str) -> str | None:
 def _upload_image_to_s3(image: UploadFile, *, private: bool) -> str:
     try:
         s3_client = boto3.client(
-            's3',
-            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-            region_name=os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
+            "s3",
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+            region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"),
         )
-        bucket_name = os.getenv('AWS_UPLOAD_BUCKET_NAME')
+        bucket_name = os.getenv("AWS_UPLOAD_BUCKET_NAME")
         if not bucket_name:
             raise ValueError("Bucket name not set in environment variables")
 
@@ -190,7 +195,9 @@ def upload_private_story_image(image: UploadFile) -> str:
         raise RuntimeError("Could not store the story image") from error
 
 
-def get_private_image_url(image_url: str | None, *, user_id: int | None = None) -> str | None:
+def get_private_image_url(
+    image_url: str | None, *, user_id: int | None = None
+) -> str | None:
     if not image_url:
         return image_url
 
@@ -220,13 +227,15 @@ def get_private_image_url(image_url: str | None, *, user_id: int | None = None) 
         region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"),
     )
     try:
-        return s3_client.generate_presigned_url(
-            "get_object",
-            Params={
-                "Bucket": os.getenv("AWS_UPLOAD_BUCKET_NAME"),
-                "Key": image_url.removeprefix("s3-private://"),
-            },
-            ExpiresIn=3600,
+        return str(
+            s3_client.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": os.getenv("AWS_UPLOAD_BUCKET_NAME"),
+                    "Key": image_url.removeprefix("s3-private://"),
+                },
+                ExpiresIn=3600,
+            )
         )
     except Exception:
         logging.exception("Could not create a temporary URL for a private story image")

@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 
 from langchain_openai import OpenAIEmbeddings
+from pydantic.v1 import SecretStr
 from sqlmodel import Session, select
 
 from app.core.config import settings
@@ -18,9 +19,10 @@ def story_embedding_text(story: StorySummary) -> str:
 
 
 def embed_texts(texts: list[str]) -> list[list[float]]:
+    api_key = settings.OPENAI_API_KEY
     embeddings = OpenAIEmbeddings(
         model=EMBEDDING_MODEL,
-        api_key=settings.OPENAI_API_KEY,
+        api_key=SecretStr(api_key) if api_key is not None else None,
     )
     return embeddings.embed_documents(texts)
 

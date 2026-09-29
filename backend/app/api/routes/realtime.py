@@ -4,7 +4,7 @@ import logging
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.api.deps import get_current_user, get_db
 from app.core.config import settings
@@ -49,11 +49,14 @@ async def create_realtime_session(
     chat_messages = db_session.exec(
         select(ChatMessage)
         .where(ChatMessage.conversation_id == conversation_id)
-        .order_by(ChatMessage.timestamp.asc())
+        .order_by(col(ChatMessage.timestamp).asc())
     ).all()
     story_prompt = get_conversation_prompt(conversation)
     session_config = build_realtime_session_config(
-        story_prompt, chat_messages, conversation.user_turn_count, conversation.ready_to_save
+        story_prompt,
+        chat_messages,
+        conversation.user_turn_count,
+        conversation.ready_to_save,
     )
 
     files = {

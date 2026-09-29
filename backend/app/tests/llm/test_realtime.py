@@ -31,7 +31,9 @@ def test_story_instructions_include_prompt_and_history() -> None:
 
 
 def test_opening_voice_response_reads_the_visible_question_verbatim() -> None:
-    opening_question = "Tell me about your childhood. What's one early moment you remember?"
+    opening_question = (
+        "Tell me about your childhood. What's one early moment you remember?"
+    )
     message = ChatMessage(
         conversation_id=1,
         sender_id=1,
@@ -41,7 +43,10 @@ def test_opening_voice_response_reads_the_visible_question_verbatim() -> None:
 
     instructions = build_story_instructions(opening_question, [message])
 
-    assert "read aloud the latest MemriPlace message below exactly as written" in instructions
+    assert (
+        "read aloud the latest MemriPlace message below exactly as written"
+        in instructions
+    )
     assert "Do not add or rephrase the opening question" in instructions
 
 
