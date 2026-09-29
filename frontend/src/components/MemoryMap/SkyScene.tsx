@@ -51,6 +51,7 @@ export default function SkyScene({ stars, links, selected, onSelect, label }: {
   const columns = narrow ? 1 : compact ? 2 : Math.max(2, Math.ceil(Math.sqrt(stars.length * 1.4)))
   const nodes: SceneNode[] = stars.map((star, index) => ({
     id: String(index), type: "sceneStar", draggable: false, selectable: false,
+    style: { pointerEvents: "all" },
     className: selected === index ? "sky-flow-node-selected" : "",
     position: {
       x: compact ? star.x == null ? (narrow ? 70 : 30 + (index % columns) * 185) : 25 + star.x * (narrow ? 80 : 245)

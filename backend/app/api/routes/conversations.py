@@ -7,12 +7,14 @@ import logging
 from app.models import (
     Conversation,
     ConversationCreate,
+    ConversationStart,
     ConversationPublic,
     ConversationsPublic,
     ConversationStatus,
     ChatMessage,
     ChatMessageSender,
     UserStoryPrompt,
+    StoryStarterTopic,
     Message
 )
 from app.api.deps import get_current_user, get_db
@@ -25,15 +27,35 @@ router = APIRouter()
 
 ROOT_NODE_TITLE = "Childhood beginnings"
 ROOT_NODE_PROMPT = "Tell me about your childhood. What's one early moment you still remember?"
+STORY_STARTERS = {
+    StoryStarterTopic.CHILDHOOD: (
+        "A memory from growing up",
+        "What's one moment from growing up that you still remember clearly?",
+    ),
+    StoryStarterTopic.PEOPLE: (
+        "Someone special",
+        "Tell me about someone who made a difference in your life. What do you remember about them?",
+    ),
+    StoryStarterTopic.PLACES: (
+        "A favorite place",
+        "Is there a place that still feels special to you? What happened there?",
+    ),
+    StoryStarterTopic.PROUD: (
+        "A moment you felt proud",
+        "Tell me about a moment when you felt proud. What made it meaningful?",
+    ),
+}
 
 
 @router.post("/", response_model=ConversationPublic)
 def create_conversation(
     *,
     session: Session = Depends(get_db),
-    conversation_in: ConversationCreate,
+    conversation_in: ConversationStart,
     current_user: User = Depends(get_current_user),
 ) -> Any:
+    if conversation_in.user_story_prompt_id is not None and conversation_in.starter_topic is not None:
+        raise HTTPException(status_code=400, detail="Choose one story starter")
     user_story_prompt = None
     if conversation_in.user_story_prompt_id is not None:
         user_story_prompt = session.get(
@@ -44,8 +66,13 @@ def create_conversation(
         if user_story_prompt.user_id != current_user.id and not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    node_prompt = user_story_prompt.prompt if user_story_prompt else ROOT_NODE_PROMPT
-    node_title = user_story_prompt.prompt[:72] if user_story_prompt else ROOT_NODE_TITLE
+    if user_story_prompt:
+        node_prompt = user_story_prompt.prompt
+        node_title = user_story_prompt.prompt[:72]
+    elif conversation_in.starter_topic:
+        node_title, node_prompt = STORY_STARTERS[conversation_in.starter_topic]
+    else:
+        node_title, node_prompt = ROOT_NODE_TITLE, ROOT_NODE_PROMPT
     conversation = Conversation(
         user_id=current_user.id,
         user_story_prompt_id=user_story_prompt.id if user_story_prompt else None,

@@ -36,6 +36,7 @@ import memriPlaceTextLogo from "../assets/images/MemriPlaceTextLogoFlat.png"
 import starscape from "../assets/images/homepage_parallax_flat/starscape.png"
 import AuthModal from "../components/Auth/AuthModal"
 import ConstellationStar from "../components/Common/ConstellationStar"
+import HomepageVoiceSample from "../components/Landing/HomepageVoiceSample"
 import NightSkyJourney from "../components/Landing/NightSkyJourney"
 import { PUBLIC_SKY_ENABLED } from "../config"
 
@@ -406,8 +407,8 @@ export function LandingPage({
                   maxW="460px"
                 >
                   Connect your stars into constellations. {PUBLIC_SKY_ENABLED
-                    ? "Keep them close, or share one with the public night sky."
-                    : "Keep them close while the public night sky takes shape."}
+                    ? "Keep them close, or share one with the Global Night Sky."
+                    : "Keep them close while the Global Night Sky takes shape."}
                 </Text>
                 <HStack flexWrap="wrap" pt={2} spacing={3}>
                   <Button
@@ -470,11 +471,11 @@ export function LandingPage({
           >
             <Flex
               align="center"
-              direction={{ base: "column-reverse", md: "row" }}
-              gap={{ base: 4, md: 10 }}
+              direction={{ base: "column", lg: "row" }}
+              gap={{ base: 8, lg: 10 }}
               justify="space-between"
             >
-              <Stack maxW="660px" spacing={3}>
+              <Stack flex="1" maxW="660px" minW={0} spacing={3} w="full">
                 <Text color="#2E7A78" fontSize="sm" fontWeight="bold">
                   BIG STORIES START SMALL
                 </Text>
@@ -495,32 +496,7 @@ export function LandingPage({
                   gentle question, and a little curiosity are all it takes.
                 </Text>
               </Stack>
-
-              {/*Sparkly*/}
-              {/*<Flex*/}
-              {/*  align="center"*/}
-              {/*  direction="column"*/}
-              {/*  flexShrink={0}*/}
-              {/*  pr={{ md: 8 }}*/}
-              {/*>*/}
-              {/*  <ConstellationStar*/}
-              {/*    w={{ base: "150px", md: "210px" }}*/}
-              {/*    h={{ base: "150px", md: "210px" }}*/}
-              {/*    label="Your smiling star companion"*/}
-              {/*  />*/}
-              {/*  <Text*/}
-              {/*    fontSize="sm"*/}
-              {/*    color="#52735E"*/}
-              {/*    bg="white"*/}
-              {/*    border="1px solid #E0E7D6"*/}
-              {/*    borderRadius="full"*/}
-              {/*    px={5}*/}
-              {/*    py={2}*/}
-              {/*  >*/}
-              {/*    One memory at a time.*/}
-              {/*  </Text>*/}
-              {/*</Flex>*/}
-
+              <HomepageVoiceSample />
             </Flex>
 
             <SimpleGrid
@@ -629,9 +605,8 @@ export function LandingPage({
                 Keep leveling up.
               </Heading>
               <Text color="#617569" fontSize="lg" lineHeight="1.8">
-                Every new story you save earns 25 XP. As your collection grows,
-                you level up, reach new milestones, and see just how far you’ve
-                come.
+                Every new story you Experience Points (XP).
+                As you level up, your constellations shine brigher in the Global Night Sky.
               </Text>
               <HStack spacing={3} align="start">
                 <Icon as={FiSun} color="#A87930" mt={1} boxSize={5} />
@@ -943,11 +918,11 @@ export function LandingPage({
                   {PUBLIC_SKY_ENABLED ? (
                     <>Your stories and personal night sky are private by default. You may
                       share an individual story or explicitly publish a reviewed constellation
-                      to the public night sky. Only its overview and the story texts and images
+                      to the Global Night Sky. Only its overview and the story texts and images
                       you select are included. Original conversations and voice transcripts
                       remain private. You can remove a published constellation at any time.</>
                   ) : (
-                    <>Your stories are private by default and are not shown in a public feed.
+                    <>Your stories are private by default and are not shown in a Global Night Sky.
                       You choose whether to share an individual story. We use your account and
                       story information to provide MemriPlace and keep your night sky available to you.</>
                   )}

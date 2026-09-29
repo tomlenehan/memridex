@@ -160,6 +160,10 @@ export type ConversationCreate = {
 	user_story_prompt_id?: number | null;
 };
 
+export type ConversationStart = ConversationCreate & {
+	starter_topic?: 'childhood' | 'people' | 'places' | 'proud' | null;
+};
+
 
 
 export type ConversationPublic = {

@@ -33,6 +33,7 @@ function ConstellationEditor() {
   const [linking, setLinking] = useState(false)
   const [linkAnchor, setLinkAnchor] = useState<number | null>(null)
   const [selected, setSelected] = useState<number | null>(0)
+  const [storyOpen, setStoryOpen] = useState(false)
   const [authorName, setAuthorName] = useState("")
   const [proposal, setProposal] = useState<string | null>(null)
   const [proposalHash, setProposalHash] = useState<string | null>(null)
@@ -92,9 +93,12 @@ function ConstellationEditor() {
     await navigate({ to: "/conversations" })
   } })
 
-  const choose = (index: number) => {
+  const choose = (index: number, openStory = false) => {
     setSelected(index)
-    if (!linking) return
+    if (!linking) {
+      if (openStory) setStoryOpen(true)
+      return
+    }
     const storyId = members[index].story_id
     if (linkAnchor == null) { setLinkAnchor(storyId); return }
     if (linkAnchor !== storyId && !links.some((link) =>
@@ -182,7 +186,7 @@ function ConstellationEditor() {
       {linking && <Button size="sm" variant="outline" onClick={() => { setLinking(false); setLinkAnchor(null) }}>Cancel connection</Button>}
     </Flex>
     <SkyScene stars={members} links={links.map((link) => ({ a: members.findIndex((item) => item.story_id === link.story_a_id), b: members.findIndex((item) => item.story_id === link.story_b_id) }))}
-      selected={selected} onSelect={choose} label="Your private constellation" />
+      selected={selected} onSelect={(index) => choose(index, true)} label="Your private constellation" />
     {member && <Flex bg="#FFFDF7" border="1px solid #DFE9DA" borderRadius="22px" mt={3} p={{ base: 4, md: 5 }} align={{ base: "start", md: "center" }} justify="space-between" gap={4} direction={{ base: "column", md: "row" }}>
       <Box><Text color="#4F8679" fontSize="xs" fontWeight="800" letterSpacing=".1em">SELECTED STAR</Text>
         <Heading size="sm" mt={1}>{member.title}</Heading><Text fontSize="sm" color="ui.muted" noOfLines={2} mt={1}>{member.summary_text}</Text></Box>
@@ -258,6 +262,18 @@ function ConstellationEditor() {
       {unpublish.isError && <Text color="red.600" role="alert" mt={3}>{String(unpublish.error)}</Text>}
     </Box>}
     <Button colorScheme="red" variant="ghost" mt={8} onClick={() => { if (window.confirm("Delete this private constellation? Its memories will stay in your night sky.")) remove.mutate() }} isLoading={remove.isPending}>Delete constellation</Button>
+    <Modal isOpen={storyOpen && !!member} onClose={() => setStoryOpen(false)} size="lg" isCentered scrollBehavior="inside">
+      <ModalOverlay bg="rgba(6, 29, 38, .72)" /><ModalContent mx={4} borderRadius="16px" bg="#FFFDF7" color="#17353B">
+        <ModalHeader fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize="2xl" pr={12}>{member?.title}</ModalHeader><ModalCloseButton aria-label="Close memory" minW="44px" minH="44px" />
+        <ModalBody>
+          {member?.image_url && <Image src={member.image_url} alt="" maxH="260px" w="full" objectFit="contain" mb={5} />}
+          <Text whiteSpace="pre-wrap" lineHeight="1.8" fontSize={{ base: "md", md: "lg" }}>{member?.summary_text}</Text>
+        </ModalBody>
+        <ModalFooter justifyContent="flex-start">
+          {member && <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(member.story_id) }} onClick={() => setStoryOpen(false)} variant="accent" leftIcon={<FiEdit3 />}>Open memory</Button>}
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
     <Modal isOpen={!!preview} onClose={() => setPreview(null)} size="xl" isCentered scrollBehavior="inside">
       <ModalOverlay /><ModalContent borderRadius="24px"><ModalHeader>Exactly what readers will see</ModalHeader><ModalCloseButton />
         <ModalBody>{preview && <Stack spacing={4}>

@@ -5,7 +5,7 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { FiArrowLeft, FiFlag, FiHeart, FiStar } from "react-icons/fi"
 import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import SkyScene from "../../components/MemoryMap/SkyScene"
@@ -18,7 +18,7 @@ function PublicConstellationPage() {
   const id = Number(publicationId)
   const queryClient = useQueryClient()
   const [selected, setSelected] = useState<number | null>(0)
-  const storyRef = useRef<HTMLDivElement | null>(null)
+  const [storyOpen, setStoryOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [reason, setReason] = useState("")
   const signedIn = !!localStorage.getItem("access_token")
@@ -39,12 +39,7 @@ function PublicConstellationPage() {
   const star = selected == null ? null : constellation?.stars[selected]
   const selectStar = (index: number) => {
     setSelected(index)
-    if (window.matchMedia("(max-width: 600px)").matches) {
-      window.requestAnimationFrame(() => storyRef.current?.scrollIntoView({
-        block: "start",
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      }))
-    }
+    setStoryOpen(true)
   }
   return <Box bg="#FFFDF5" minH="100vh" color="#17353B">
     <Flex as="header" px={{ base: 5, md: 10 }} py={4} align="center" justify="space-between" gap={3}>
@@ -66,7 +61,7 @@ function PublicConstellationPage() {
             <Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">THE STORY OF THIS CONSTELLATION</Text>
             <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
           </Box>
-          <Box ref={storyRef} w={{ base: "full", lg: "340px" }} bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={6} scrollMarginTop="20px">
+          <Box w={{ base: "full", lg: "340px" }} bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={6}>
             <Heading size="sm">{star?.title || "Choose a star"}</Heading>
             {star?.story_text ? <Text mt={4} lineHeight="1.8" whiteSpace="pre-wrap">{star.story_text}</Text> :
               <Text color="ui.muted" mt={3}>This storyteller kept the memory itself private. Its star still belongs to the shared shape.</Text>}
@@ -84,6 +79,20 @@ function PublicConstellationPage() {
         </Flex>
       </>}
     </Container>
+    <Modal isOpen={storyOpen && !!star} onClose={() => setStoryOpen(false)} isCentered size="lg" scrollBehavior="inside">
+      <ModalOverlay bg="rgba(6, 29, 38, .72)" />
+      <ModalContent mx={4} borderRadius="16px" bg="#FFFDF7" color="#17353B">
+        <ModalHeader fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize="2xl" pr={12}>{star?.title}</ModalHeader>
+        <ModalCloseButton aria-label="Close story" minW="44px" minH="44px" />
+        <ModalBody>
+          {star?.image_url && <Image src={star.image_url} alt="" maxH="260px" w="full" objectFit="contain" mb={5} />}
+          <Text whiteSpace="pre-wrap" lineHeight="1.8" fontSize={{ base: "md", md: "lg" }}>
+            {star?.story_text || "The storyteller kept this memory private. Its star is part of the shared constellation."}
+          </Text>
+        </ModalBody>
+        <ModalFooter><Button onClick={() => setStoryOpen(false)} variant="secondary">Back to the sky</Button></ModalFooter>
+      </ModalContent>
+    </Modal>
     <Modal isOpen={reportOpen} onClose={() => setReportOpen(false)} isCentered><ModalOverlay /><ModalContent borderRadius="24px">
       <ModalHeader>Report a concern</ModalHeader><ModalCloseButton /><ModalBody>
         <Text color="ui.muted" mb={3}>Tell us what needs review. Your report is private.</Text>

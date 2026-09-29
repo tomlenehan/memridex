@@ -2,7 +2,7 @@ import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
 
-import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ContactEmailSchema,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationPublic,ConversationsPublic,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,RealtimeSessionOffer,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_update_story_summary,StorySummaryPublic,SummaryCreateRequest,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate,ContactCreate,ContactRead,StoryRelationshipPublic,RelatedStorySuggestion } from './models';
+import type { Body_login_login_access_token,Message,NewPassword,Token,UserPublic,UpdatePassword,UserCreate,UserRegister,UsersPublic,UserUpdate,UserUpdateMe,ContactEmailSchema,ItemCreate,ItemPublic,ItemsPublic,ItemUpdate,ConversationCreate,ConversationStart,ConversationPublic,ConversationsPublic,ChatMessageCreate,ChatMessagePublic,ChatMessagesPublic,RealtimeSessionOffer,Body_user_story_prompts_create_user_story_prompt,Body_user_story_prompts_update_user_story_prompt,UserStoryPromptPublic,UserStoryPromptsPublic,Body_summaries_update_story_summary,StorySummaryPublic,SummaryCreateRequest,CategoriesPublic,CategoryCreate,CategoryPublic,CategoryUpdate,ImageCreate,ImagePublic,ImagesPublic,ImageUpdate,ContactCreate,ContactRead,StoryRelationshipPublic,RelatedStorySuggestion } from './models';
 
 export type TDataLoginAccessToken = {
                 formData: Body_login_login_access_token
@@ -560,7 +560,7 @@ id,
 }
 
 export type TDataCreateConversation = {
-                requestBody: ConversationCreate
+                requestBody: ConversationStart
 
             }
 export type TDataReadConversations = {
