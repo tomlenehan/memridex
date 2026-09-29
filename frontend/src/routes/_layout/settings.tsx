@@ -1,6 +1,8 @@
 import {
+  Avatar,
   Box,
   Container,
+  Flex,
   Heading,
   Stack,
   Tab,
@@ -19,6 +21,7 @@ import ChangePassword from "../../components/UserSettings/ChangePassword"
 import DeleteAccount from "../../components/UserSettings/DeleteAccount"
 import UserInformation from "../../components/UserSettings/UserInformation"
 import Contacts from "../../components/UserSettings/Contacts" // Import Contacts component
+import ProgressTrail from "../../components/Progress/ProgressTrail"
 
 const tabsConfig = [
   { title: "My profile", component: UserInformation },
@@ -43,17 +46,15 @@ function UserSettings() {
     <Container maxW="7xl" px={0}>
       <Stack spacing={6}>
         <Box>
-          <Text color="ui.main" fontWeight="bold" mb={2}>
-            Account
-          </Text>
-          <Heading size="xl" letterSpacing={0}>
-            Settings
-          </Heading>
-          <Text color="ui.muted" mt={3} maxW="680px">
-            Manage profile details, saved contacts, appearance, and account
-            preferences.
-          </Text>
+          <Flex align="center" gap={4}>
+            <Avatar name={currentUser?.full_name || currentUser?.email || "Your account"} size="lg" bg="#2D766D" color="white" />
+            <Box>
+              <Heading size="lg" letterSpacing={0}>Your account</Heading>
+              <Text color="ui.muted" mt={1}>{currentUser?.full_name || currentUser?.email}</Text>
+            </Box>
+          </Flex>
         </Box>
+        <ProgressTrail />
         <Box
           bg="white"
           border="1px solid"
@@ -63,11 +64,15 @@ function UserSettings() {
           overflow="hidden"
         >
           <Tabs variant="enclosed">
-            <TabList bg="ui.secondary" px={4} pt={4}>
+            <TabList bg="ui.secondary" px={{ base: 2, md: 4 }} pt={4}
+              display="grid" gridTemplateColumns={{ base: "repeat(2, minmax(0, 1fr))", md: `repeat(${finalTabs.length}, minmax(0, 1fr))` }}>
               {finalTabs.map((tab, index) => (
                 <Tab
                   key={index}
                   borderTopRadius="8px"
+                  minH="48px"
+                  px={2}
+                  whiteSpace="normal"
                   _selected={{ color: "ui.mainDark", bg: "white" }}
                 >
                   {tab.title}

@@ -18,7 +18,6 @@ import { Link } from "@tanstack/react-router"
 import {
   FiGitBranch,
   FiStar,
-  FiHome,
   FiLogOut,
   FiMenu,
   FiSettings,
@@ -31,7 +30,6 @@ import UserMenu from "./UserMenu"
 import { PUBLIC_SKY_ENABLED } from "../../config"
 
 const links = [
-  { label: "Home", to: "/", icon: FiHome },
   { label: "My night sky", to: "/conversations", icon: FiGitBranch },
   { label: "Public night sky", to: "/night-sky", icon: FiStar },
 ] as const
@@ -124,9 +122,7 @@ function AppHeader() {
           ml={{ base: "auto", md: 0 }}
         >
           <SoundToggle />
-          <Box display={{ base: "none", md: "block" }}>
-            <UserMenu />
-          </Box>
+          <UserMenu />
           <IconButton
             aria-label="Open navigation menu"
             display={{ base: "inline-flex", md: "none" }}
@@ -195,7 +191,7 @@ function AppHeader() {
                 fontSize="lg"
                 _hover={{ bg: "ui.secondary" }}
               >
-                Account settings
+                My account
               </Button>
               <Button
                 onClick={() => {

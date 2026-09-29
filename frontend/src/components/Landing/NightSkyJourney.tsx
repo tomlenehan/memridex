@@ -31,7 +31,7 @@ const steps = [
   },
   {
     title: "Share if you choose",
-    detail: "Preview it, then publish your constellation to the public sky.",
+    detail: "Preview it, then publish your constellation to the global sky.",
     sky: "PUBLIC NIGHT SKY",
     status: "SHARED BY CHOICE",
     caption: "Grandma’s summers",
@@ -56,7 +56,7 @@ export default function NightSkyJourney({ publicSkyEnabled }: { publicSkyEnabled
     {
       ...steps[2],
       title: "Share when it opens",
-      detail: "The public night sky is coming soon. Your sky stays private.",
+      detail: "The global night sky is coming soon. Your sky stays private.",
       status: "COMING SOON",
       note: "A preview of sharing. Nothing is public yet.",
     },
@@ -69,12 +69,12 @@ export default function NightSkyJourney({ publicSkyEnabled }: { publicSkyEnabled
     <div className="journey-layout">
       <div className="journey-copy">
         <p className="journey-eyebrow">IT STARTS WITH A MEMORY</p>
-        <h2>Your memories are stars. Connect them into constellations.</h2>
+        <h2>Memories are stars that fill the night sky.</h2>
         <p className="journey-intro">
-          Your memories live as stars in your own night sky. Connect two or more
-          to create a constellation with a story of its own. {publicSkyEnabled
-            ? "Keep it private, or share it in the public night sky."
-            : "Your constellation stays private while the public night sky takes shape."}
+          Connect two or more or more memories to create a constellation that you can
+          choose to share on the global night sky. {publicSkyEnabled
+            ? "Keep it private, or share it in the global night sky."
+            : "Your constellation stays private while the global night sky takes shape."}
         </p>
         <div className="journey-steps" role="group" aria-label="Explore how MemriPlace works">
           {journeySteps.map((item, index) => (
@@ -96,7 +96,7 @@ export default function NightSkyJourney({ publicSkyEnabled }: { publicSkyEnabled
         </div>
         {publicSkyEnabled && (
           <Link className="journey-public-link" to="/night-sky">
-            Explore the public night sky <FiArrowRight aria-hidden="true" />
+            Explore the global night sky <FiArrowRight aria-hidden="true" />
           </Link>
         )}
       </div>
@@ -129,12 +129,12 @@ export default function NightSkyJourney({ publicSkyEnabled }: { publicSkyEnabled
                   : slideIndex === 1
                     ? "Three memories are connected into a private constellation; another star stays separate"
                     : publicSkyEnabled
-                      ? "The chosen three-star constellation appears in the public night sky"
-                      : "A preview of how the chosen three-star constellation could appear in the future public night sky"}
+                      ? "The chosen three-star constellation appears in the global night sky"
+                      : "A preview of how the chosen three-star constellation could appear in the future global night sky"}
                 >
                   {slideIndex === 2 ? (
                     <img
-                      alt="A glowing three-star constellation among other stories in the public night sky"
+                      alt="A glowing three-star constellation among other stories in the global night sky"
                       className="journey-public-image"
                       decoding="async"
                       loading="lazy"

@@ -15,14 +15,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import ConstellationStar from "../../components/Common/ConstellationStar"
-import ProgressTrail from "../../components/Progress/ProgressTrail"
 import { useRef } from "react"
 import {
   FiArrowRight,
-  FiAward,
-  FiHome,
-  FiMapPin,
-  FiUsers,
+  FiStar,
 } from "react-icons/fi"
 
 import {
@@ -31,37 +27,11 @@ import {
   type UserPublic,
   type UserStoryPromptPublic,
 } from "../../client"
+import { storyStarters, type StoryStarterTopic } from "../../lib/storyStarters"
 
 export const Route = createFileRoute("/_layout/")({
   component: Dashboard,
 })
-
-const starters = [
-  {
-    category: "Childhood",
-    title: "A memory from growing up",
-    description: "A family tradition, a favorite day, or a place you remember.",
-    icon: FiHome,
-  },
-  {
-    category: "Influences",
-    title: "Someone special",
-    description: "Think of someone who made a difference in your life.",
-    icon: FiUsers,
-  },
-  {
-    category: "Special Places",
-    title: "A favorite place",
-    description: "Remember a place where something meaningful happened.",
-    icon: FiMapPin,
-  },
-  {
-    category: "Achievements",
-    title: "A moment you felt proud",
-    description: "Tell the story of something you worked hard to do.",
-    icon: FiAward,
-  },
-]
 
 function Dashboard() {
   const navigate = useNavigate()
@@ -74,9 +44,9 @@ function Dashboard() {
     queryFn: () => UserStoryPromptsService.readUserStoryPrompts({ limit: 100 }),
   })
   const startStory = useMutation({
-    mutationFn: (promptId?: number) =>
+    mutationFn: ({ promptId, topic }: { promptId?: number; topic?: StoryStarterTopic }) =>
       ConversationsService.createConversation({
-        requestBody: promptId ? { user_story_prompt_id: promptId } : {},
+        requestBody: promptId ? { user_story_prompt_id: promptId } : topic ? { starter_topic: topic } : {},
       }),
     onSuccess: async (conversation) => {
       await queryClient.invalidateQueries({
@@ -91,10 +61,10 @@ function Dashboard() {
       startRequestInFlight.current = false
     },
   })
-  const startStoryFromPrompt = (promptId?: number) => {
+  const startStoryFromPrompt = (promptId?: number, topic?: StoryStarterTopic) => {
     if (startRequestInFlight.current) return
     startRequestInFlight.current = true
-    startStory.mutate(promptId)
+    startStory.mutate({ promptId, topic })
   }
 
   const promptForCategory = (
@@ -105,7 +75,6 @@ function Dashboard() {
   return (
     <Container maxW="6xl" px={0}>
       <Stack spacing={{ base: 6, md: 8 }}>
-        <ProgressTrail />
         <Flex
           align="center"
           gap={5}
@@ -125,18 +94,22 @@ function Dashboard() {
               Your next star could be a person, a place, or a tiny moment that
               stayed with you.
             </Text>
-            <Button
-              variant="accent"
-              size="lg"
-              mt={6}
-              rightIcon={<FiArrowRight />}
-              onClick={() => startStoryFromPrompt()}
-              isLoading={startStory.isPending}
-            >
-              Let’s find a memory
-            </Button>
-            <Text fontSize="xs" color="ui.muted" mt={4}>
-              Speak or type. A few questions, at your own pace.
+            <Flex align="center" flexWrap="wrap" gap={3} mt={6}>
+              <Button
+                variant="accent"
+                size="lg"
+                rightIcon={<FiArrowRight />}
+                onClick={() => startStoryFromPrompt()}
+                isLoading={startStory.isPending}
+              >
+                Tell a memory
+              </Button>
+              <Button as={Link} to="/conversations" variant="outline" size="lg" leftIcon={<FiStar />}>
+                My night sky
+              </Button>
+            </Flex>
+            <Text fontSize="sm" color="ui.muted" mt={4}>
+              Speak or type at your own pace. Your memories stay private.
             </Text>
           </Box>
           <ConstellationStar
@@ -162,7 +135,7 @@ function Dashboard() {
 
         {promptsQuery.isLoading ? (
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-            {starters.map((starter) => (
+            {storyStarters.map((starter) => (
               <Skeleton
                 key={starter.category}
                 minH="148px"
@@ -172,7 +145,7 @@ function Dashboard() {
           </SimpleGrid>
         ) : (
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-            {starters.map((starter) => {
+            {storyStarters.map((starter) => {
               const prompt = promptForCategory(starter.category)
               const isStarting = startStory.isPending
 
@@ -180,7 +153,7 @@ function Dashboard() {
                 <Button
                   key={starter.category}
                   variant="storyStarter"
-                  onClick={() => startStoryFromPrompt(prompt?.id)}
+                  onClick={() => startStoryFromPrompt(prompt?.id, starter.topic)}
                   isLoading={isStarting}
                   isDisabled={isStarting}
                   aria-label={`Start a story: ${starter.title}`}
@@ -193,11 +166,7 @@ function Dashboard() {
                       flexShrink={0}
                       boxSize="52px"
                       borderRadius="18px"
-                      bg={
-                        ["#FFF0BD", "#E6DCF0", "#D5EADD", "#F8DDCB"][
-                          starters.indexOf(starter)
-                        ]
-                      }
+                      bg={starter.color}
                       color="ui.mainDark"
                     >
                       <Icon as={starter.icon} boxSize={6} />
@@ -240,27 +209,6 @@ function Dashboard() {
           </Alert>
         )}
 
-        <Flex
-          align={{ base: "flex-start", sm: "center" }}
-          justify="space-between"
-          gap={4}
-          direction={{ base: "column", sm: "row" }}
-          borderTop="1px solid"
-          borderColor="ui.line"
-          pt={5}
-        >
-          <Text color="ui.muted" fontSize="md">
-            Your stories are saved privately to your account.
-          </Text>
-          <Button
-            as={Link}
-            to="/conversations"
-            variant="outline"
-            rightIcon={<FiArrowRight />}
-          >
-            See my memories
-          </Button>
-        </Flex>
       </Stack>
     </Container>
   )

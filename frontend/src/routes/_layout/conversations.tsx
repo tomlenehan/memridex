@@ -20,7 +20,6 @@ import { useMemo, useRef, useState } from "react"
 import {
   FiArrowRight,
   FiBookOpen,
-  FiGitBranch,
   FiList,
   FiPlus,
   FiStar,
@@ -33,10 +32,11 @@ import {
   type StoryRelationshipPublic,
   type StorySummaryPublic,
 } from "../../client"
-import ProgressTrail from "../../components/Progress/ProgressTrail"
 import ConstellationMap from "../../components/MemoryMap/ConstellationMap"
 import ConstellationStar from "../../components/Common/ConstellationStar"
+import StoryTopicPicker from "../../components/Conversations/StoryTopicPicker"
 import { nightSkyApi } from "../../lib/nightSkyApi"
+import { type StoryStarterTopic } from "../../lib/storyStarters"
 
 export const Route = createFileRoute("/_layout/conversations")({
   component: MemoryMap,
@@ -49,6 +49,10 @@ const accents = ["#D88B4A", "#4B8D82", "#9A78AA", "#CE7667", "#638CAA"]
 
 function MemoryMap() {
   const [view, setView] = useState<"sky" | "cards">("sky")
+  const [mode, setMode] = useState<"memories" | "constellations">("memories")
+  const [crafting, setCrafting] = useState(false)
+  const [topicOpen, setTopicOpen] = useState(false)
+  const [startingTopic, setStartingTopic] = useState<StoryStarterTopic | null>(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const startRequestInFlight = useRef(false)
@@ -71,8 +75,8 @@ function MemoryMap() {
     enabled: storiesQuery.isSuccess,
   })
   const createConversation = useMutation({
-    mutationFn: () =>
-      ConversationsService.createConversation({ requestBody: {} }),
+    mutationFn: (topic: StoryStarterTopic) =>
+      ConversationsService.createConversation({ requestBody: { starter_topic: topic } }),
     onSuccess: async (conversation) => {
       await queryClient.invalidateQueries({
         queryKey: ["conversationConstellation"],
@@ -84,6 +88,7 @@ function MemoryMap() {
     },
     onSettled: () => {
       startRequestInFlight.current = false
+      setStartingTopic(null)
     },
   })
 
@@ -120,10 +125,15 @@ function MemoryMap() {
   const isLoading = conversationsQuery.isLoading || storiesQuery.isLoading
   const hasError = conversationsQuery.isError || storiesQuery.isError
 
-  const startStory = () => {
+  const startStory = (topic: StoryStarterTopic) => {
     if (startRequestInFlight.current) return
     startRequestInFlight.current = true
-    createConversation.mutate()
+    setStartingTopic(topic)
+    createConversation.mutate(topic)
+  }
+  const openTopics = () => {
+    createConversation.reset()
+    setTopicOpen(true)
   }
 
   if (isLoading) {
@@ -135,41 +145,25 @@ function MemoryMap() {
     )
   }
 
+  if (storiesQuery.isError && !storiesQuery.data) {
+    return <Box maxW="700px" mx="auto" pt={10}>
+      <Alert status="error" borderRadius="12px" alignItems="flex-start">
+        <AlertIcon mt={1} />
+        <Box>
+          <Text fontWeight="bold">Your memories could not be loaded.</Text>
+          <Text mt={1}>They are still saved. Please try again.</Text>
+          <Button mt={4} size="md" onClick={() => void storiesQuery.refetch()}>Try again</Button>
+        </Box>
+      </Alert>
+    </Box>
+  }
+
   return (
     <Box color={ink} maxW="1280px" mx="auto" pb={{ base: 12, md: 20 }}>
-      <Flex
-        align={{ base: "stretch", md: "flex-end" }}
-        direction={{ base: "column", md: "row" }}
-        justify="space-between"
-        gap={5}
-        mb={8}
-      >
-        <Box maxW="650px">
-          <HStack spacing={2} color="#4B8D82" mb={3}>
-            <Icon as={FiGitBranch} />
-            <Text
-              fontSize="xs"
-              fontWeight="800"
-              letterSpacing="0.13em"
-              textTransform="uppercase"
-            >
-              Your personal night sky
-            </Text>
-          </HStack>
-          <Heading
-            fontFamily={
-              '"Iowan Old Style", "Palatino Linotype", Georgia, serif'
-            }
-            fontSize={{ base: "3xl", md: "5xl" }}
-            lineHeight="1.08"
-          >
-            Your night sky.
-          </Heading>
-        </Box>
-        {stories.length > 0 && (inProgress.length > 0
-          ? <ContinueStory node={inProgress[0]} compact />
-          : <Button variant={stories.length < 2 ? "accent" : "outline"} size="md" rightIcon={<FiPlus />} onClick={startStory} isLoading={createConversation.isPending}>Add a memory</Button>)}
-      </Flex>
+      <Heading as="h1" fontFamily={'"Iowan Old Style", "Palatino Linotype", Georgia, serif'}
+        fontSize={{ base: "3xl", md: "4xl" }} lineHeight="1.08" mb={{ base: 5, md: 4 }}>
+        Your night sky.
+      </Heading>
 
       {hasError && (
         <Alert status="error" borderRadius="xl" mb={6}>
@@ -178,20 +172,6 @@ function MemoryMap() {
           again.
         </Alert>
       )}
-      {createConversation.isError && (
-        <Alert status="error" borderRadius="xl" mb={6}>
-          <AlertIcon />
-          We couldn’t start a story just now. Please try again.
-        </Alert>
-      )}
-
-      {stories.length > 0 && <Flex justify="flex-end" mb={3}>
-        <Button size="sm" variant="ghost" leftIcon={<FiList />} color="#426C68"
-          onClick={() => setView(view === "sky" ? "cards" : "sky")}>
-          {view === "sky" ? "View as list" : "Back to sky"}
-        </Button>
-      </Flex>}
-
       {stories.length === 0 ? (
         <Box
           bg="linear-gradient(135deg, #F8FAE9, #FFF5DC 65%, #F7ECDF)"
@@ -212,7 +192,7 @@ function MemoryMap() {
             fontFamily={'"Iowan Old Style", Georgia, serif'}
             fontSize="2xl"
           >
-            Every night sky starts with one star.
+            Start your night sky with one memory.
           </Heading>
           <Text
             color={muted}
@@ -222,8 +202,8 @@ function MemoryMap() {
             mb={6}
             lineHeight="1.7"
           >
-            A childhood kitchen. Someone’s laugh. Start with one little moment
-            and watch your universe grow.
+            Tell us about a person, place, or moment you remember. We’ll help
+            you save it as your first star.
           </Text>
           {inProgress.length > 0 ? (
             <Box maxW="420px" mx="auto" textAlign="left">
@@ -231,34 +211,49 @@ function MemoryMap() {
             </Box>
           ) : (
             <Button
-              onClick={startStory}
-              isLoading={createConversation.isPending}
+              onClick={openTopics}
               rightIcon={<FiArrowRight />}
               variant="accent"
               size="lg"
               px={8}
             >
-              Light your first star
+              Tell your first memory
             </Button>
           )}
           <Text fontSize="xs" color={muted} mt={4}>
             Speak or type · Your pace · Always your story
           </Text>
         </Box>
-      ) : view === "sky" ? (
-        <ConstellationMap stories={stories} relationships={relationships} groups={groupsQuery.data ?? []} />
       ) : (
-        <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={4}>
-          {stories.map((story, index) => (
-            <MemoryCard
-              key={story.id}
-              story={story}
-              accent={accents[index % accents.length]}
-              relationships={relationships}
-              storyById={storyById}
-            />
-          ))}
-        </SimpleGrid>
+        <ConstellationMap
+          stories={stories}
+          relationships={relationships}
+          groups={groupsQuery.data ?? []}
+          mode={mode}
+          crafting={crafting}
+          onCraftingChange={setCrafting}
+          toolbar={<Flex className="sky-main-actions" align="center" justify="center" gap={3} flexWrap="wrap">
+            <HStack className="sky-mode-switch" spacing={0} role="group" aria-label="Night Sky view">
+              <Button className="sky-mode-button" aria-pressed={mode === "memories"}
+                onClick={() => { setMode("memories"); setCrafting(false) }}>Memories</Button>
+              <Button className="sky-mode-button" aria-pressed={mode === "constellations"}
+                isDisabled={stories.length < 2}
+                onClick={() => { setMode("constellations"); setView("sky"); setCrafting(false) }}>Constellations</Button>
+            </HStack>
+            {mode === "memories" ? <>
+              <Button variant="accent" size="md" leftIcon={<FiPlus />} onClick={openTopics}>Add memory</Button>
+              <Button className="sky-list-toggle" size="md" variant="ghost" leftIcon={<FiList />}
+                onClick={() => setView(view === "sky" ? "cards" : "sky")}>
+                {view === "sky" ? "View as list" : "Back to sky"}
+              </Button>
+            </> : <Button variant="accent" size="md" leftIcon={<FiPlus />}
+              isDisabled={crafting} onClick={() => setCrafting(true)}>Create constellation</Button>}
+          </Flex>}
+          memoryList={mode === "memories" && view === "cards" ? <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={4}>
+            {stories.map((story, index) => <MemoryCard key={story.id} story={story}
+              accent={accents[index % accents.length]} relationships={relationships} storyById={storyById} />)}
+          </SimpleGrid> : null}
+        />
       )}
 
       {relationshipsQuery.isError && stories.length > 0 && (
@@ -267,20 +262,21 @@ function MemoryMap() {
         </Text>
       )}
       {groupsQuery.isError && stories.length > 0 && <Text color={muted} fontSize="sm" mt={4}>Your memories are here, but saved constellations are temporarily unavailable.</Text>}
-      <Box mt={8}><ProgressTrail /></Box>
-      {inProgress.length > 1 && (
+      {mode === "memories" && inProgress.length > 0 && (
         <Box mt={8}>
           <Flex align="center" gap={2} mb={4}>
             <Icon as={FiBookOpen} color="#4B8D82" />
-            <Heading size="md">Stories in progress</Heading>
+            <Heading size="md">Continue a story</Heading>
           </Flex>
           <Stack spacing={3}>
-            {inProgress.slice(1).map((node) => (
+            {inProgress.map((node) => (
               <ContinueStory key={node.id} node={node} />
             ))}
           </Stack>
         </Box>
       )}
+      <StoryTopicPicker isOpen={topicOpen} onClose={() => { if (!startingTopic) setTopicOpen(false) }}
+        onChoose={startStory} startingTopic={startingTopic} hasError={createConversation.isError} />
     </Box>
   )
 }

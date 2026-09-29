@@ -16,33 +16,39 @@ function PublicSky() {
   const [sort, setSort] = useState<"recent" | "appreciated">("recent")
   const [view, setView] = useState<"sky" | "list">("sky")
   const [page, setPage] = useState(0)
+  const signedIn = typeof window !== "undefined" && !!window.localStorage.getItem("access_token")
   const query = useQuery({ queryKey: ["publicSky", sort, page], queryFn: () => nightSkyApi.browse(sort, page * 24) })
   const data = query.data?.data ?? []
+  const hasSharedStories = query.isSuccess && (query.data?.count ?? 0) > 0
   return <Box minH="100vh" bg="#FFFDF5" color="#17353B">
     <Flex as="header" align="center" justify="space-between" gap={4} px={{ base: 5, md: 10 }} py={4} bg="#FFFDF5">
       <HStack as={Link} to="/landing" spacing={3}><Image src={memriPlaceMark} alt="MemriPlace" boxSize="48px" objectFit="contain" /><Text fontWeight="800">MemriPlace</Text></HStack>
-      <HStack><Button as={Link} to="/landing" variant="ghost" size="sm">Home</Button><Button as={Link} to="/conversations" variant="secondary" size="sm">My night sky</Button></HStack>
+      <HStack><Button as={Link} to="/landing" variant="ghost" size="sm" display={{ base: "none", sm: "inline-flex" }}>Home</Button><Button as={Link} to="/conversations" variant="secondary" size="sm">My night sky</Button></HStack>
     </Flex>
     <Box className="public-night-sky" color="#FFF9E8" pb={16}>
       <Flex maxW="7xl" mx="auto" px={{ base: 5, md: 10 }} pt={{ base: 10, md: 16 }} pb={8} align="center" justify="space-between" gap={5}>
         <Box><HStack color="#F5D785" fontSize="xs" fontWeight="800" letterSpacing=".13em"><Icon as={FiMoon} /> STORIES SHARED BY CHOICE</HStack>
           <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize={{ base: "4xl", md: "6xl" }} mt={3}>The public night sky</Heading>
-          <Text color="#D4E7DF" maxW="640px" fontSize={{ base: "md", md: "lg" }} mt={4} lineHeight="1.7">Each glow is a constellation someone chose to share. Come closer to follow the memories within it.</Text>
+          <Text color="#D4E7DF" maxW="640px" fontSize={{ base: "md", md: "lg" }} mt={4} lineHeight="1.7">{query.isSuccess && !hasSharedStories
+            ? "Shared constellations will appear here. Your own memories stay private unless you choose to share."
+            : "Each glow is a constellation someone chose to share. Select one to read its story."}</Text>
         </Box>
         <ConstellationStar boxSize="130px" display={{ base: "none", md: "block" }} />
       </Flex>
-      <Flex maxW="7xl" mx="auto" px={{ base: 5, md: 10 }} justify="space-between" align="center" flexWrap="wrap" gap={3} mb={6}>
+      {hasSharedStories && <Flex maxW="7xl" mx="auto" px={{ base: 5, md: 10 }} justify="space-between" align="center" flexWrap="wrap" gap={3} mb={6}>
         <HStack><Button size="sm" onClick={() => { setSort("recent"); setPage(0) }} variant={sort === "recent" ? "solid" : "outline"} colorScheme="yellow">Recently shared</Button>
           <Button size="sm" onClick={() => { setSort("appreciated"); setPage(0) }} variant={sort === "appreciated" ? "solid" : "outline"} colorScheme="yellow">Appreciated</Button></HStack>
         <Button size="sm" onClick={() => setView(view === "sky" ? "list" : "sky")} leftIcon={<FiList />}
           variant="outline" color="#FFF9E8" bg="transparent" borderColor="#A7CAC1" _hover={{ bg: "#315B65" }}>
           {view === "sky" ? "List view" : "Sky view"}
         </Button>
-      </Flex>
+      </Flex>}
       <Box maxW="7xl" mx="auto" px={{ base: 5, md: 10 }}>
         {query.isLoading && <Flex minH="300px" align="center" justify="center"><Spinner size="xl" color="#F5D785" /></Flex>}
         {query.isError && <Alert status="info" borderRadius="2xl" color="#17353B"><AlertIcon />The public night sky is being prepared. Your private sky is still here when you sign in.</Alert>}
-        {query.isSuccess && data.length === 0 && <Flex minH="320px" direction="column" align="center" justify="center" textAlign="center"><Icon as={FiStar} boxSize={12} color="#F5D785" /><Heading size="md" mt={4}>A quiet sky, for now.</Heading><Text color="#D4E7DF" mt={2}>The first shared constellations will appear here.</Text></Flex>}
+        {query.isSuccess && !hasSharedStories && <Flex minH="320px" direction="column" align="center" justify="center" textAlign="center" gap={3}><Icon as={FiStar} boxSize={12} color="#F5D785" /><Heading size="md">A quiet sky, for now.</Heading><Text color="#D4E7DF">Start with a memory in your own private night sky.</Text>
+          <Button as={Link} to={signedIn ? "/conversations" : "/signup"} variant="accent" size="lg" rightIcon={<FiArrowRight />} mt={3}>{signedIn ? "Go to my night sky" : "Start your night sky"}</Button>
+        </Flex>}
         {query.isSuccess && data.length > 0 && (view === "sky" ? <PublicSkyCanvas data={data} /> : <Box bg="#153845" borderRadius="24px" p={{ base: 4, md: 7 }}>
           {data.map((item) => <Flex key={item.id} as={Link} to="/night-sky/$publicationId" params={{ publicationId: String(item.id) }}
             borderBottom="1px solid #3C6166" py={4} gap={4} align="center" _hover={{ bg: "#214C55" }} borderRadius="lg" px={3}>

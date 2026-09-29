@@ -18,6 +18,7 @@ function PublicConstellationPage() {
   const id = Number(publicationId)
   const queryClient = useQueryClient()
   const [selected, setSelected] = useState<number | null>(0)
+  const [storyOpen, setStoryOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [reason, setReason] = useState("")
   const signedIn = !!localStorage.getItem("access_token")
@@ -36,6 +37,10 @@ function PublicConstellationPage() {
   } })
   const constellation = query.data
   const star = selected == null ? null : constellation?.stars[selected]
+  const selectStar = (index: number) => {
+    setSelected(index)
+    setStoryOpen(true)
+  }
   return <Box bg="#FFFDF5" minH="100vh" color="#17353B">
     <Flex as="header" px={{ base: 5, md: 10 }} py={4} align="center" justify="space-between" gap={3}>
       <HStack as={Link} to="/landing" spacing={3}><Image src={memriPlaceMark} alt="MemriPlace" boxSize="45px" objectFit="contain" /><Text fontWeight="800">MemriPlace</Text></HStack>
@@ -50,7 +55,7 @@ function PublicConstellationPage() {
           <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize={{ base: "3xl", md: "5xl" }} mt={3}>{constellation.title}</Heading>
           <Text color="#61777A" mt={3}>{constellation.author_name} · Level {constellation.author_level} · {constellation.stars.length} stars</Text>
         </Box>
-        <SkyScene stars={constellation.stars} links={constellation.links} selected={selected} onSelect={setSelected} label={`Constellation: ${constellation.title}`} />
+        <SkyScene stars={constellation.stars} links={constellation.links} selected={selected} onSelect={selectStar} label={`Constellation: ${constellation.title}`} />
         <Flex direction={{ base: "column", lg: "row" }} gap={6} mt={7} align="start">
           <Box flex="1" bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={{ base: 5, md: 8 }}>
             <Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">THE STORY OF THIS CONSTELLATION</Text>
@@ -74,6 +79,20 @@ function PublicConstellationPage() {
         </Flex>
       </>}
     </Container>
+    <Modal isOpen={storyOpen && !!star} onClose={() => setStoryOpen(false)} isCentered size="lg" scrollBehavior="inside">
+      <ModalOverlay bg="rgba(6, 29, 38, .72)" />
+      <ModalContent mx={4} borderRadius="16px" bg="#FFFDF7" color="#17353B">
+        <ModalHeader fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize="2xl" pr={12}>{star?.title}</ModalHeader>
+        <ModalCloseButton aria-label="Close story" minW="44px" minH="44px" />
+        <ModalBody>
+          {star?.image_url && <Image src={star.image_url} alt="" maxH="260px" w="full" objectFit="contain" mb={5} />}
+          <Text whiteSpace="pre-wrap" lineHeight="1.8" fontSize={{ base: "md", md: "lg" }}>
+            {star?.story_text || "The storyteller kept this memory private. Its star is part of the shared constellation."}
+          </Text>
+        </ModalBody>
+        <ModalFooter><Button onClick={() => setStoryOpen(false)} variant="secondary">Back to the sky</Button></ModalFooter>
+      </ModalContent>
+    </Modal>
     <Modal isOpen={reportOpen} onClose={() => setReportOpen(false)} isCentered><ModalOverlay /><ModalContent borderRadius="24px">
       <ModalHeader>Report a concern</ModalHeader><ModalCloseButton /><ModalBody>
         <Text color="ui.muted" mb={3}>Tell us what needs review. Your report is private.</Text>

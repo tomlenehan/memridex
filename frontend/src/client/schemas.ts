@@ -475,6 +475,28 @@ export const $ConversationCreate = {
 	},
 } as const;
 
+export const $ConversationStart = {
+	properties: {
+		user_story_prompt_id: {
+	type: 'any-of',
+	contains: [{
+	type: 'number',
+}, {
+	type: 'null',
+}],
+},
+		starter_topic: {
+	type: 'any-of',
+	contains: [{
+	type: 'enum',
+	values: ['childhood', 'people', 'places', 'proud'],
+}, {
+	type: 'null',
+}],
+},
+	},
+} as const;
+
 export const $ConversationPublic = {
 	properties: {
 		user_story_prompt_id: {

@@ -10,6 +10,7 @@ __pycache__/
 backend/.coverage
 backend/htmlcov/
 backend/uploads/
+backend/.demo-credentials.local.json
 
 # Frontend generated files
 frontend/dist/
@@ -19,3 +20,4 @@ frontend/node_modules/
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+/commands.txt

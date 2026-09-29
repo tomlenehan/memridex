@@ -399,6 +399,15 @@ class RelatedStorySuggestion(SQLModel):
 class ConversationCreate(SQLModel):
     user_story_prompt_id: Optional[int] = None
 
+class StoryStarterTopic(str, Enum):
+    CHILDHOOD = "childhood"
+    PEOPLE = "people"
+    PLACES = "places"
+    PROUD = "proud"
+
+class ConversationStart(ConversationCreate):
+    starter_topic: Optional[StoryStarterTopic] = None
+
 class ConversationPublic(ConversationCreate):
     id: int
     created_at: datetime

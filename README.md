@@ -33,6 +33,46 @@ that publishes `db` port `5432` to an unused host port.
 
 FastAPI docs are proxied through the frontend at http://localhost:5173/docs.
 
+## Demo Account
+
+To populate a fictional example account and the public Night Sky locally, after
+the stack is running:
+
+```sh
+docker compose exec -T backend python -m app.demo_data seed
+```
+
+The login is saved in `backend/.demo-credentials.local.json` with owner-only
+permissions. It is ignored by Git. Sign in at http://localhost:5173/login with
+those credentials. The example has eight memories (including the original
+questions and answers), two published constellations, and one private
+constellation. Public examples show `[Demo]` next to the author's name.
+
+The seed command is idempotent: running it again leaves the account and any
+edits to it unchanged. Check or remove only the demo account with:
+
+```sh
+docker compose exec -T backend python -m app.demo_data status
+docker compose exec -T backend python -m app.demo_data clear --confirm-email evelyn.demo@memriplace.test
+```
+
+Clearing removes the login, its private memories/transcripts, and its public
+constellation snapshots; it does not reset the database or delete customers.
+The local credentials file is removed too. Run `seed` again to recreate the demo.
+
+On Render, deploy the code (the Blueprint enables the public Night Sky), set a
+strong `DEMO_PASSWORD` environment variable on the API service, then run this
+in the API service's Shell:
+
+```sh
+python -m app.demo_data seed --no-credentials-file
+```
+
+Keep the Render password in your password manager; the local credentials file
+does not contain the Render password unless you deliberately use the same value.
+Use the same `status` and `clear --confirm-email ...` commands in the Render
+Shell when the public demo is no longer needed. Do not put a demo password in Git.
+
 The frontend uses relative `/api/...` calls by default. In Docker, Vite proxies
 those requests to the `backend` container. If you need the browser to call a
 specific backend URL directly, set `VITE_API_URL`.
