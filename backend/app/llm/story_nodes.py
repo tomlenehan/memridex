@@ -5,6 +5,7 @@ from langchain_openai import ChatOpenAI
 import logging
 
 from app.core.db import engine
+from app.llm.tracing import llm_trace_config
 from app.llm.utils import MAX_NODE_USER_TURNS, MODEL_NAME
 from app.models import ChatMessage, ChatMessageSender, Conversation, ConversationStatus
 
@@ -95,7 +96,8 @@ Conversation transcript:
         StoryBranchPlan
     )
     plan = await model.ainvoke(
-        [SystemMessage(content=instructions), HumanMessage(content=request)]
+        [SystemMessage(content=instructions), HumanMessage(content=request)],
+        config=llm_trace_config("story.branches"),
     )
 
     # A manual retry may have finished while the automatic request was generating.

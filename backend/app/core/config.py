@@ -64,6 +64,16 @@ class Settings(BaseSettings):
     OPENAI_NARRATION_VOICE: str = "marin"
     OPENAI_TRANSCRIPTION_MODEL: str = "gpt-transcribe"
     PUBLIC_SKY_ENABLED: bool = False
+    # LangSmith is opt-in because its traces can include private story content.
+    # LANGCHAIN_* remains supported for the older LangChain packages in this app.
+    LANGSMITH_API_KEY: str | None = None
+    LANGSMITH_TRACING: bool | None = None
+    LANGSMITH_ENDPOINT: str | None = None
+    LANGSMITH_PROJECT: str | None = None
+    LANGCHAIN_API_KEY: str | None = None
+    LANGCHAIN_TRACING_V2: bool = False
+    LANGCHAIN_ENDPOINT: str | None = None
+    LANGCHAIN_PROJECT: str | None = None
     DATABASE_URL: str | None = None
     POSTGRES_SERVER: str = "db"
     POSTGRES_PORT: int = 5432
@@ -110,6 +120,24 @@ class Settings(BaseSettings):
     @property
     def emails_enabled(self) -> bool:
         return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
+
+    @property
+    def langsmith_tracing_enabled(self) -> bool:
+        if self.LANGSMITH_TRACING is not None:
+            return self.LANGSMITH_TRACING
+        return self.LANGCHAIN_TRACING_V2
+
+    @property
+    def langsmith_api_key(self) -> str | None:
+        return self.LANGSMITH_API_KEY or self.LANGCHAIN_API_KEY
+
+    @property
+    def langsmith_endpoint(self) -> str | None:
+        return self.LANGSMITH_ENDPOINT or self.LANGCHAIN_ENDPOINT
+
+    @property
+    def langsmith_project(self) -> str:
+        return self.LANGSMITH_PROJECT or self.LANGCHAIN_PROJECT or "memriplace"
 
     # TODO: update type to EmailStr when sqlmodel supports it
     EMAIL_TEST_USER: str = "test@example.com"

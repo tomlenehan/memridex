@@ -9,6 +9,7 @@ from sqlmodel import Session, select
 
 from app.core.config import settings
 from app.core.db import engine
+from app.llm.tracing import llm_trace_config
 from app.llm.story_nodes import get_conversation_prompt
 from app.llm.utils import MIN_READY_USER_TURNS
 from app.models import ChatMessage, ChatMessageSender, Conversation, ConversationStatus
@@ -73,7 +74,8 @@ async def assess_story_readiness_after_reply(
             model=settings.STORY_READINESS_MODEL, temperature=0
         ).with_structured_output(StoryReadiness)
         decision = await model.ainvoke(
-            [SystemMessage(content=instructions), HumanMessage(content=request)]
+            [SystemMessage(content=instructions), HumanMessage(content=request)],
+            config=llm_trace_config("story.readiness"),
         )
         if not decision.ready:
             return

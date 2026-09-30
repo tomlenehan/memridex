@@ -7,10 +7,12 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 from app.api.main import api_router
 from app.core.config import settings
+from app.llm.tracing import configure_langsmith_tracing
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+configure_langsmith_tracing()
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
