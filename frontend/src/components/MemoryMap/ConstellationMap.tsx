@@ -8,6 +8,7 @@ import { Controls, Handle, Position, ReactFlow, type Edge, type Node, type NodeP
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react"
 import { FiArrowRight, FiChevronLeft, FiChevronRight, FiEdit3, FiStar, FiX } from "react-icons/fi"
 import { type StoryRelationshipPublic, type StorySummaryPublic } from "../../client"
+import NarrationControl from "../Common/NarrationControl"
 import { celebrateConnection } from "../../lib/celebration"
 import { nightSkyApi, type Constellation } from "../../lib/nightSkyApi"
 import "@xyflow/react/dist/style.css"
@@ -194,6 +195,7 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
       <FiStar aria-hidden="true" />
     </Box>
     <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>{focusedGroup.title}</Heading>
+    {focusedGroup.overview && <Box mt={4}><NarrationControl path={`constellations/${focusedGroup.id}`} /></Box>}
     <Text className="sky-group-panel-overview" whiteSpace="pre-wrap" mt={4}>
       {focusedGroup.overview || "These memories are connected in your private night sky."}
     </Text>
@@ -267,6 +269,7 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
             <IconButton aria-label="Close memory" icon={<FiX />} variant="ghost" onClick={() => setSelectedId(null)} />
           </Flex>
           <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>{selected.title || "A remembered moment"}</Heading>
+          <Box mt={4}><NarrationControl path={`memories/${selected.id}`} /></Box>
           {selected.image_url && <Image src={selected.image_url} alt="" maxH="180px" w="full" objectFit="contain" mt={5} />}
           <Text className="sky-story-text" whiteSpace="pre-wrap" lineHeight="1.8" mt={5}>{selected.summary_text}</Text>
           <Box className="sky-story-actions">
@@ -289,6 +292,7 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
         <ModalHeader fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize="2xl" pr={12}>{selected?.title || "A remembered moment"}</ModalHeader>
         <ModalCloseButton aria-label="Close memory" minW="44px" minH="44px" />
         <ModalBody>
+          {selected && <Box mb={5}><NarrationControl path={`memories/${selected.id}`} /></Box>}
           {selected?.image_url && <Image src={selected.image_url} alt="" maxH="260px" w="full" objectFit="contain" mb={5} />}
           <Text whiteSpace="pre-wrap" lineHeight="1.8" fontSize={{ base: "md", md: "lg" }}>{selected?.summary_text}</Text>
         </ModalBody>

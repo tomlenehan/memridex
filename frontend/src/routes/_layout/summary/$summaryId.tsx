@@ -33,6 +33,7 @@ import {
 import { FiGitBranch, FiImage } from "react-icons/fi"
 import ConstellationStar from "../../../components/Common/ConstellationStar"
 import ConnectionConstellation from "../../../components/MemoryMap/ConnectionConstellation"
+import NarrationControl from "../../../components/Common/NarrationControl"
 import useCustomToast from "../../../hooks/useCustomToast"
 import { celebrateConnection } from "../../../lib/celebration"
 import { API_BASE_URL } from "../../../config"
@@ -246,6 +247,10 @@ function SummaryPage() {
           <Text color="ui.muted" mt={2} fontSize="sm">
             Make it sound like you, add a photo, or connect it to another memory.
           </Text>
+          {currentStory && watch("summary") === currentStory.summary_text && watch("title") === currentStory.title &&
+            <Box mt={4}><NarrationControl path={`memories/${currentStory.id}`} /></Box>}
+          {currentStory && (watch("summary") !== currentStory.summary_text || watch("title") !== currentStory.title) &&
+            <Text fontSize="sm" color="ui.muted" mt={3}>Save your changes to hear this version.</Text>}
         </Box>
       </Flex>
       {status === "succeeded" && <RelatedMemories storyId={Number(summaryId)} currentStory={currentStory} />}

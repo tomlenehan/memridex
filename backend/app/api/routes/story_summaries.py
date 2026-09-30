@@ -81,16 +81,12 @@ def read_story_summaries(
     """
     Retrieve story summaries.
     """
-    if current_user.is_superuser:
-        statement = select(StorySummary).offset(skip).limit(limit)
-    else:
-        statement = (
-            select(StorySummary)
-            .join(Conversation, StorySummary.conversation_id == Conversation.id)
-            .where(Conversation.user_id == current_user.id)
-            .offset(skip)
-            .limit(limit)
-        )
+    statement = (
+        select(StorySummary)
+        .where(StorySummary.user_id == current_user.id)
+        .offset(skip)
+        .limit(limit)
+    )
     summaries = session.exec(statement).all()
     return [_story_summary_public(summary) for summary in summaries]
 
@@ -119,7 +115,7 @@ def read_story_summary(
     if not summary:
         raise HTTPException(status_code=404, detail="Story summary not found")
     conversation = session.get(Conversation, summary.conversation_id)
-    if not current_user.is_superuser and (conversation.user_id != current_user.id):
+    if conversation.user_id != current_user.id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return _story_summary_public(summary)
 
@@ -135,7 +131,7 @@ async def create_story_summary(
         conversation = db_session.get(Conversation, request.conversation_id)
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
-        if not current_user.is_superuser and conversation.user_id != current_user.id:
+        if conversation.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not enough permissions")
         saved_while_active = conversation.status == ConversationStatus.ACTIVE
 
@@ -231,7 +227,7 @@ def update_story_summary(
 
         # Fetch the conversation and check permissions
         conversation = session.get(Conversation, summary.conversation_id)
-        if not current_user.is_superuser and (conversation.user_id != current_user.id):
+        if conversation.user_id != current_user.id:
             raise HTTPException(status_code=400, detail="Not enough permissions")
 
         # Update fields if provided
@@ -304,7 +300,7 @@ def delete_story_summary(
     if not summary:
         raise HTTPException(status_code=404, detail="Story summary not found")
     conversation = session.get(Conversation, summary.conversation_id)
-    if not current_user.is_superuser and (conversation.user_id != current_user.id):
+    if conversation.user_id != current_user.id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
     membership = session.exec(select(ConstellationMemory.id).where(
@@ -329,7 +325,7 @@ async def generate_story_image(
     current_user: User = Depends(get_current_user),
 ) -> StoryImageGenerationResponse:
     summary = session.get(StorySummary, id)
-    if not summary or (not current_user.is_superuser and summary.user_id != current_user.id):
+    if not summary or summary.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Story not found")
     if not settings.OPENAI_API_KEY:
         raise HTTPException(status_code=503, detail="Image generation is not configured")

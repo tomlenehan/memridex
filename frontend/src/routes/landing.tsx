@@ -40,7 +40,7 @@ import HomepageVoiceSample from "../components/Landing/HomepageVoiceSample"
 import NightSkyJourney from "../components/Landing/NightSkyJourney"
 import { PUBLIC_SKY_ENABLED } from "../config"
 
-export type AuthModalMode = "login" | "signup"
+export type AuthModalMode = "login" | "signup" | "recover"
 
 export const Route = createFileRoute("/landing")({
   component: LandingRoute,
