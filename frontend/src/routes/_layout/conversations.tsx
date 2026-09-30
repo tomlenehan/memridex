@@ -232,23 +232,23 @@ function MemoryMap() {
           mode={mode}
           crafting={crafting}
           onCraftingChange={setCrafting}
-          toolbar={<Flex className="sky-main-actions" align="center" justify="center" gap={3} flexWrap="wrap">
-            <HStack className="sky-mode-switch" spacing={0} role="group" aria-label="Night Sky view">
-              <Button className="sky-mode-button" aria-pressed={mode === "memories"}
-                onClick={() => { setMode("memories"); setCrafting(false) }}>Memories</Button>
-              <Button className="sky-mode-button" aria-pressed={mode === "constellations"}
-                isDisabled={stories.length < 2}
-                onClick={() => { setMode("constellations"); setView("sky"); setCrafting(false) }}>Constellations</Button>
-            </HStack>
-            {mode === "memories" ? <>
-              <Button variant="accent" size="md" leftIcon={<FiPlus />} onClick={openTopics}>Add memory</Button>
-              <Button className="sky-list-toggle" size="md" variant="ghost" leftIcon={<FiList />}
-                onClick={() => setView(view === "sky" ? "cards" : "sky")}>
-                {view === "sky" ? "View as list" : "Back to sky"}
-              </Button>
-            </> : <Button variant="accent" size="md" leftIcon={<FiPlus />}
-              isDisabled={crafting} onClick={() => setCrafting(true)}>Create constellation</Button>}
-          </Flex>}
+          toolbar={<Box className="sky-toolbar">
+            <Flex className="sky-toolbar-center" align="center" justify="center" gap={3} flexWrap="wrap">
+              <HStack className="sky-mode-switch" spacing={0} role="group" aria-label="Night Sky view">
+                <Button className="sky-mode-button" aria-pressed={mode === "memories"}
+                  onClick={() => { setMode("memories"); setCrafting(false) }}>Memories</Button>
+                <Button className="sky-mode-button" aria-pressed={mode === "constellations"}
+                  isDisabled={stories.length < 2}
+                  onClick={() => { setMode("constellations"); setView("sky"); setCrafting(false) }}>Constellations</Button>
+              </HStack>
+              {mode === "memories" ? <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiPlus />} onClick={openTopics}>Add memory</Button> : <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiPlus />}
+                isDisabled={crafting} onClick={() => setCrafting(true)}>Create constellation</Button>}
+            </Flex>
+            {mode === "memories" && <Button className="sky-list-toggle" size="md" variant="ghost" leftIcon={<FiList />}
+              onClick={() => setView(view === "sky" ? "cards" : "sky")}>
+              {view === "sky" ? "View as list" : "Back to sky"}
+            </Button>}
+          </Box>}
           memoryList={mode === "memories" && view === "cards" ? <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={4}>
             {stories.map((story, index) => <MemoryCard key={story.id} story={story}
               accent={accents[index % accents.length]} relationships={relationships} storyById={storyById} />)}
