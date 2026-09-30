@@ -28,11 +28,11 @@ import {
   FiSun,
 } from "react-icons/fi"
 
+import memriPlaceLogo from "../assets/images/MemriPlaceLighterLogo.png"
+import memriPlaceTextLogo from "../assets/images/MemriPlaceTextLogoFlat.png"
 import background from "../assets/images/homepage_parallax_flat/background.png"
 import foreground from "../assets/images/homepage_parallax_flat/foreground3.png"
 import midground from "../assets/images/homepage_parallax_flat/midground.png"
-import memriPlaceLogo from "../assets/images/MemriPlaceLighterLogo.png"
-import memriPlaceTextLogo from "../assets/images/MemriPlaceTextLogoFlat.png"
 import starscape from "../assets/images/homepage_parallax_flat/starscape.png"
 import AuthModal from "../components/Auth/AuthModal"
 import ConstellationStar from "../components/Common/ConstellationStar"
@@ -88,7 +88,9 @@ export function LandingPage({
 } = {}) {
   const parallaxTrackRef = useRef<HTMLDivElement>(null)
   const storyStepsRef = useRef<HTMLDivElement>(null)
-  const [footerModal, setFooterModal] = useState<"contact" | "legal" | null>(null)
+  const [footerModal, setFooterModal] = useState<"contact" | "legal" | null>(
+    null,
+  )
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -97,7 +99,9 @@ export function LandingPage({
     if (!track || !scene) return
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)")
-    const layers = Array.from(scene.querySelectorAll<HTMLElement>("[data-parallax-layer]"))
+    const layers = Array.from(
+      scene.querySelectorAll<HTMLElement>("[data-parallax-layer]"),
+    )
     const copy = scene.querySelector<HTMLElement>("[data-parallax-copy]")
     let frame: number | null = null
     let current = 0
@@ -113,17 +117,34 @@ export function LandingPage({
       // while the horizon stays almost still. Scaling keeps every edge covered.
       const transforms: Record<string, [number, number, number]> = {
         background: [0, -sceneHeight * 0.012 * depth, 1.08 + 0.018 * depth],
-        starscape: [-12 * depth, -sceneHeight * 0.075 * depth, 1.06 + 0.08 * depth],
-        midground: [-8 * depth, -sceneHeight * 0.025 * depth, 1.08 + 0.075 * depth],
-        foreground: [22 * depth, sceneHeight * 0.065 * depth, 1.1 + 0.19 * depth],
+        starscape: [
+          -12 * depth,
+          -sceneHeight * 0.075 * depth,
+          1.06 + 0.08 * depth,
+        ],
+        midground: [
+          -8 * depth,
+          -sceneHeight * 0.025 * depth,
+          1.08 + 0.075 * depth,
+        ],
+        foreground: [
+          22 * depth,
+          sceneHeight * 0.065 * depth,
+          1.1 + 0.19 * depth,
+        ],
       }
       for (const layer of layers) {
-        const [x, y, scale] = transforms[layer.dataset.parallaxLayer ?? ""] ?? [0, 0, 1]
+        const [x, y, scale] = transforms[layer.dataset.parallaxLayer ?? ""] ?? [
+          0, 0, 1,
+        ]
         layer.style.setProperty("--layer-x", `${x}px`)
         layer.style.setProperty("--layer-y", `${y}px`)
         layer.style.setProperty("--layer-scale", `${scale}`)
       }
-      copy?.style.setProperty("--copy-offset", `${-sceneHeight * 0.085 * depth}px`)
+      copy?.style.setProperty(
+        "--copy-offset",
+        `${-sceneHeight * 0.085 * depth}px`,
+      )
       copy?.style.setProperty("--copy-opacity", `${1 - progress * 0.1}`)
       copy?.style.setProperty("--logo-scale", `${1 - 0.04 * depth}`)
     }
@@ -140,9 +161,14 @@ export function LandingPage({
     }
 
     const scheduleUpdate = () => {
-      const progress = Math.min(1, Math.max(0, -track.getBoundingClientRect().top / travel))
+      const progress = Math.min(
+        1,
+        Math.max(0, -track.getBoundingClientRect().top / travel),
+      )
       // A short ease-in avoids a sudden jump as the first scroll starts.
-      target = reducedMotion.matches ? 0 : (1.08 * progress * progress) / (progress + 0.08)
+      target = reducedMotion.matches
+        ? 0
+        : (1.08 * progress * progress) / (progress + 0.08)
       if (reducedMotion.matches) {
         if (frame !== null) window.cancelAnimationFrame(frame)
         frame = null
@@ -330,9 +356,18 @@ export function LandingPage({
                 src={memriPlaceLogo}
               />
               <HStack spacing={{ base: 1, md: 3 }}>
-                {PUBLIC_SKY_ENABLED && <Button as={Link} to="/night-sky" color="#FFF8E8" size={{ base: "sm", md: "md" }} variant="ghost" display={{ base: "none", md: "inline-flex" }}>
-                  Global Night Sky
-                </Button>}
+                {PUBLIC_SKY_ENABLED && (
+                  <Button
+                    as={Link}
+                    to="/night-sky"
+                    color="#FFF8E8"
+                    size={{ base: "sm", md: "md" }}
+                    variant="ghost"
+                    display={{ base: "none", md: "inline-flex" }}
+                  >
+                    Global Night Sky
+                  </Button>
+                )}
                 <Button
                   _hover={{ bg: "whiteAlpha.200" }}
                   as={Link}
@@ -406,7 +441,8 @@ export function LandingPage({
                   lineHeight="1.7"
                   maxW="460px"
                 >
-                  Capture the memories that matter, connect the ones that belong together, and build a night sky that’s uniquely yours.
+                  Capture the memories that matter, connect the ones that belong
+                  together, and build a night sky that’s uniquely yours.
                 </Text>
                 <HStack flexWrap="wrap" pt={2} spacing={3}>
                   <Button
@@ -601,8 +637,8 @@ export function LandingPage({
                 Keep leveling up.
               </Heading>
               <Text color="#617569" fontSize="lg" lineHeight="1.8">
-                Every new story earns you Experience Points (XP).
-                As you level up, your constellations shine brighter in the Global Night Sky.
+                Every new story earns you Experience Points (XP). As you level
+                up, your constellations shine brighter in the Global Night Sky.
               </Text>
               <HStack spacing={3} align="start">
                 <Icon as={FiSun} color="#A87930" mt={1} boxSize={5} />
@@ -758,12 +794,18 @@ export function LandingPage({
                 lineHeight="1.8"
               >
                 {PUBLIC_SKY_ENABLED ? (
-                  <>Nothing is posted automatically. Before publishing a constellation,
-                    you can preview it and choose which story texts and images readers
-                    can open. The rest of your sky stays yours.</>
+                  <>
+                    Nothing is posted automatically. Before publishing a
+                    constellation, you can preview it and choose which story
+                    texts and images readers can open. The rest of your sky
+                    stays yours.
+                  </>
                 ) : (
-                  <>Nothing is posted to a public feed. Share an individual story with
-                    someone you love without opening the rest of your night sky.</>
+                  <>
+                    Nothing is posted to a public feed. Share an individual
+                    story with someone you love without opening the rest of your
+                    night sky.
+                  </>
                 )}
               </Text>
             </Stack>
@@ -841,9 +883,22 @@ export function LandingPage({
       >
         <Text fontSize="sm">MemriPlace. Stories worth keeping.</Text>
         <HStack spacing={{ base: 4, md: 5 }} flexWrap="wrap" justify="center">
-          {PUBLIC_SKY_ENABLED && <Button as={Link} to="/night-sky" color="inherit" fontSize="sm" fontWeight="500" minW="auto" p={0} variant="link" textDecoration="underline" textUnderlineOffset="3px">
-            Global Night Sky
-          </Button>}
+          {PUBLIC_SKY_ENABLED && (
+            <Button
+              as={Link}
+              to="/night-sky"
+              color="inherit"
+              fontSize="sm"
+              fontWeight="500"
+              minW="auto"
+              p={0}
+              variant="link"
+              textDecoration="underline"
+              textUnderlineOffset="3px"
+            >
+              Global Night Sky
+            </Button>
+          )}
           <Button
             color="inherit"
             fontSize="sm"
@@ -858,22 +913,41 @@ export function LandingPage({
             Contact us
           </Button>
           <Button
+            as={Link}
             color="inherit"
             fontSize="sm"
             fontWeight="500"
             minW="auto"
-            onClick={() => setFooterModal("legal")}
             p={0}
             textDecoration="underline"
             textUnderlineOffset="3px"
+            to="/privacy"
             variant="link"
           >
-            Privacy & terms
+            Privacy
+          </Button>
+          <Button
+            as={Link}
+            color="inherit"
+            fontSize="sm"
+            fontWeight="500"
+            minW="auto"
+            p={0}
+            textDecoration="underline"
+            textUnderlineOffset="3px"
+            to="/terms"
+            variant="link"
+          >
+            Terms
           </Button>
           <Text fontSize="sm">© {new Date().getFullYear()}</Text>
         </HStack>
       </Flex>
-      <Modal isCentered isOpen={footerModal === "contact"} onClose={() => setFooterModal(null)}>
+      <Modal
+        isCentered
+        isOpen={footerModal === "contact"}
+        onClose={() => setFooterModal(null)}
+      >
         <ModalOverlay bg="rgba(3, 19, 24, 0.72)" backdropFilter="blur(8px)" />
         <ModalContent bg="#FFFDF7" borderRadius="24px" mx={4}>
           <ModalHeader color="#24483E" fontFamily="Georgia, serif" pt={7}>
@@ -882,8 +956,8 @@ export function LandingPage({
           <ModalCloseButton color="#526A70" top={5} />
           <ModalBody color="#526A70" lineHeight="1.75" pb={7}>
             <Text>
-              Questions, ideas, or a story about how MemriPlace is working for you?
-              We’d love to hear from you.
+              Questions, ideas, or a story about how MemriPlace is working for
+              you? We’d love to hear from you.
             </Text>
             <Button
               as="a"
@@ -897,7 +971,12 @@ export function LandingPage({
           </ModalBody>
         </ModalContent>
       </Modal>
-      <Modal isCentered isOpen={footerModal === "legal"} onClose={() => setFooterModal(null)} size={{ base: "sm", md: "lg" }}>
+      <Modal
+        isCentered
+        isOpen={footerModal === "legal"}
+        onClose={() => setFooterModal(null)}
+        size={{ base: "sm", md: "lg" }}
+      >
         <ModalOverlay bg="rgba(3, 19, 24, 0.72)" backdropFilter="blur(8px)" />
         <ModalContent bg="#FFFDF7" borderRadius="24px" mx={4}>
           <ModalHeader color="#24483E" fontFamily="Georgia, serif" pt={7}>
@@ -907,35 +986,56 @@ export function LandingPage({
           <ModalBody color="#526A70" lineHeight="1.75" pb={7}>
             <Stack spacing={5}>
               <Box>
-                <Heading as="h3" color="#24483E" fontSize="lg" mb={2} sx={storybookHeading}>
+                <Heading
+                  as="h3"
+                  color="#24483E"
+                  fontSize="lg"
+                  mb={2}
+                  sx={storybookHeading}
+                >
                   Your privacy
                 </Heading>
                 <Text>
                   {PUBLIC_SKY_ENABLED ? (
-                    <>Your stories and personal night sky are private by default. You may
-                      share an individual story or explicitly publish a reviewed constellation
-                      to the Global Night Sky. Only its overview and the story texts and images
-                      you select are included. Original conversations and voice transcripts
-                      remain private. You can remove a published constellation at any time.</>
+                    <>
+                      Your stories and personal night sky are private by
+                      default. You may share an individual story or explicitly
+                      publish a reviewed constellation to the Global Night Sky.
+                      Only its overview and the story texts and images you
+                      select are included. Original conversations and voice
+                      transcripts remain private. You can remove a published
+                      constellation at any time.
+                    </>
                   ) : (
-                    <>Your stories are private by default and are not shown in a Global Night Sky.
-                      You choose whether to share an individual story. We use your account and
-                      story information to provide MemriPlace and keep your night sky available to you.</>
+                    <>
+                      Your stories are private by default and are not shown in a
+                      Global Night Sky. You choose whether to share an
+                      individual story. We use your account and story
+                      information to provide MemriPlace and keep your night sky
+                      available to you.
+                    </>
                   )}
                 </Text>
               </Box>
               <Box>
-                <Heading as="h3" color="#24483E" fontSize="lg" mb={2} sx={storybookHeading}>
+                <Heading
+                  as="h3"
+                  color="#24483E"
+                  fontSize="lg"
+                  mb={2}
+                  sx={storybookHeading}
+                >
                   Terms of use
                 </Heading>
                 <Text>
-                  Please use MemriPlace responsibly and only share stories you have the right to share.
-                  The service is designed to help you preserve memories; it does not replace professional,
-                  legal, medical, or emergency support.
+                  Please use MemriPlace responsibly and only share stories you
+                  have the right to share. The service is designed to help you
+                  preserve memories; it does not replace professional, legal,
+                  medical, or emergency support.
                 </Text>
               </Box>
               <Text fontSize="sm">
-                Questions about privacy or these terms? Email {" "}
+                Questions about privacy or these terms? Email{" "}
                 <Button
                   as="a"
                   color="#2E7A78"

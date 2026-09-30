@@ -11,9 +11,11 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as TermsImport } from './routes/terms'
 import { Route as SignupImport } from './routes/signup'
 import { Route as ResetPasswordImport } from './routes/reset-password'
 import { Route as RecoverPasswordImport } from './routes/recover-password'
+import { Route as PrivacyImport } from './routes/privacy'
 import { Route as NightSkyImport } from './routes/night-sky'
 import { Route as LoginImport } from './routes/login'
 import { Route as LandingImport } from './routes/landing'
@@ -33,6 +35,11 @@ import { Route as LayoutConstellationConstellationIdImport } from './routes/_lay
 
 // Create/Update Routes
 
+const TermsRoute = TermsImport.update({
+  path: '/terms',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const SignupRoute = SignupImport.update({
   path: '/signup',
   getParentRoute: () => rootRoute,
@@ -45,6 +52,11 @@ const ResetPasswordRoute = ResetPasswordImport.update({
 
 const RecoverPasswordRoute = RecoverPasswordImport.update({
   path: '/recover-password',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PrivacyRoute = PrivacyImport.update({
+  path: '/privacy',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -150,6 +162,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NightSkyImport
       parentRoute: typeof rootRoute
     }
+    '/privacy': {
+      preLoaderRoute: typeof PrivacyImport
+      parentRoute: typeof rootRoute
+    }
     '/recover-password': {
       preLoaderRoute: typeof RecoverPasswordImport
       parentRoute: typeof rootRoute
@@ -160,6 +176,10 @@ declare module '@tanstack/react-router' {
     }
     '/signup': {
       preLoaderRoute: typeof SignupImport
+      parentRoute: typeof rootRoute
+    }
+    '/terms': {
+      preLoaderRoute: typeof TermsImport
       parentRoute: typeof rootRoute
     }
     '/_layout/admin': {
@@ -231,9 +251,11 @@ export const routeTree = rootRoute.addChildren([
   LandingRoute,
   LoginRoute,
   NightSkyRoute.addChildren([NightSkyPublicationIdRoute, NightSkyIndexRoute]),
+  PrivacyRoute,
   RecoverPasswordRoute,
   ResetPasswordRoute,
   SignupRoute,
+  TermsRoute,
 ])
 
 /* prettier-ignore-end */

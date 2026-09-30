@@ -1,4 +1,6 @@
 import {
+  Alert,
+  AlertIcon,
   Box,
   Button,
   Container,
@@ -12,6 +14,8 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
+import axios from "axios"
 import { useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
@@ -21,16 +25,62 @@ import {
   type UserUpdateMe,
   UsersService,
 } from "../../client"
+import { API_BASE_URL, GOOGLE_CLIENT_ID } from "../../config"
 import useAuth from "../../hooks/useAuth"
 import useCustomToast from "../../hooks/useCustomToast"
 import { emailPattern } from "../../utils"
+import GoogleSignInButton from "../Auth/GoogleSignInButton"
 
 const UserInformation = () => {
   const queryClient = useQueryClient()
   const color = useColorModeValue("inherit", "ui.light")
   const showToast = useCustomToast()
   const [editMode, setEditMode] = useState(false)
+  const [googleError, setGoogleError] = useState<string | null>(null)
   const { user: currentUser } = useAuth()
+  const googleStatus = useQuery({
+    queryKey: ["googleConnection"],
+    enabled: Boolean(GOOGLE_CLIENT_ID),
+    queryFn: async () => {
+      const response = await axios.get<{ connected: boolean }>(
+        `${API_BASE_URL}/api/v1/login/google/status`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        },
+      )
+      return response.data.connected
+    },
+  })
+  const linkGoogle = useMutation({
+    mutationFn: async (credential: string) => {
+      await axios.post(
+        `${API_BASE_URL}/api/v1/login/google/link`,
+        { credential },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        },
+      )
+    },
+    onSuccess: () => {
+      setGoogleError(null)
+      queryClient.invalidateQueries({ queryKey: ["googleConnection"] })
+      showToast("Connected", "You can now sign in with Google.", "success")
+    },
+    onError: (error: unknown) => {
+      const detail = axios.isAxiosError(error)
+        ? (error.response?.data as { detail?: unknown })?.detail
+        : undefined
+      setGoogleError(
+        typeof detail === "string"
+          ? detail
+          : "Could not connect Google. Please try again.",
+      )
+    },
+  })
   const {
     register,
     handleSubmit,
@@ -138,13 +188,51 @@ const UserInformation = () => {
               {editMode ? "Save" : "Edit"}
             </Button>
             {editMode && (
-              <Button variant="outline" onClick={onCancel} isDisabled={isSubmitting}>
+              <Button
+                variant="outline"
+                onClick={onCancel}
+                isDisabled={isSubmitting}
+              >
                 Cancel
               </Button>
             )}
           </Flex>
         </Box>
       </Container>
+      {GOOGLE_CLIENT_ID && (
+        <Box borderTop="1px solid" borderColor="ui.line" mt={6} pt={6}>
+          <Heading size="sm" mb={2}>
+            Google sign-in
+          </Heading>
+          {googleStatus.isPending ? (
+            <Text color="ui.muted">Checking connection...</Text>
+          ) : googleStatus.data ? (
+            <Text color="ui.muted">
+              Connected. You can use Google to sign in.
+            </Text>
+          ) : (
+            <>
+              <Text color="ui.muted" mb={4}>
+                Connect the Google account with your MemriPlace email.
+              </Text>
+              <Box maxW="360px">
+                <GoogleSignInButton
+                  onCredential={(credential) => {
+                    setGoogleError(null)
+                    if (!linkGoogle.isPending) linkGoogle.mutate(credential)
+                  }}
+                />
+              </Box>
+              {googleError && (
+                <Alert mt={3} status="error" maxW="500px">
+                  <AlertIcon />
+                  {googleError}
+                </Alert>
+              )}
+            </>
+          )}
+        </Box>
+      )}
     </>
   )
 }

@@ -2,6 +2,8 @@ import {
   Alert,
   AlertIcon,
   Button,
+  Divider,
+  Flex,
   FormControl,
   FormErrorMessage,
   FormLabel,
@@ -21,8 +23,10 @@ import { Link } from "@tanstack/react-router"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
 import memriPlaceLogo from "../../assets/images/MemriPlaceLighterLogo.png"
+import { GOOGLE_CLIENT_ID } from "../../config"
 import useAuth from "../../hooks/useAuth"
 import { emailPattern, passwordRules } from "../../utils"
+import GoogleSignInButton from "./GoogleSignInButton"
 
 type AuthMode = "login" | "signup"
 
@@ -39,7 +43,13 @@ interface AuthModalProps {
 }
 
 function AuthModal({ isOpen, mode, onClose }: AuthModalProps) {
-  const { loginMutation, signupMutation, error, resetError } = useAuth()
+  const {
+    loginMutation,
+    googleLoginMutation,
+    signupMutation,
+    error,
+    resetError,
+  } = useAuth()
   const {
     register,
     handleSubmit,
@@ -102,6 +112,26 @@ function AuthModal({ isOpen, mode, onClose }: AuthModalProps) {
           {/*    ? "Create your free MemriPlace account."*/}
           {/*    : "Pick up the memories you have already started."}*/}
           {/*</Text>*/}
+          {GOOGLE_CLIENT_ID && (
+            <>
+              <GoogleSignInButton
+                label={mode === "signup" ? "signup_with" : "signin_with"}
+                onCredential={(credential) => {
+                  resetError()
+                  if (!googleLoginMutation.isPending) {
+                    googleLoginMutation.mutate(credential)
+                  }
+                }}
+              />
+              <Flex align="center" gap={3} my={5}>
+                <Divider borderColor="#D7CFAF" />
+                <Text color="#526A70" fontSize="sm" whiteSpace="nowrap">
+                  or use email
+                </Text>
+                <Divider borderColor="#D7CFAF" />
+              </Flex>
+            </>
+          )}
           <Stack as="form" onSubmit={handleSubmit(onSubmit)} spacing={4}>
             {isSignup && (
               <FormControl isInvalid={!!errors.full_name}>
@@ -179,11 +209,7 @@ function AuthModal({ isOpen, mode, onClose }: AuthModalProps) {
                 Forgot password?
               </Button>
             )}
-            <Button
-              variant="accent"
-              isLoading={isSubmitting}
-              type="submit"
-            >
+            <Button variant="accent" isLoading={isSubmitting} type="submit">
               {isSignup ? "Create account" : "Log in"}
             </Button>
           </Stack>

@@ -19,6 +19,8 @@ services:
           envVarKey: RENDER_EXTERNAL_HOSTNAME
       - key: BACKEND_PROTOCOL
         value: https
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
 
   - type: web
     name: memribox-api
@@ -58,6 +60,8 @@ services:
       - key: USERS_OPEN_REGISTRATION
         value: "true"
       - key: OPENAI_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
         sync: false
       - key: OPENAI_REALTIME_MODEL
         value: gpt-realtime-2.1

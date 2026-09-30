@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 
 import { AxiosError } from "axios"
+import axios from "axios"
 import {
   type Body_login_login_access_token as AccessToken,
   ApiError,
@@ -11,6 +12,7 @@ import {
   type UserPublic,
   UsersService,
 } from "../client"
+import { API_BASE_URL } from "../config"
 
 const isLoggedIn = () => {
   return localStorage.getItem("access_token") !== null
@@ -54,6 +56,13 @@ const getAuthErrorMessage = (
   }
 
   if (error instanceof AxiosError) {
+    if (error.response) {
+      if (error.response.status >= 500) {
+        return "MemriPlace is temporarily unavailable. Please try again in a few minutes."
+      }
+      const detail = (error.response.data as { detail?: unknown })?.detail
+      if (typeof detail === "string") return detail
+    }
     return "We couldn't connect to MemriPlace. Check your internet connection and try again."
   }
 
@@ -79,6 +88,23 @@ const useAuth = () => {
     queryClient.clear()
     localStorage.setItem("access_token", response.access_token)
   }
+
+  const googleLoginMutation = useMutation({
+    mutationFn: async (credential: string) => {
+      const response = await axios.post<{ access_token: string }>(
+        `${API_BASE_URL}/api/v1/login/google`,
+        { credential },
+      )
+      queryClient.clear()
+      localStorage.setItem("access_token", response.data.access_token)
+    },
+    onSuccess: () => {
+      navigate({ to: "/conversations" })
+    },
+    onError: (err: unknown) => {
+      setError(getAuthErrorMessage(err, "login"))
+    },
+  })
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -113,6 +139,7 @@ const useAuth = () => {
 
   return {
     loginMutation,
+    googleLoginMutation,
     signupMutation,
     logout,
     user,
