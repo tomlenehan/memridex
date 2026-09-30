@@ -37,6 +37,7 @@ class UpdatePassword(SQLModel):
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     hashed_password: str
+    google_sub: Optional[str] = Field(default=None, unique=True, index=True)
     items: List["Item"] = Relationship(back_populates="owner")
     user_story_prompts: List["UserStoryPrompt"] = Relationship(back_populates="user")
     conversations: List["Conversation"] = Relationship(back_populates="user")

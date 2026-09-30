@@ -87,10 +87,28 @@ The repo includes a Render Blueprint at `render.yaml`. It creates:
   compute plan with 1 GB of storage
 
 In Render, create a new Blueprint from this repository. During setup, Render
-will prompt for the secret values marked with `sync: false`:
+will prompt for the values marked with `sync: false`:
 
 - `FIRST_SUPERUSER_PASSWORD`: the seeded admin password for `admin@example.com`
 - `OPENAI_API_KEY`: required for AI conversation features
+- `GOOGLE_CLIENT_ID` on the API and `VITE_GOOGLE_CLIENT_ID` on the web service:
+  the same public OAuth 2.0 Web application client ID. For an existing Blueprint,
+  set both manually in Render; new `sync: false` variables are not prompted for
+  when an existing Blueprint is updated. Rebuild and deploy the web service
+  after setting its value, since Vite embeds it at build time.
+
+For Google sign-in, create an OAuth 2.0 Web application client in Google Cloud
+and add `http://localhost`, `http://localhost:5173`, `https://memriplace.com`,
+`https://www.memriplace.com`, and any Render web hostname you use to
+**Authorized JavaScript origins**. Complete Google's consent-screen setup and
+add test users there if your app is still in testing. No client secret or
+redirect URI is needed for the Google Identity Services popup button. Set
+`GOOGLE_CLIENT_ID` in `.env` for local Compose; its value is also passed to Vite.
+After changing `.env`, restart the backend and frontend with
+`docker compose up -d --build backend frontend`.
+Email/password sign-in remains available. Existing accounts with non-Gmail,
+non-Workspace addresses should sign in with their password once and connect
+Google under **Your account > My profile** before using Google to sign in.
 
 The frontend is configured as the public app. It serves static files and proxies
 `/api`, `/docs`, and `/redoc` to the API service's Render-managed public hostname.
