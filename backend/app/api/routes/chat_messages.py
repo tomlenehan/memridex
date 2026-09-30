@@ -6,13 +6,12 @@ from sqlmodel import Session, func, select
 
 from app.api.deps import get_current_user, get_db
 from app.llm.conversation_agent import send_message
+from app.llm.conversation_lifecycle import run_post_reply_workflow
 from app.llm.story_nodes import (
     MAX_NODE_USER_TURNS,
-    generate_story_branches_after_reply,
     get_conversation_prompt,
 )
-from app.llm.story_readiness import assess_story_readiness_after_reply
-from app.llm.utils import MIN_READY_USER_TURNS, get_formatted_history, refresh_story_status
+from app.llm.utils import get_formatted_history, refresh_story_status
 from app.models import (
     ChatMessage,
     ChatMessageCreate,
@@ -116,17 +115,11 @@ async def create_chat_message(
         db_session.refresh(ai_message)
         refresh_story_status(conversation, db_session)
         db_session.commit()
-        if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
-            background_tasks.add_task(generate_story_branches_after_reply, conversation_id)
-        elif (
-            conversation.user_turn_count >= MIN_READY_USER_TURNS
-            and not conversation.ready_to_save
-        ):
-            background_tasks.add_task(
-                assess_story_readiness_after_reply,
-                conversation_id,
-                conversation.user_turn_count,
-            )
+        background_tasks.add_task(
+            run_post_reply_workflow,
+            conversation_id,
+            conversation.user_turn_count,
+        )
 
     current_user_id = current_user.id
 
@@ -181,18 +174,9 @@ async def persist_realtime_message(
 
     refresh_story_status(conversation, db_session)
     db_session.commit()
-    if (
-        chat_message_in.sender_type == ChatMessageSender.AI
-        and conversation.user_turn_count >= MAX_NODE_USER_TURNS
-    ):
-        background_tasks.add_task(generate_story_branches_after_reply, conversation_id)
-    elif (
-        chat_message_in.sender_type == ChatMessageSender.AI
-        and conversation.user_turn_count >= MIN_READY_USER_TURNS
-        and not conversation.ready_to_save
-    ):
+    if chat_message_in.sender_type == ChatMessageSender.AI:
         background_tasks.add_task(
-            assess_story_readiness_after_reply,
+            run_post_reply_workflow,
             conversation_id,
             conversation.user_turn_count,
         )

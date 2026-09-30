@@ -31,6 +31,8 @@ boto3 = "^1.34.109"
 langchain-openai = "^0.1.7"
 langchain = "^0.2.0"
 langchain-core = "^0.2.1"
+# Latest LangSmith release compatible with this LangChain 0.2 dependency family.
+langsmith = "^0.1.147"
 langgraph = "^0.0.55"
 langchainhub = "^0.1.15"
 pydevd-pycharm = ">=241.15989.155,<241.15990.0"

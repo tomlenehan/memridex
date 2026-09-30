@@ -35,6 +35,22 @@ def test_configure_langsmith_tracing_supports_current_environment_names(
     assert os.environ["LANGCHAIN_PROJECT"] == "memriplace-test"
 
 
+def test_configure_langsmith_tracing_removes_blank_endpoint_variables(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(settings, "LANGSMITH_TRACING", True)
+    monkeypatch.setattr(settings, "LANGSMITH_API_KEY", "test-langsmith-key")
+    monkeypatch.setattr(settings, "LANGSMITH_ENDPOINT", None)
+    monkeypatch.setattr(settings, "LANGCHAIN_ENDPOINT", None)
+    monkeypatch.setenv("LANGSMITH_ENDPOINT", "")
+    monkeypatch.setenv("LANGCHAIN_ENDPOINT", "")
+
+    configure_langsmith_tracing()
+
+    assert "LANGSMITH_ENDPOINT" not in os.environ
+    assert "LANGCHAIN_ENDPOINT" not in os.environ
+
+
 def test_llm_trace_config_names_the_product_operation() -> None:
     config = llm_trace_config("conversation.reply")
 

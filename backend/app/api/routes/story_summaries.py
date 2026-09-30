@@ -14,11 +14,12 @@ from sqlmodel import Session, select
 from app.api.deps import get_current_user, get_db
 from app.core.config import settings
 from app.llm.conversation_summarize import generate_summary, generate_title
+from app.llm.conversation_lifecycle import run_post_reply_workflow
 from app.llm.story_embeddings import (
     ensure_story_embedding,
     ensure_user_story_embeddings,
 )
-from app.llm.story_nodes import generate_story_branches_after_reply, get_conversation_prompt
+from app.llm.story_nodes import get_conversation_prompt
 from app.llm.utils import get_formatted_history
 from app.models import (
     Conversation,
@@ -191,7 +192,9 @@ async def create_story_summary(
         db_session.refresh(conversation)
         if saved_while_active and conversation.user_turn_count > 0:
             background_tasks.add_task(
-                generate_story_branches_after_reply, conversation.id
+                run_post_reply_workflow,
+                conversation.id,
+                conversation.user_turn_count,
             )
 
         # Convert StorySummary to StorySummaryPublic
