@@ -1,4 +1,6 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.10
+# Python 3.11 includes exception groups natively, avoiding the fragile
+# exceptiongroup backport installation on Render's clean build workers.
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11
 
 WORKDIR /app/
 
