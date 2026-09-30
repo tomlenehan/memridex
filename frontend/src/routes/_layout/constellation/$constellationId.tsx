@@ -12,6 +12,7 @@ import { SummariesService } from "../../../client"
 import { PUBLIC_SKY_ENABLED } from "../../../config"
 import ConstellationStar from "../../../components/Common/ConstellationStar"
 import SkyScene from "../../../components/MemoryMap/SkyScene"
+import NarrationControl from "../../../components/Common/NarrationControl"
 import useAuth from "../../../hooks/useAuth"
 import { celebrateConnection } from "../../../lib/celebration"
 import { nightSkyApi, type ConstellationWrite, type Member, type PublicConstellation } from "../../../lib/nightSkyApi"
@@ -179,6 +180,8 @@ function ConstellationEditor() {
       <Box><Text color="#63816C" fontSize="xs" fontWeight="800" letterSpacing=".1em">YOUR PRIVATE CONSTELLATION</Text>
         <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize={{ base: "2xl", md: "4xl" }} mt={1}>{groupQuery.data.title}</Heading>
         <Text color="ui.muted" mt={2}>{members.length} memories, one shape only you could make.</Text>
+        {!dirty && overview.trim() && <Box mt={4}><NarrationControl path={`constellations/${id}`} /></Box>}
+        {dirty && <Text fontSize="sm" color="ui.muted" mt={3}>Save your changes to hear this version.</Text>}
       </Box>
     </Flex>
     <Flex mb={3} justify="space-between" gap={3} align="center" flexWrap="wrap">
@@ -189,7 +192,7 @@ function ConstellationEditor() {
       selected={selected} onSelect={(index) => choose(index, true)} label="Your private constellation" />
     {member && <Flex bg="#FFFDF7" border="1px solid #DFE9DA" borderRadius="22px" mt={3} p={{ base: 4, md: 5 }} align={{ base: "start", md: "center" }} justify="space-between" gap={4} direction={{ base: "column", md: "row" }}>
       <Box><Text color="#4F8679" fontSize="xs" fontWeight="800" letterSpacing=".1em">SELECTED STAR</Text>
-        <Heading size="sm" mt={1}>{member.title}</Heading><Text fontSize="sm" color="ui.muted" noOfLines={2} mt={1}>{member.summary_text}</Text></Box>
+        <Heading size="sm" mt={1}>{member.title}</Heading><Box mt={3}><NarrationControl path={`memories/${member.story_id}`} /></Box><Text fontSize="sm" color="ui.muted" noOfLines={2} mt={3}>{member.summary_text}</Text></Box>
       <HStack flexShrink={0} flexWrap="wrap"><Button size="sm" variant="secondary" onClick={() => { setLinking(true); setLinkAnchor(member.story_id) }} isDisabled={linking}>Connect this star</Button>
         {dirty && <Button size="sm" variant="accent" onClick={() => save.mutate()} isLoading={save.isPending}>Save draft</Button>}</HStack>
     </Flex>}
@@ -231,7 +234,7 @@ function ConstellationEditor() {
         </Box>
         {member && <Box bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={5}>
           <Text color="#63816C" fontSize="xs" fontWeight="800" textTransform="uppercase">Selected star</Text>
-          <Heading size="sm" mt={2}>{member.title}</Heading><Text mt={3} color="ui.muted" noOfLines={5}>{member.summary_text}</Text>
+          <Heading size="sm" mt={2}>{member.title}</Heading><Box mt={3}><NarrationControl path={`memories/${member.story_id}`} /></Box><Text mt={3} color="ui.muted" noOfLines={5}>{member.summary_text}</Text>
           {member.image_url && <Image src={member.image_url} alt="Memory illustration" mt={4} borderRadius="lg" maxH="140px" objectFit="cover" />}
           <HStack mt={4}><Button size="xs" onClick={() => moveMember(selected!, -1)} isDisabled={selected === 0}>Move earlier</Button>
             <Button size="xs" onClick={() => moveMember(selected!, 1)} isDisabled={selected === members.length - 1}>Move later</Button></HStack>
@@ -266,6 +269,7 @@ function ConstellationEditor() {
       <ModalOverlay bg="rgba(6, 29, 38, .72)" /><ModalContent mx={4} borderRadius="16px" bg="#FFFDF7" color="#17353B">
         <ModalHeader fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize="2xl" pr={12}>{member?.title}</ModalHeader><ModalCloseButton aria-label="Close memory" minW="44px" minH="44px" />
         <ModalBody>
+          {member && <Box mb={5}><NarrationControl path={`memories/${member.story_id}`} /></Box>}
           {member?.image_url && <Image src={member.image_url} alt="" maxH="260px" w="full" objectFit="contain" mb={5} />}
           <Text whiteSpace="pre-wrap" lineHeight="1.8" fontSize={{ base: "md", md: "lg" }}>{member?.summary_text}</Text>
         </ModalBody>

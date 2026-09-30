@@ -60,6 +60,8 @@ class Settings(BaseSettings):
     STORY_READINESS_MODEL: str = "gpt-4o-mini"
     OPENAI_REALTIME_MODEL: str = "gpt-realtime-2.1"
     OPENAI_REALTIME_VOICE: str = "marin"
+    OPENAI_NARRATION_MODEL: str = "gpt-4o-mini-tts"
+    OPENAI_NARRATION_VOICE: str = "marin"
     OPENAI_TRANSCRIPTION_MODEL: str = "gpt-transcribe"
     PUBLIC_SKY_ENABLED: bool = False
     DATABASE_URL: str | None = None

@@ -34,6 +34,7 @@ import {
 } from "../../client"
 import ConstellationMap from "../../components/MemoryMap/ConstellationMap"
 import ConstellationStar from "../../components/Common/ConstellationStar"
+import NarrationControl from "../../components/Common/NarrationControl"
 import StoryTopicPicker from "../../components/Conversations/StoryTopicPicker"
 import { nightSkyApi } from "../../lib/nightSkyApi"
 import { type StoryStarterTopic } from "../../lib/storyStarters"
@@ -232,18 +233,16 @@ function MemoryMap() {
           mode={mode}
           crafting={crafting}
           onCraftingChange={setCrafting}
-          toolbar={<Box className="sky-toolbar">
-            <Flex className="sky-toolbar-center" align="center" justify="center" gap={3} flexWrap="wrap">
-              <HStack className="sky-mode-switch" spacing={0} role="group" aria-label="Night Sky view">
-                <Button className="sky-mode-button" aria-pressed={mode === "memories"}
-                  onClick={() => { setMode("memories"); setCrafting(false) }}>Memories</Button>
-                <Button className="sky-mode-button" aria-pressed={mode === "constellations"}
-                  isDisabled={stories.length < 2}
-                  onClick={() => { setMode("constellations"); setView("sky"); setCrafting(false) }}>Constellations</Button>
-              </HStack>
-              {mode === "memories" ? <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiPlus />} onClick={openTopics}>Add memory</Button> : <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiPlus />}
-                isDisabled={crafting} onClick={() => setCrafting(true)}>Create constellation</Button>}
-            </Flex>
+          toolbar={<Box className={`sky-toolbar${mode === "memories" ? " sky-toolbar-has-list" : ""}`}>
+            <HStack className="sky-mode-switch" spacing={0} role="group" aria-label="Night Sky view">
+              <Button className="sky-mode-button" aria-pressed={mode === "memories"}
+                onClick={() => { setMode("memories"); setCrafting(false) }}>Memories</Button>
+              <Button className="sky-mode-button" aria-pressed={mode === "constellations"}
+                isDisabled={stories.length < 2}
+                onClick={() => { setMode("constellations"); setView("sky"); setCrafting(false) }}>Constellations</Button>
+            </HStack>
+            {mode === "memories" ? <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiPlus />} onClick={openTopics}>Add note</Button> : <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiPlus />}
+              isDisabled={crafting} onClick={() => setCrafting(true)}>Create constellation</Button>}
             {mode === "memories" && <Button className="sky-list-toggle" size="md" variant="ghost" leftIcon={<FiList />}
               onClick={() => setView(view === "sky" ? "cards" : "sky")}>
               {view === "sky" ? "View as list" : "Back to sky"}
@@ -391,9 +390,6 @@ function MemoryCard({
 
   return (
     <Box
-      as={Link}
-      to="/summary/$summaryId"
-      params={{ summaryId: String(story.id) }}
       display="flex"
       flexDirection="column"
       minH="220px"
@@ -439,8 +435,12 @@ function MemoryCard({
               {date}
             </Text>
           </Box>
-          <Icon as={FiArrowRight} mt={1} color={accent} />
+          <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(story.id) }}
+            aria-label={`Open ${story.title || "memory"}`} variant="ghost" minW="44px" minH="44px" p={0} color={accent}>
+            <Icon as={FiArrowRight} />
+          </Button>
         </HStack>
+        <NarrationControl path={`memories/${story.id}`} />
         <Text color={muted} fontSize="sm" lineHeight="1.55" noOfLines={3}>
           {story.summary_text}
         </Text>
@@ -455,6 +455,9 @@ function MemoryCard({
             </Text>
           </Box>
         )}
+        <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(story.id) }} variant="secondary" size="sm" mt="auto">
+          Open memory
+        </Button>
       </Stack>
     </Box>
   )
