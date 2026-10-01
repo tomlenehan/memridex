@@ -1,0 +1,9 @@
+.home-story-path { text-align: left !important; white-space: normal !important; }
+.home-story-path--in-progress { border-color: #9cbcb5 !important; background: #f2f8f5 !important; }
+.home-story-path--suggested { border-color: #c9d0cd !important; background: #f0f2f0 !important; }
+.home-story-path-icon { border-radius: 8px; color: #245b59; background: #d7ebe4; }
+.home-story-path--suggested .home-story-path-icon { color: #506965; background: #dbe2de; }
+.home-story-path-state { color: #3d786f; font-size: 11px; font-weight: 800; }
+.home-story-path--suggested .home-story-path-state { color: #617571; }
+.home-story-path-source { color: #536f69; font-size: 13px; font-weight: 650; white-space: normal; }
+.home-story-path:focus-visible { outline: 3px solid #d88b4a; outline-offset: 3px; }
