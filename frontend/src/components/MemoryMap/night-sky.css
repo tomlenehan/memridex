@@ -43,6 +43,35 @@
   color: #17353b;
 }
 
+.constellation-memory-options,
+.constellation-connections {
+  color: #315a54;
+}
+
+.constellation-memory-options {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #dce9db;
+}
+
+.constellation-connections {
+  margin-top: 12px;
+}
+
+.constellation-memory-options summary,
+.constellation-connections summary {
+  width: fit-content;
+  color: #39766f;
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.constellation-memory-options summary:hover,
+.constellation-connections summary:hover {
+  color: #214d4d;
+}
+
 .constellation-sky-map .scene-sky { border-radius: 26px 0 0 26px; }
 
 .sky-mode-switch { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
@@ -293,6 +322,7 @@
 .sky-unfinished-panel-action { flex: 0 0 auto; min-height: 46px !important; margin-top: 28px !important; }
 
 .sky-group-panel-symbol { display: grid; place-items: center; width: 48px; height: 48px; margin-top: 16px; border: 2px solid var(--group-color); border-radius: 12px; background: color-mix(in srgb, var(--group-color) 36%, white); color: #17353b; font-size: 26px; }
+.sky-companion-note { min-height: 66px; padding: 6px 12px 6px 6px; border: 1px solid #e0e9dc; border-radius: 16px; background: #f5f8ee; color: #365f58; font-size: 14px; font-weight: 700; line-height: 1.4; }
 .sky-group-panel-overview { color: #4d6766; font-size: 16px; line-height: 1.65; }
 .sky-group-panel-label { color: #4f8679; font-size: 12px; font-weight: 800; text-transform: uppercase; }
 .sky-group-memory { height: auto !important; min-height: 42px; gap: 8px; padding: 8px !important; color: #214d4d !important; }
@@ -376,11 +406,32 @@
 }
 
 .sky-node {
+  position: relative;
   width: 168px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+}
+
+.sky-node-companion {
+  position: absolute;
+  z-index: 3;
+  top: -78px;
+  left: 50%;
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: sky-companion-bob 1.15s ease-in-out infinite;
+  filter: drop-shadow(0 5px 12px rgba(255, 218, 130, .38));
+}
+
+@keyframes sky-companion-bob {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: -9px; }
 }
 
 .sky-node-hit {
@@ -442,6 +493,22 @@
 .sky-node.crafting.picked .sky-node-button::after {
   opacity: 1;
   box-shadow: 0 0 0 5px #ffe4a4, 0 0 35px 12px rgba(248, 216, 129, .85);
+}
+
+/* Keep the selected memory itself vivid while the animated mascot is disabled. */
+.sky-node.active .sky-node-button::after {
+  content: "";
+  position: absolute;
+  inset: -11px;
+  border-radius: 36px;
+  pointer-events: none;
+  box-shadow: 0 0 0 4px rgba(255, 228, 164, .9), 0 0 32px 9px rgba(248, 216, 129, .68);
+  animation: sky-selected-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes sky-selected-pulse {
+  0%, 100% { opacity: .68; transform: scale(.96); }
+  50% { opacity: 1; transform: scale(1.035); }
 }
 
 @keyframes sky-selectable-glow {
@@ -639,4 +706,6 @@
 @media (prefers-reduced-motion: reduce) {
   .sky-mode-button, .sky-node-button, .personal-sky-viewport .react-flow__edge path { transition: none; }
   .sky-node.crafting:not(.picked) .sky-node-button::after { animation: none; opacity: .7; }
+  .sky-node.active .sky-node-button::after { animation: none; opacity: .85; }
+  .sky-node-companion { animation: none; }
 }
