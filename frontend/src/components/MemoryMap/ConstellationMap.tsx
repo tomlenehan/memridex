@@ -312,7 +312,7 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
   })
   const openUnfinished = () => {
     if (!selectedUnfinished) return
-    const resumableDraft = selectedUnfinished.status === "ready_for_summary"
+    const resumableDraft = (selectedUnfinished.status === "ready_for_summary" || selectedUnfinished.status === "active")
       && selectedUnfinishedTurnCount < MAX_NODE_USER_TURNS
     if (selectedUnfinished.status === "inactive" || resumableDraft) resumeUnfinished.mutate()
     else void navigate({ to: "/conversation/$conversationId", params: { conversationId: String(selectedUnfinished.id) } })

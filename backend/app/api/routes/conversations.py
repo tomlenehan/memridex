@@ -28,6 +28,15 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+STORY_PAUSE_MESSAGE = (
+    "We can pause here. Thank you for sharing this memory with me. "
+    "It's ready to keep whenever you are."
+)
+STORY_RESUME_QUESTION = (
+    "Let's keep exploring this memory. What else do you remember about this moment, "
+    "or is there a small detail you haven't shared yet?"
+)
+
 ROOT_NODE_TITLE = "Childhood beginnings"
 ROOT_NODE_PROMPT = (
     "Tell me about your childhood. What's one early moment you still remember?"
@@ -221,14 +230,39 @@ def activate_story_node(
                 conversation_id=conversation.id,
                 sender_id=current_user.id,
                 sender_type=ChatMessageSender.AI,
-                content=(
-                    "Let’s keep exploring this memory. What else do you remember "
-                    "about this moment, or is there a small detail you haven’t shared yet?"
-                ),
+                content=STORY_RESUME_QUESTION,
             )
         )
         session.commit()
         session.refresh(conversation)
+        return conversation
+    if (
+        conversation.status == ConversationStatus.ACTIVE
+        and conversation.user_turn_count < MAX_NODE_USER_TURNS
+    ):
+        latest_message = session.exec(
+            select(ChatMessage)
+            .where(ChatMessage.conversation_id == conversation.id)
+            .order_by(ChatMessage.id.desc())
+            .limit(1)
+        ).first()
+        if (
+            latest_message is not None
+            and latest_message.sender_type == ChatMessageSender.AI
+            and latest_message.content.strip() == STORY_PAUSE_MESSAGE
+        ):
+            conversation.ready_to_save = False
+            session.add(conversation)
+            session.add(
+                ChatMessage(
+                    conversation_id=conversation.id,
+                    sender_id=current_user.id,
+                    sender_type=ChatMessageSender.AI,
+                    content=STORY_RESUME_QUESTION,
+                )
+            )
+            session.commit()
+            session.refresh(conversation)
         return conversation
     if conversation.status != ConversationStatus.INACTIVE:
         return conversation
@@ -345,7 +379,7 @@ def wrap_up_story_node(
             conversation_id=id,
             sender_id=current_user.id,
             sender_type=ChatMessageSender.AI,
-            content="We can pause here. Thank you for sharing this memory with me. It's ready to keep whenever you are.",
+            content=STORY_PAUSE_MESSAGE,
         )
     )
     session.commit()

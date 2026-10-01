@@ -33,15 +33,19 @@ function ConversationPage() {
   const { conversationId } = Route.useParams()
   const id = Number(conversationId)
   const readinessPollDeadline = useRef<{ id: number; turns: number; until: number } | null>(null)
+  const resumeCheckCompletedFor = useRef<number | null>(null)
   const conversationQuery = useQuery({
     queryKey: ["conversationNode", id],
     queryFn: async () => {
       const conversation = await ConversationsService.readConversation({ id })
       if (
-        conversation.status === "ready_for_summary" &&
-        (conversation.user_turn_count ?? 0) < MAX_NODE_USER_TURNS
+        (conversation.status === "ready_for_summary" || conversation.status === "active") &&
+        (conversation.user_turn_count ?? 0) < MAX_NODE_USER_TURNS &&
+        resumeCheckCompletedFor.current !== id
       ) {
-        return ConversationsService.activateStoryNode({ id })
+        const resumedConversation = await ConversationsService.activateStoryNode({ id })
+        resumeCheckCompletedFor.current = id
+        return resumedConversation
       }
       return conversation
     },
