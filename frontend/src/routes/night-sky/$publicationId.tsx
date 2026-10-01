@@ -6,7 +6,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
-import { FiArrowLeft, FiChevronDown, FiChevronUp, FiFlag, FiHeart, FiStar, FiX } from "react-icons/fi"
+import { FiArrowLeft, FiChevronDown, FiChevronUp, FiFlag, FiHeart, FiLink, FiLock, FiShare2, FiStar, FiX } from "react-icons/fi"
 import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import AppHeader from "../../components/Common/AppHeader"
 import SkyScene from "../../components/MemoryMap/SkyScene"
@@ -24,6 +24,7 @@ function PublicConstellationPage() {
   const [storyCollapsed, setStoryCollapsed] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [reason, setReason] = useState("")
+  const [shareFeedback, setShareFeedback] = useState("")
   const signedIn = !!localStorage.getItem("access_token")
   const [wideReader] = useMediaQuery("(min-width: 900px)")
   const query = useQuery({ queryKey: ["publicConstellation", id], queryFn: () => nightSkyApi.publicDetail(id), enabled: Number.isInteger(id) && id > 0 })
@@ -44,6 +45,45 @@ function PublicConstellationPage() {
     setReportOpen(false)
     setReason("")
   } })
+  const copyConstellationLink = async () => {
+    try {
+      const url = window.location.href
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+      } else {
+        const field = document.createElement("textarea")
+        field.value = url
+        field.style.position = "fixed"
+        field.style.opacity = "0"
+        document.body.appendChild(field)
+        field.select()
+        const copied = document.execCommand("copy")
+        document.body.removeChild(field)
+        if (!copied) throw new Error("Clipboard unavailable")
+      }
+      setShareFeedback("Link copied. Share this constellation with someone you care about.")
+    } catch {
+      setShareFeedback("Couldn’t copy the link. You can copy it from your browser’s address bar.")
+    }
+  }
+  const shareConstellation = async () => {
+    setShareFeedback("")
+    if (!navigator.share) {
+      await copyConstellationLink()
+      return
+    }
+    try {
+      await navigator.share({
+        title: constellation?.title ?? "A MemriPlace constellation",
+        text: "A story in MemriPlace’s Global Night Sky",
+        url: window.location.href,
+      })
+      setShareFeedback("Thanks for sharing this constellation.")
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return
+      await copyConstellationLink()
+    }
+  }
   const constellation = query.data
   const star = selected == null ? null : constellation?.stars[selected]
   const selectStar = (index: number) => setSelected((current) => current === index ? null : index)
@@ -95,11 +135,18 @@ function PublicConstellationPage() {
               </Button>
             </Tooltip>
             {signedIn && <Button size="sm" variant="ghost" leftIcon={<FiFlag />} onClick={() => setReportOpen(true)}>Report a concern</Button>}
+            <Button size="sm" variant="secondary" leftIcon={<FiShare2 />} onClick={shareConstellation}>Share constellation</Button>
+            <Button size="sm" variant="ghost" leftIcon={<FiLink />} onClick={copyConstellationLink}>Copy link</Button>
           </Flex>
           {vote.isError && <Text color="red.600" role="alert" mt={2}>{String(vote.error)}</Text>}
+          {shareFeedback && <Text color="#39725C" fontSize="sm" role="status" mt={2}>{shareFeedback}</Text>}
           {!storyCollapsed && <>
             <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
           </>}
+          <HStack mt={4} align="start" color="#55716A" bg="#F3F7EF" borderRadius="xl" px={4} py={3}>
+            <FiLock aria-hidden="true" style={{ flex: "0 0 auto", marginTop: 3 }} />
+            <Text fontSize="sm">Shared by choice. The constellation story, star titles, and map are visible; memory stories and images appear only if selected for sharing.</Text>
+          </HStack>
         </Box>
         <Flex className={storyCollapsed ? "public-constellation-sky-row public-constellation-sky-row--story-collapsed" : "public-constellation-sky-row"} direction={wideReader ? "row" : "column"} gap={0} mt={4} align="stretch">
           <Box className={star && wideReader ? "public-sky-map public-sky-map--with-reader" : "public-sky-map"} flex="1" minW={0}>

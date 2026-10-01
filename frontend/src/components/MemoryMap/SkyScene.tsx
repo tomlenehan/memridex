@@ -74,7 +74,7 @@ export default function SkyScene({ stars, links, selected, onSelect, label }: {
         zoomOnDoubleClick={false} preventScrolling={false} proOptions={{ hideAttribution: true }}>
         <Controls position={compact ? "top-left" : "bottom-right"} showInteractive={false} />
       </ReactFlow>
-      <Text className="sky-hint">Tap a star to explore it · Drag to move around</Text>
+      <Text className="sky-hint">Select a star to read its memory · Drag the sky to explore</Text>
     </Box>
   </Box>
 }

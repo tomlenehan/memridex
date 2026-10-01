@@ -41,6 +41,7 @@ type StarterNode = Node<{ onChoose: () => void }, "starter">
 function Star({ data }: NodeProps<StarNode>) {
   const title = data.story.title || "A remembered moment"
   return <div className={`sky-node ${data.active ? "active" : ""} ${data.picked ? "picked" : ""} ${data.crafting ? "crafting" : ""}`}>
+    {/* Temporarily disabled: the animated mascot above the selected star felt too playful. */}
     <Handle type="target" position={Position.Left} className="sky-node-handle" />
     <button type="button" className="sky-node-hit nodrag nopan"
       aria-label={data.crafting ? `${data.picked ? "Remove" : "Choose"} ${title} ${data.picked ? "from" : "for"} constellation` : `Explore ${title}`}
@@ -58,6 +59,7 @@ function Star({ data }: NodeProps<StarNode>) {
 function UnfinishedStory({ data }: NodeProps<UnfinishedStoryNode>) {
   const title = data.conversation.node_title || (data.suggested ? "A suggested story" : "A story in progress")
   return <div className={`sky-node sky-unfinished-node sky-unfinished-node--${data.suggested ? "suggested" : "progress"} ${data.active ? "active" : ""}`}>
+    {/* Keep the same restrained selection treatment for unfinished and suggested stars. */}
     <Handle type="target" position={Position.Left} className="sky-node-handle" />
     <button type="button" className="sky-node-hit nodrag nopan"
       aria-label={`${data.suggested ? "Explore suggested memory" : "Continue memory"}: ${title}`}
@@ -259,7 +261,8 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
       style: { pointerEvents: "all" },
       className: selectedId === story.id || picked.includes(story.id) ? "sky-flow-node-selected" : "",
       data: { story, tint: owningGroup ? groupColor(owningGroup.id) : starColors[i % starColors.length],
-        active: selectedId === story.id && !crafting, picked: picked.includes(story.id), crafting, onChoose: choose },
+        active: crafting ? picked[picked.length - 1] === story.id : selectedId === story.id,
+        picked: picked.includes(story.id), crafting, onChoose: choose },
     }
     }),
     ...visibleUnfinishedStories.map((conversation): UnfinishedStoryNode => ({
@@ -309,6 +312,7 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
       <Text className="sky-story-count">SAVED CONSTELLATION</Text>
       <IconButton aria-label="Show all constellations" icon={<FiX />} variant="ghost" onClick={() => onFocusedGroupChange(null)} />
     </Flex>
+    {/* Temporarily disabled with the map mascots; constellation selection stays unchanged. */}
     <Box className="sky-group-panel-symbol" style={{ "--group-color": groupColor(focusedGroup.id) } as CSSProperties}>
       <FiStar aria-hidden="true" />
     </Box>
@@ -352,7 +356,9 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
       <Text className="sky-story-count">{selectedUnfinished.status === "inactive" ? "SUGGESTED NEXT STORY" : "IN PROGRESS"}</Text>
       <IconButton aria-label="Close unfinished story" icon={<FiX />} variant="ghost" onClick={() => setSelectedUnfinishedId(null)} />
     </Flex>
-    <Box className="sky-unfinished-panel-icon" aria-hidden="true"><FiBookOpen /></Box>
+    <Flex className="sky-companion-note" align="center" gap={2} mt={3}>
+      <Text>{selectedUnfinished.status === "inactive" ? "Curious where this story could lead." : "Your story is still unfolding."}</Text>
+    </Flex>
     <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>
       {selectedUnfinished.node_title || "A story in progress"}
     </Heading>
@@ -420,7 +426,7 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
           <ReactFlow key={`${narrow ? "narrow" : compact ? "compact" : "wide"}-${focusedGroupId === NO_CONSTELLATION_SELECTION ? "none" : focusedGroup?.id ?? "all"}-${wideReader && (selected || selectedUnfinished || focusedGroup) && !crafting ? "inspecting" : "browsing"}`}
             nodes={nodes} edges={[...suggestedEdges, ...savedEdges, ...draftEdges]} nodeTypes={nodeTypes}
             onEdgeClick={(_event, edge) => setSelectedSuggestion((edge.data as { suggestion?: RelatedStorySuggestion } | undefined)?.suggestion ?? null)}
-            fitView={!compact && skyItems.length <= 8} fitViewOptions={{ padding: .25, maxZoom: 1.1 }}
+            fitView={!compact && skyItems.length <= 8} fitViewOptions={{ padding: .38, maxZoom: 1.1 }}
             defaultViewport={compact ? { x: narrow ? 30 : 12, y: 50, zoom: narrow ? .9 : .8 } : { x: 25, y: 45, zoom: .9 }} minZoom={.3} maxZoom={1.8}
             nodesDraggable={false} nodesConnectable={false} elementsSelectable={false}
             panOnDrag zoomOnPinch zoomOnScroll={false} zoomOnDoubleClick={false}
