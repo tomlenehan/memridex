@@ -369,7 +369,7 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
           <Text color="#D0E2D9" fontSize="md" mt={2} aria-live="polite">{guidance}</Text></Box>
         {crafting ? <HStack w={{ base: "full", md: "auto" }} flexWrap="wrap" spacing={2}>
           <Button className="sky-quiet" size="md" leftIcon={<FiX />} onClick={() => { onCraftingChange(false); setPicked([]) }}>Cancel</Button>
-          <Button className="sky-gold" size="md" rightIcon={<FiArrowRight />} onClick={() => setNaming(true)} isDisabled={picked.length < 2}>Name constellation</Button>
+          <Button className="sky-gold" size="md" rightIcon={<FiArrowRight />} onClick={() => setNaming(true)} isDisabled={picked.length < 2}>Save constellation</Button>
         </HStack> : headerActions}
         </Flex>
         {toolbar}
@@ -378,7 +378,7 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
           <span><i className="sky-key-dot sky-key-dot--progress" />In progress</span>
           <span><i className="sky-key-dot sky-key-dot--suggested" />Suggested</span>
           <span><i className="sky-key-dot sky-key-dot--starter" />Starter</span>
-          <span><i className="sky-connection-line sky-connection-line--saved" />Saved link</span>
+          <span><i className="sky-connection-line sky-connection-line--saved" />Memory connection</span>
           <span><i className="sky-connection-line sky-connection-line--suggested" />Suggested path</span>
         </Box>}
       </Box>

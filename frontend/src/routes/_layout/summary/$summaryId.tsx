@@ -12,6 +12,7 @@ import {
   Spinner,
   Textarea,
   Image,
+  SimpleGrid,
   VStack,
 } from "@chakra-ui/react"
 import { createFileRoute, Link } from "@tanstack/react-router"
@@ -30,7 +31,7 @@ import {
   type StoryRelationshipPublic,
   type StorySummaryPublic,
 } from "../../../client"
-import { FiGitBranch, FiImage } from "react-icons/fi"
+import { FiCheck, FiGitBranch, FiImage } from "react-icons/fi"
 import ConstellationStar from "../../../components/Common/ConstellationStar"
 import ConnectionConstellation from "../../../components/MemoryMap/ConnectionConstellation"
 import NarrationControl from "../../../components/Common/NarrationControl"
@@ -50,6 +51,12 @@ interface SummaryFormInputs {
   image_url?: string
 }
 
+interface GeneratedImageOption {
+  id: string
+  file: File
+  previewUrl: string
+}
+
 function SummaryPage() {
   const { summaryId } = Route.useParams<{ summaryId: string }>() // Correct type for summaryId
   const {
@@ -66,6 +73,8 @@ function SummaryPage() {
   const [imageLoadFailed, setImageLoadFailed] = useState(false)
   const [pendingImageUrl, setPendingImageUrl] = useState<string | undefined>()
   const [generatedImageFile, setGeneratedImageFile] = useState<File | undefined>()
+  const [generatedImageOptions, setGeneratedImageOptions] = useState<GeneratedImageOption[]>([])
+  const [selectedGeneratedImageId, setSelectedGeneratedImageId] = useState<string | undefined>()
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [conversationId, setConversationId] = useState<number | undefined>(undefined)
   const [currentStory, setCurrentStory] = useState<StorySummaryPublic | undefined>()
@@ -77,6 +86,8 @@ function SummaryPage() {
     onDrop: () => {
       setNewImageUploaded(true)
       setGeneratedImageFile(undefined)
+      setGeneratedImageOptions([])
+      setSelectedGeneratedImageId(undefined)
     },
   })
 
@@ -151,6 +162,8 @@ function SummaryPage() {
       setCurrentStory(response)
       setNewImageUploaded(false)
       setGeneratedImageFile(undefined)
+      setGeneratedImageOptions([])
+      setSelectedGeneratedImageId(undefined)
     } catch (error) {
       console.error(error)
       setIsSaving(false)
@@ -184,17 +197,39 @@ function SummaryPage() {
       const binary = atob(result.image_base64)
       const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0))
       const mimeType = result.mime_type || "image/png"
-      setGeneratedImageFile(new File([bytes], "memriplace-story.png", { type: mimeType }))
-      setPendingImageUrl(`data:${mimeType};base64,${result.image_base64}`)
+      const imageCount = generatedImageOptions.length + 1
+      const generatedImage: GeneratedImageOption = {
+        id: `generated-${imageCount}`,
+        file: new File([bytes], `memriplace-story-${imageCount}.png`, { type: mimeType }),
+        previewUrl: `data:${mimeType};base64,${result.image_base64}`,
+      }
+      setGeneratedImageOptions((current) => [...current, generatedImage])
+      setSelectedGeneratedImageId(generatedImage.id)
+      setGeneratedImageFile(generatedImage.file)
+      setPendingImageUrl(generatedImage.previewUrl)
       setNewImageUploaded(true)
       setImageLoadFailed(false)
-      showToast("Your story art is ready", "Save the summary to keep this illustration.", "success")
+      showToast(
+        imageCount === 1 ? "Your story art is ready" : "Two illustrations are ready",
+        imageCount === 1
+          ? "You can generate one alternative before choosing your favorite."
+          : "Choose the illustration you want to save with this memory.",
+        "success",
+      )
     } catch (error) {
       console.error(error)
       showToast("Image could not be created", `${error}`, "error")
     } finally {
       setIsGeneratingImage(false)
     }
+  }
+
+  const selectGeneratedImage = (image: GeneratedImageOption) => {
+    setSelectedGeneratedImageId(image.id)
+    setGeneratedImageFile(image.file)
+    setPendingImageUrl(image.previewUrl)
+    setNewImageUploaded(true)
+    setImageLoadFailed(false)
   }
 
   const fetchContacts = async (): Promise<ContactRead[]> => {
@@ -303,15 +338,68 @@ function SummaryPage() {
                     variant="outline"
                     onClick={handleGenerateImage}
                     isLoading={isGeneratingImage}
-                    isDisabled={!watch("summary")?.trim() || isSaving}
+                    isDisabled={
+                      !watch("summary")?.trim() ||
+                      isSaving ||
+                      generatedImageOptions.length >= 2
+                    }
                   >
-                    Create story illustration
+                    {generatedImageOptions.length === 0
+                      ? "Create story illustration"
+                      : generatedImageOptions.length === 1
+                        ? "Generate one alternative"
+                        : "Two illustrations ready"}
                   </Button>
                   <Text fontSize="xs" color="ui.muted" mt={1}>
-                    Optional · sends this summary to OpenAI · about $0.006 per image
+                    Optional · sends this summary to OpenAI · up to two images at about $0.006 each
                   </Text>
                   <VStack mt={3} align="stretch" maxW="400px">
-                    {displayedImageUrl && !imageLoadFailed ? (
+                    {generatedImageOptions.length === 2 ? (
+                      <>
+                        <Text fontSize="sm" color="ui.ink" fontWeight="700">
+                          Choose the illustration to save
+                        </Text>
+                        <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
+                          {generatedImageOptions.map((image, index) => {
+                            const isSelected = selectedGeneratedImageId === image.id
+                            return (
+                              <Box
+                                as="button"
+                                type="button"
+                                key={image.id}
+                                onClick={() => selectGeneratedImage(image)}
+                                textAlign="left"
+                                position="relative"
+                                overflow="hidden"
+                                borderRadius="18px"
+                                border="2px solid"
+                                borderColor={isSelected ? "ui.main" : "#DFE7D5"}
+                                boxShadow={isSelected ? "0 0 0 3px #EAF3F1" : "none"}
+                                _hover={{ borderColor: "ui.main" }}
+                                _focusVisible={{ outline: "3px solid", outlineColor: "#F6D986", outlineOffset: "3px" }}
+                              >
+                                <Image
+                                  src={image.previewUrl}
+                                  alt={`Generated story illustration ${index + 1}`}
+                                  w="full"
+                                  h="156px"
+                                  objectFit="cover"
+                                />
+                                <Flex align="center" justify="space-between" px={3} py={2} bg="#FFFEF9">
+                                  <Text fontSize="sm" fontWeight="700" color="ui.ink">
+                                    Illustration {index + 1}
+                                  </Text>
+                                  {isSelected && <Icon as={FiCheck} color="ui.main" boxSize={5} />}
+                                </Flex>
+                              </Box>
+                            )
+                          })}
+                        </SimpleGrid>
+                        <Text fontSize="xs" color="ui.muted">
+                          Your selected illustration will be saved with this memory.
+                        </Text>
+                      </>
+                    ) : displayedImageUrl && !imageLoadFailed ? (
                       <Image
                         src={displayedImageUrl}
                         alt={newImageUploaded ? "Selected image preview" : "Current memory"}
@@ -345,6 +433,11 @@ function SummaryPage() {
                           {file.name}
                         </Text>
                       ))}
+                    {generatedImageOptions.length === 1 && (
+                      <Text fontSize="xs" color="ui.muted">
+                        Like this illustration? Save it now, or generate one alternative to compare.
+                      </Text>
+                    )}
                   </VStack>
                 </FormControl>
                 <Button mt={4} rightIcon={<FaRegSave />} variant="primary" type="submit" isLoading={isSaving}>
