@@ -1,6 +1,6 @@
-import { Button, HStack, Text } from "@chakra-ui/react"
+import { Button, HStack, IconButton, Text, Tooltip } from "@chakra-ui/react"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { FiPause, FiPlay, FiSquare } from "react-icons/fi"
+import { FiInfo, FiPause, FiPlay, FiSquare } from "react-icons/fi"
 import { API_BASE_URL } from "../../config"
 
 let stopOtherNarration: (() => void) | null = null
@@ -184,13 +184,15 @@ export default function NarrationControl({ path, publicStory = false }: { path: 
 
   return <div>
     <HStack spacing={2} flexWrap="wrap">
-      <Button type="button" size="sm" variant="outline" leftIcon={phase === "playing" ? <FiPause /> : <FiPlay />}
-        onClick={toggle} isLoading={phase === "loading"} loadingText="Preparing voice" minH="44px">
+      <Button type="button" size="md" variant="secondary" leftIcon={phase === "playing" ? <FiPause /> : <FiPlay />}
+        onClick={toggle} isLoading={phase === "loading"} loadingText="Preparing voice" minH="48px" fontWeight="750">
         {phase === "playing" ? "Pause" : phase === "paused" ? "Resume" : "Listen"}
       </Button>
       {phase !== "idle" && <Button type="button" size="sm" variant="ghost" leftIcon={<FiSquare />}
         onClick={stop} minH="44px">Stop</Button>}
-      <Text fontSize="xs" color="ui.muted">AI-generated voice</Text>
+      <Tooltip label="AI-generated voice" hasArrow>
+        <IconButton aria-label="About the AI-generated voice" icon={<FiInfo />} variant="ghost" size="sm" minH="40px" />
+      </Tooltip>
     </HStack>
     {error && <Text role="alert" color="red.600" fontSize="sm" mt={2}>{error}</Text>}
   </div>

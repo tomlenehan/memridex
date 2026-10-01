@@ -1,12 +1,12 @@
 import {
   Alert, AlertIcon, Box, Button, Container, Flex, Heading, HStack, IconButton, Image,
   Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader,
-  ModalOverlay, Spinner, Text, Textarea, useMediaQuery,
+  ModalOverlay, Spinner, Text, Textarea, Tooltip, useMediaQuery,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
-import { FiArrowLeft, FiFlag, FiHeart, FiStar, FiX } from "react-icons/fi"
+import { FiArrowLeft, FiChevronDown, FiChevronUp, FiFlag, FiHeart, FiStar, FiX } from "react-icons/fi"
 import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import AppHeader from "../../components/Common/AppHeader"
 import SkyScene from "../../components/MemoryMap/SkyScene"
@@ -21,6 +21,7 @@ function PublicConstellationPage() {
   const id = Number(publicationId)
   const queryClient = useQueryClient()
   const [selected, setSelected] = useState<number | null>(null)
+  const [storyCollapsed, setStoryCollapsed] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [reason, setReason] = useState("")
   const signedIn = !!localStorage.getItem("access_token")
@@ -49,7 +50,10 @@ function PublicConstellationPage() {
   return <Box bg="#FFFDF5" minH="100vh" color="#17353B">
     {signedIn ? <AppHeader /> : <Flex as="header" px={{ base: 5, md: 10 }} py={4} align="center" justify="space-between" gap={3}>
       <HStack as={Link} to="/landing" spacing={3}><Image src={memriPlaceMark} alt="MemriPlace" boxSize="45px" objectFit="contain" /><Text fontWeight="800">MemriPlace</Text></HStack>
-      <Button as={Link} to="/night-sky" variant="ghost" leftIcon={<FiArrowLeft />}>Global Night Sky</Button>
+      <HStack spacing={2}>
+        <Button as={Link} to="/night-sky" variant="ghost" leftIcon={<FiArrowLeft />} size="sm">Global Night Sky</Button>
+        <Button as={Link} to="/login" variant="secondary" size="sm">Log in</Button>
+      </HStack>
     </Flex>}
     <Container maxW="6xl" pb={16} px={{ base: 4, md: 8 }}>
       {query.isLoading && <Flex minH="65vh" align="center" justify="center"><Spinner size="xl" color="#4B8D82" /></Flex>}
@@ -67,20 +71,37 @@ function PublicConstellationPage() {
           <Text color="#61777A" mt={3}>{constellation.author_name} · Level {constellation.author_level} · {constellation.stars.length} stars</Text>
         </Box>
         <Box className="public-constellation-story" bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={{ base: 5, md: 8 }}>
-          <Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">THE STORY</Text>
-          {constellation.overview && <Box mt={4}><NarrationControl path={`public/${id}`} publicStory /></Box>}
-          <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
-          <Box mt={6} pt={5} borderTop="1px solid #E2E9DB">
-            <Button leftIcon={<FiHeart fill={voteQuery.data?.voted ? "currentColor" : "none"} />} variant="accent" onClick={() => vote.mutate()}
-              isLoading={vote.isPending} isDisabled={!signedIn || voteQuery.isLoading}>
-              {voteQuery.data?.voted ? "Celebrated" : "Celebrate"} · {voteQuery.data?.votes ?? constellation.votes}
-            </Button>
-            {!signedIn && <Text color="ui.muted" mt={2} fontSize="xs"><Link to="/landing">Sign in</Link> to celebrate this constellation.</Text>}
-            {vote.isError && <Text color="red.600" role="alert" mt={2}>{String(vote.error)}</Text>}
-            {signedIn && <Button size="sm" mt={3} variant="ghost" leftIcon={<FiFlag />} onClick={() => setReportOpen(true)}>Report a concern</Button>}
-          </Box>
+          <Flex align="center" justify="space-between" gap={3}>
+            <Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">
+              {storyCollapsed ? "THE STORY · COLLAPSED" : "THE STORY"}
+            </Text>
+            <IconButton
+              aria-label={storyCollapsed ? "Expand story" : "Collapse story to enlarge the sky"}
+              icon={storyCollapsed ? <FiChevronDown /> : <FiChevronUp />}
+              variant="ghost"
+              size="sm"
+              onClick={() => setStoryCollapsed((collapsed) => !collapsed)}
+            />
+          </Flex>
+          {!storyCollapsed && <>
+            {constellation.overview && <Box mt={4}><NarrationControl path={`public/${id}`} publicStory /></Box>}
+          </>}
+          <Flex mt={4} gap={3} align="center" flexWrap="wrap">
+            <Tooltip label="Sign in to celebrate this constellation." hasArrow shouldWrapChildren isDisabled={signedIn}>
+              <Button leftIcon={<FiHeart fill={voteQuery.data?.voted ? "currentColor" : "none"} />} variant="accent" onClick={() => vote.mutate()}
+                isLoading={vote.isPending} isDisabled={!signedIn || voteQuery.isLoading}
+                _hover={{ bg: "#F2C96D", transform: "none", boxShadow: "0 3px 0 #C99B3F, 0 6px 12px rgba(132, 93, 27, 0.12)" }}>
+                {voteQuery.data?.voted ? "Celebrated" : "Celebrate"} · {voteQuery.data?.votes ?? constellation.votes}
+              </Button>
+            </Tooltip>
+            {signedIn && <Button size="sm" variant="ghost" leftIcon={<FiFlag />} onClick={() => setReportOpen(true)}>Report a concern</Button>}
+          </Flex>
+          {vote.isError && <Text color="red.600" role="alert" mt={2}>{String(vote.error)}</Text>}
+          {!storyCollapsed && <>
+            <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
+          </>}
         </Box>
-        <Flex direction={wideReader ? "row" : "column"} gap={0} mt={4} align="stretch">
+        <Flex className={storyCollapsed ? "public-constellation-sky-row public-constellation-sky-row--story-collapsed" : "public-constellation-sky-row"} direction={wideReader ? "row" : "column"} gap={0} mt={4} align="stretch">
           <Box className={star && wideReader ? "public-sky-map public-sky-map--with-reader" : "public-sky-map"} flex="1" minW={0}>
             <SkyScene stars={constellation.stars} links={constellation.links} selected={selected} onSelect={selectStar} label={`Constellation: ${constellation.title}`} />
           </Box>

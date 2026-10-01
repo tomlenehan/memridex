@@ -12,7 +12,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useRef } from "react"
 import { FiArrowLeft, FiCheck, FiCompass, FiGitBranch } from "react-icons/fi"
@@ -29,8 +29,6 @@ export const Route = createFileRoute("/_layout/conversation/$conversationId")({
 function ConversationPage() {
   const { conversationId } = Route.useParams()
   const id = Number(conversationId)
-  const queryClient = useQueryClient()
-  const branchPollDeadline = useRef<{ id: number; until: number } | null>(null)
   const readinessPollDeadline = useRef<{ id: number; turns: number; until: number } | null>(null)
   const conversationQuery = useQuery({
     queryKey: ["conversationNode", id],
@@ -44,30 +42,6 @@ function ConversationPage() {
         readinessPollDeadline.current = { id, turns, until: Date.now() + 30_000 }
       }
       return Date.now() < readinessPollDeadline.current.until ? 2_500 : false
-    },
-  })
-  const mapQuery = useQuery({
-    queryKey: ["conversationConstellation"],
-    queryFn: () => ConversationsService.readConversations({ limit: 500 }),
-    enabled: Number.isInteger(id) && id > 0,
-    refetchInterval: (query) => {
-      const conversation = conversationQuery.data
-      if (!conversation || !["ready_for_summary", "complete"].includes(conversation.status ?? "") || (conversation.node_depth ?? 0) >= 4) return false
-      const hasNewPath = query.state.data?.data.some((item) => item.parent_conversation_id === id)
-      if (hasNewPath) return false
-      if (!branchPollDeadline.current || branchPollDeadline.current.id !== id) {
-        branchPollDeadline.current = { id, until: Date.now() + 30_000 }
-      }
-      return Date.now() < branchPollDeadline.current.until ? 2_500 : false
-    },
-  })
-  const retryBranches = useMutation({
-    mutationFn: () => ConversationsService.retryStoryBranches({ id }),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["conversationConstellation"] }),
-        queryClient.invalidateQueries({ queryKey: ["conversationNode", id] }),
-      ])
     },
   })
 
@@ -91,8 +65,6 @@ function ConversationPage() {
   const turns = conversation.user_turn_count ?? 0
   const isFinished = conversation.status === "ready_for_summary" || conversation.status === "complete" || turns >= 8
   const isReadyToSave = conversation.ready_to_save || isFinished
-  const atLastDepth = (conversation.node_depth ?? 0) >= 4
-  const branchCount = mapQuery.data?.data.filter((item) => item.parent_conversation_id === id).length ?? 0
 
   return (
     <Flex direction="column" minH="640px" h={{ base: "calc(100svh - 120px)", md: "calc(100svh - 144px)" }} maxW="1050px" mx="auto" color="#17353B">
@@ -149,9 +121,7 @@ function ConversationPage() {
               </Heading>
               <Text mt={2} color="#66807E" fontSize="sm" lineHeight="1.6">
                 {isFinished
-                  ? atLastDepth
-                    ? "This story path is complete. You can save the memory or revisit your constellation."
-                    : "This story path is complete. Your next paths are ready to explore."
+                  ? "This memory is complete. You can save it or revisit your night sky."
                   : isReadyToSave
                     ? "This memory is ready to save. You can keep talking if there’s more to tell."
                   : "Take your time. There are no wrong details, and you can speak or type."}
@@ -187,26 +157,9 @@ function ConversationPage() {
             direction={{ base: "column", sm: "row" }}
           >
             <Text fontSize="sm" color="#476B63">
-              {atLastDepth
-                ? "You’ve reached the edge of this story map."
-                : branchCount
-                  ? `${branchCount} new ${branchCount === 1 ? "path is" : "paths are"} waiting on your map.`
-                  : "Your next paths are being uncovered from this story."}
+              Your memory is ready to save whenever you are.
             </Text>
             <HStack spacing={2}>
-              {!branchCount && !atLastDepth && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  color="#477B70"
-                  borderColor="#B7D0C2"
-                  borderRadius="full"
-                  isLoading={retryBranches.isPending}
-                  onClick={() => retryBranches.mutate()}
-                >
-                  Find paths
-                </Button>
-              )}
               <Button
                 as={Link}
                 to="/conversations"
@@ -222,11 +175,6 @@ function ConversationPage() {
           </Flex>
         )}
 
-        {retryBranches.isError && (
-          <Alert status="error" py={2}>
-            <AlertIcon />Could not uncover paths yet. Please try again.
-          </Alert>
-        )}
 
         <Box flex="1" minH={0} overflow="hidden" bg="#FBF9F1">
           <ChatMessages conversationId={id} />

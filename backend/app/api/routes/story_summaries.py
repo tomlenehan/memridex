@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -58,6 +59,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+_REASON_STOP_WORDS = {"about", "after", "again", "always", "been", "because", "before", "being", "both", "could", "from", "have", "into", "just", "like", "more", "much", "only", "over", "said", "some", "that", "than", "their", "there", "these", "they", "this", "through", "time", "very", "were", "when", "with", "would", "your"}
+
+
+def _connection_reason(source: StorySummary, candidate: StorySummary) -> str:
+    """Give a short, evidence-based explanation for an embedding match."""
+    words = lambda story: set(re.findall(r"[a-zA-Z]{4,}", f"{story.title or ''} {story.summary_text}".lower()))
+    shared = sorted(words(source) & words(candidate) - _REASON_STOP_WORDS, key=lambda word: (-len(word), word))[:3]
+    if shared:
+        labels = ", ".join(f"“{word}”" for word in shared)
+        return f"Both memories mention {labels}, suggesting a shared thread worth exploring."
+    return "These memories have closely related themes. Read both before deciding whether they belong together."
 
 
 def _story_summary_public(summary: StorySummary) -> StorySummaryPublic:
@@ -448,6 +461,7 @@ def read_related_stories(
             RelatedStorySuggestion(
                 story=_story_summary_public(candidate),
                 similarity=max(0.0, min(1.0, 1.0 - float(distance_value))),
+                reason=_connection_reason(story, candidate),
             )
             for candidate, distance_value in matches
         ]

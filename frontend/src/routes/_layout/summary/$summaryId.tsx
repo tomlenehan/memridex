@@ -9,7 +9,6 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Spinner,
   Textarea,
   Image,
   SimpleGrid,
@@ -21,22 +20,19 @@ import { useEffect, useState } from "react"
 import { FaRegSave } from "react-icons/fa"
 import { CiShare2 } from "react-icons/ci"
 import { useForm, SubmitHandler } from "react-hook-form"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useDropzone } from "react-dropzone"
 import {
   SummariesService,
   ContactsService,
   ContactRead,
   Body_summaries_update_story_summary,
-  type StoryRelationshipPublic,
   type StorySummaryPublic,
 } from "../../../client"
 import { FiCheck, FiGitBranch, FiImage } from "react-icons/fi"
 import ConstellationStar from "../../../components/Common/ConstellationStar"
-import ConnectionConstellation from "../../../components/MemoryMap/ConnectionConstellation"
 import NarrationControl from "../../../components/Common/NarrationControl"
 import useCustomToast from "../../../hooks/useCustomToast"
-import { celebrateConnection } from "../../../lib/celebration"
 import { API_BASE_URL } from "../../../config"
 
 export const Route = createFileRoute("/_layout/summary/$summaryId")({
@@ -288,7 +284,6 @@ function SummaryPage() {
             <Text fontSize="sm" color="ui.muted" mt={3}>Save your changes to hear this version.</Text>}
         </Box>
       </Flex>
-      {status === "succeeded" && <RelatedMemories storyId={Number(summaryId)} currentStory={currentStory} />}
       <Flex flex="1" direction="column" mt={4} bg="white" borderRadius="24px" border="1px solid #E5E8DC">
         <Box flex="1" overflowY="auto" p={4}>
           {status === "loading" ? (
@@ -456,126 +451,3 @@ function SummaryPage() {
 }
 
 export default SummaryPage
-
-function RelatedMemories({ storyId, currentStory }: { storyId: number; currentStory?: StorySummaryPublic }) {
-  const queryClient = useQueryClient()
-  const [dismissed, setDismissed] = useState<number[]>([])
-  const [recentlyConnectedId, setRecentlyConnectedId] = useState<number | null>(null)
-  const suggestionsQuery = useQuery({
-    queryKey: ["relatedStories", storyId],
-    queryFn: () => SummariesService.readRelatedStories({ id: storyId, limit: 5 }),
-    enabled: Number.isFinite(storyId) && storyId > 0,
-  })
-  const relationshipsQuery = useQuery({
-    queryKey: ["storyRelationships"],
-    queryFn: () => SummariesService.readStoryRelationships(),
-  })
-  const storiesQuery = useQuery({
-    queryKey: ["summaries"],
-    queryFn: () => SummariesService.readStorySummaries({ limit: 100 }),
-  })
-  const createLink = useMutation({
-    mutationFn: (otherId: number) => SummariesService.createStoryRelationship({ id: storyId, otherId }),
-    onSuccess: async (relationship, otherId) => {
-      queryClient.setQueryData<StoryRelationshipPublic[]>(["storyRelationships"], (current = []) =>
-        current.some((item) => item.id === relationship.id) ? current : [...current, relationship],
-      )
-      setRecentlyConnectedId(otherId)
-      celebrateConnection()
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["storyRelationships"] }),
-        queryClient.invalidateQueries({
-          queryKey: ["relatedStories", storyId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["relatedStories", otherId],
-        }),
-      ])
-    },
-  })
-  const removeLink = useMutation({
-    mutationFn: (otherId: number) => SummariesService.deleteStoryRelationship({ id: storyId, otherId }),
-    onSuccess: async (_result, otherId) => {
-      queryClient.setQueryData<StoryRelationshipPublic[]>(["storyRelationships"], (current = []) =>
-        current.filter((item) => !(
-          (item.story_a_id === storyId && item.story_b_id === otherId) ||
-          (item.story_b_id === storyId && item.story_a_id === otherId)
-        )),
-      )
-      setRecentlyConnectedId(null)
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["storyRelationships"] }),
-        queryClient.invalidateQueries({
-          queryKey: ["relatedStories", storyId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["relatedStories", otherId],
-        }),
-      ])
-    },
-  })
-
-  const relationships = relationshipsQuery.data ?? []
-  const storyById = new Map((storiesQuery.data ?? []).map((story) => [story.id, story]))
-  if (currentStory) storyById.set(currentStory.id, currentStory)
-  for (const suggestion of suggestionsQuery.data ?? []) storyById.set(suggestion.story.id, suggestion.story)
-  const connected = relationships
-    .flatMap((relationship) => {
-      if (relationship.story_a_id === storyId)
-        return [
-          {
-            id: relationship.story_b_id,
-            story: storyById.get(relationship.story_b_id),
-          },
-        ]
-      if (relationship.story_b_id === storyId)
-        return [
-          {
-            id: relationship.story_a_id,
-            story: storyById.get(relationship.story_a_id),
-          },
-        ]
-      return []
-    })
-    .filter((item): item is { id: number; story: StorySummaryPublic } => Boolean(item.story))
-  const connectedIds = new Set(connected.map((item) => item.id))
-  const suggestions = (suggestionsQuery.data ?? [])
-    .filter((item) => !connectedIds.has(item.story.id) && !dismissed.includes(item.story.id))
-    .slice(0, 2)
-  const displayedConnected = connected.slice(0, 4 - suggestions.length)
-
-  if (suggestionsQuery.isLoading || relationshipsQuery.isLoading || storiesQuery.isLoading) {
-    return (
-      <Flex justify="center" py={8}>
-        <Spinner color="#4B8D82" />
-      </Flex>
-    )
-  }
-
-  return (
-    <Box mt={5}>
-      <ConnectionConstellation
-        currentStory={storyById.get(storyId)}
-        connected={displayedConnected.map(({ story }) => story)}
-        suggestions={suggestions}
-        hiddenConnectionCount={Math.max(0, connected.length - displayedConnected.length)}
-        connectingId={createLink.isPending ? createLink.variables : undefined}
-        disconnectingId={removeLink.isPending ? removeLink.variables : undefined}
-        recentlyConnectedId={recentlyConnectedId}
-        onConnect={(id) => createLink.mutate(id)}
-        onDisconnect={(id) => removeLink.mutate(id)}
-        onDismiss={(id) => setDismissed((items) => [...items, id])}
-      />
-      {suggestionsQuery.isError && (
-        <Text color="ui.muted" fontSize="sm" mt={4}>
-          Possible connections are temporarily unavailable. Your saved links are still here.
-        </Text>
-      )}
-      {(createLink.isError || removeLink.isError) && (
-        <Text role="alert" color="red.600" fontSize="sm" mt={4}>
-          We couldn’t update this connection. Please try again.
-        </Text>
-      )}
-    </Box>
-  )
-}

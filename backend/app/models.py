@@ -545,6 +545,7 @@ class StorySummaryUpdate(SQLModel):
 class RelatedStorySuggestion(SQLModel):
     story: StorySummaryPublic
     similarity: float
+    reason: str
 
 
 class ConversationCreate(SQLModel):

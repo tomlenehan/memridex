@@ -22,6 +22,8 @@ import {
   FiArrowRight,
   FiBookOpen,
   FiCheck,
+  FiGitBranch,
+  FiLogIn,
   FiLock,
   FiMic,
   FiStar,
@@ -61,22 +63,22 @@ const storySteps = [
   {
     icon: FiBookOpen,
     index: "01",
-    text: "A childhood kitchen. A familiar laugh. Start with a gentle question or a moment already on your mind.",
-    title: "Find a spark",
+    text: "Share a moment that's on your mind.",
+    title: "Start with a memory",
     color: "#FFF0BF",
   },
   {
     icon: FiMic,
     index: "02",
-    text: "Your AI companion asks thoughtful questions to help bring the little details back.",
-    title: "Follow the memory",
+    text: "Chat with your AI companion. She will ask gentle questions to help the details come back.",
+    title: "Tell the whole story",
     color: "#DDEDE1",
   },
   {
     icon: FiStar,
     index: "03",
-    text: "Save your story and a new star appears in your private night sky.",
-    title: "Light your first star",
+    text: "Save your story as a star, then revisit it or connect it with other memories.",
+    title: "Fill your night sky",
     color: "#E9DFF1",
   },
 ]
@@ -360,21 +362,46 @@ export function LandingPage({
                   <Button
                     as={Link}
                     to="/night-sky"
-                    color="#FFF8E8"
+                    leftIcon={<Icon as={FiGitBranch} />}
+                    bg="rgba(9, 39, 50, 0.56)"
+                    border="1px solid rgba(247, 213, 129, 0.62)"
+                    boxShadow="0 2px 0 rgba(3, 19, 24, 0.34), inset 0 1px 0 rgba(255,255,255,0.12)"
+                    color="#FFF3CF"
+                    fontWeight="700"
                     size={{ base: "sm", md: "md" }}
-                    variant="ghost"
+                    transition="all 0.18s ease"
+                    _hover={{
+                      bg: "#F7D581",
+                      borderColor: "#FFE8A1",
+                      boxShadow: "0 4px 0 rgba(3, 19, 24, 0.38), 0 8px 20px rgba(3, 19, 24, 0.22)",
+                      color: "#163940",
+                      transform: "translateY(-2px)",
+                    }}
+                    _active={{ transform: "translateY(1px)", boxShadow: "0 1px 0 rgba(3, 19, 24, 0.34)" }}
                     display={{ base: "none", md: "inline-flex" }}
                   >
                     Global Night Sky
                   </Button>
                 )}
                 <Button
-                  _hover={{ bg: "whiteAlpha.200" }}
                   as={Link}
+                  leftIcon={<Icon as={FiLogIn} />}
+                  bg="rgba(223, 241, 235, 0.14)"
+                  border="1px solid rgba(211, 235, 225, 0.52)"
+                  boxShadow="inset 0 1px 0 rgba(255,255,255,0.13)"
                   color="#FFF8E8"
+                  fontWeight="700"
                   size={{ base: "sm", md: "md" }}
                   to="/login"
-                  variant="ghost"
+                  transition="all 0.18s ease"
+                  _hover={{
+                    bg: "#EAF3F1",
+                    borderColor: "#FFF8E8",
+                    boxShadow: "0 4px 0 rgba(3, 19, 24, 0.28), 0 8px 20px rgba(3, 19, 24, 0.18)",
+                    color: "#1F5E5C",
+                    transform: "translateY(-2px)",
+                  }}
+                  _active={{ transform: "translateY(1px)", boxShadow: "none" }}
                 >
                   Log in
                 </Button>
