@@ -11,6 +11,7 @@ import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import AppHeader from "../../components/Common/AppHeader"
 import SkyScene from "../../components/MemoryMap/SkyScene"
 import NarrationControl from "../../components/Common/NarrationControl"
+import { celebrateConstellation } from "../../lib/celebration"
 import { nightSkyApi } from "../../lib/nightSkyApi"
 
 export const Route = createFileRoute("/night-sky/$publicationId")({ component: PublicConstellationPage })
@@ -27,9 +28,14 @@ function PublicConstellationPage() {
   const query = useQuery({ queryKey: ["publicConstellation", id], queryFn: () => nightSkyApi.publicDetail(id), enabled: Number.isInteger(id) && id > 0 })
   const voteQuery = useQuery({ queryKey: ["publicVote", id], queryFn: () => nightSkyApi.voteStatus(id), enabled: signedIn && query.isSuccess })
   const vote = useMutation({
-    mutationFn: () => voteQuery.data?.voted ? nightSkyApi.unvote(id) : nightSkyApi.vote(id),
-    onSuccess: async (result) => {
+    mutationFn: async () => {
+      const wasCelebrated = Boolean(voteQuery.data?.voted)
+      const result = wasCelebrated ? await nightSkyApi.unvote(id) : await nightSkyApi.vote(id)
+      return { result, wasCelebrated }
+    },
+    onSuccess: async ({ result, wasCelebrated }) => {
       queryClient.setQueryData(["publicVote", id], result)
+      if (!wasCelebrated && result.voted) celebrateConstellation()
       await queryClient.invalidateQueries({ queryKey: ["publicConstellation", id] })
     },
   })
@@ -73,9 +79,9 @@ function PublicConstellationPage() {
           <Box mt={6} pt={5} borderTop="1px solid #E2E9DB">
             <Button leftIcon={<FiHeart fill={voteQuery.data?.voted ? "currentColor" : "none"} />} variant="accent" onClick={() => vote.mutate()}
               isLoading={vote.isPending} isDisabled={!signedIn || voteQuery.isLoading}>
-              {voteQuery.data?.voted ? "Appreciated" : "Appreciate"} · {voteQuery.data?.votes ?? constellation.votes}
+              {voteQuery.data?.voted ? "Celebrated" : "Celebrate"} · {voteQuery.data?.votes ?? constellation.votes}
             </Button>
-            {!signedIn && <Text color="ui.muted" mt={2} fontSize="xs"><Link to="/landing">Sign in</Link> to appreciate this constellation.</Text>}
+            {!signedIn && <Text color="ui.muted" mt={2} fontSize="xs"><Link to="/landing">Sign in</Link> to celebrate this constellation.</Text>}
             {vote.isError && <Text color="red.600" role="alert" mt={2}>{String(vote.error)}</Text>}
             {signedIn && <Button size="sm" mt={3} variant="ghost" leftIcon={<FiFlag />} onClick={() => setReportOpen(true)}>Report a concern</Button>}
           </Box>

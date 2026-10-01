@@ -16,7 +16,7 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import {
   FiArrowRight,
   FiBookOpen,
@@ -36,10 +36,12 @@ import ConstellationMap from "../../components/MemoryMap/ConstellationMap"
 import ConstellationStar from "../../components/Common/ConstellationStar"
 import NarrationControl from "../../components/Common/NarrationControl"
 import StoryTopicPicker from "../../components/Conversations/StoryTopicPicker"
-import { nightSkyApi } from "../../lib/nightSkyApi"
+import { nightSkyApi, type Constellation } from "../../lib/nightSkyApi"
 import { type StoryStarterTopic } from "../../lib/storyStarters"
 
 export const Route = createFileRoute("/_layout/conversations")({
+  validateSearch: (search: Record<string, unknown>): { mode?: "constellations" } =>
+    search.mode === "constellations" ? { mode: "constellations" } : {},
   component: MemoryMap,
 })
 
@@ -49,14 +51,21 @@ const paper = "#FFFDF5"
 const accents = ["#D88B4A", "#4B8D82", "#9A78AA", "#CE7667", "#638CAA"]
 
 function MemoryMap() {
-  const [view, setView] = useState<"sky" | "cards">("sky")
-  const [mode, setMode] = useState<"memories" | "constellations">("memories")
+  const [view, setView] = useState<"sky" | "list">("sky")
+  const [focusedGroupId, setFocusedGroupId] = useState<number | null>(null)
+  const { mode: selectedMode } = Route.useSearch()
+  const mode = selectedMode ?? "memories"
   const [crafting, setCrafting] = useState(false)
   const [topicOpen, setTopicOpen] = useState(false)
   const [startingTopic, setStartingTopic] = useState<StoryStarterTopic | null>(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const startRequestInFlight = useRef(false)
+  useEffect(() => {
+    setCrafting(false)
+    setView("sky")
+    setFocusedGroupId(null)
+  }, [mode])
   const conversationsQuery = useQuery({
     queryKey: ["conversationConstellation"],
     queryFn: () => ConversationsService.readConversations({ limit: 500 }),
@@ -233,25 +242,34 @@ function MemoryMap() {
           mode={mode}
           crafting={crafting}
           onCraftingChange={setCrafting}
-          toolbar={<Box className={`sky-toolbar${mode === "memories" ? " sky-toolbar-has-list" : ""}`}>
-            <HStack className="sky-mode-switch" spacing={0} role="group" aria-label="Night Sky view">
+          focusedGroupId={focusedGroupId}
+          onFocusedGroupChange={setFocusedGroupId}
+          toolbar={<Box className="sky-toolbar">
+            <HStack className="sky-mode-switch" spacing={1} role="group" aria-label="Night Sky view">
               <Button className="sky-mode-button" aria-pressed={mode === "memories"}
-                onClick={() => { setMode("memories"); setCrafting(false) }}>Memories</Button>
+                onClick={() => { void navigate({ to: "/conversations", search: {} }); setView("sky"); setCrafting(false) }}>Memories</Button>
               <Button className="sky-mode-button" aria-pressed={mode === "constellations"}
                 isDisabled={stories.length < 2}
-                onClick={() => { setMode("constellations"); setView("sky"); setCrafting(false) }}>Constellations</Button>
+                onClick={() => { void navigate({ to: "/conversations", search: { mode: "constellations" } }); setView("sky"); setCrafting(false) }}>Constellations</Button>
             </HStack>
-            {mode === "memories" ? <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiPlus />} onClick={openTopics}>Add note</Button> : <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiPlus />}
-              isDisabled={crafting} onClick={() => setCrafting(true)}>Create constellation</Button>}
-            {mode === "memories" && <Button className="sky-list-toggle" size="md" variant="ghost" leftIcon={<FiList />}
-              onClick={() => setView(view === "sky" ? "cards" : "sky")}>
-              {view === "sky" ? "View as list" : "Back to sky"}
-            </Button>}
           </Box>}
-          memoryList={mode === "memories" && view === "cards" ? <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={4}>
-            {stories.map((story, index) => <MemoryCard key={story.id} story={story}
-              accent={accents[index % accents.length]} relationships={relationships} storyById={storyById} />)}
-          </SimpleGrid> : null}
+          headerActions={<Flex className="sky-header-actions">
+            {mode === "memories" ? <Button className="sky-primary-action sky-primary-action-add" variant="accent" size="md" leftIcon={<FiPlus />} onClick={openTopics}>Add memory</Button> : <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiPlus />}
+              isDisabled={crafting} onClick={() => setCrafting(true)}>Create constellation</Button>}
+            <Button className="sky-list-toggle" size="md" variant="ghost" leftIcon={<FiList />}
+              onClick={() => setView(view === "sky" ? "list" : "sky")}>
+              {view === "sky" ? "View as list" : "Back to sky"}
+            </Button>
+          </Flex>}
+          listContent={view === "list" ? mode === "memories"
+            ? <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={4}>
+              {stories.map((story, index) => <MemoryCard key={story.id} story={story}
+                accent={accents[index % accents.length]} relationships={relationships} storyById={storyById} />)}
+            </SimpleGrid>
+            : <ConstellationList groups={groupsQuery.data ?? []} onOpen={(id) => {
+              setFocusedGroupId(id)
+              setView("sky")
+            }} /> : null}
         />
       )}
 
@@ -278,6 +296,55 @@ function MemoryMap() {
         onChoose={startStory} startingTopic={startingTopic} hasError={createConversation.isError} />
     </Box>
   )
+}
+
+const constellationAccents = ["#F8D881", "#8ED8BC", "#D9B8F0", "#F5AC91", "#91C9EF", "#F39FB8"]
+
+function ConstellationList({ groups, onOpen }: { groups: Constellation[]; onOpen: (id: number) => void }) {
+  if (groups.length === 0) {
+    return <Center minH="300px" flexDirection="column" textAlign="center" px={6}>
+      <Center w="58px" h="58px" borderRadius="14px" bg="#E4F2EA" color="#3F7F74" mb={4}>
+        <Icon as={FiStar} boxSize={7} />
+      </Center>
+      <Heading size="md">No constellations yet</Heading>
+      <Text color={muted} mt={2}>Connect two or more memories to create your first one.</Text>
+    </Center>
+  }
+
+  return <Stack spacing={3}>
+    {groups.map((group, index) => {
+      const accent = constellationAccents[index % constellationAccents.length]
+      return <Flex
+        key={group.id}
+        as="button"
+        type="button"
+        className="sky-constellation-list-row"
+        onClick={() => onOpen(group.id)}
+        style={{ "--constellation-accent": accent } as CSSProperties}
+        align="center"
+        gap={{ base: 3, md: 4 }}
+        textAlign="left"
+        aria-label={`Open ${group.title}`}
+      >
+        <Center className="sky-constellation-list-symbol">
+          <Icon as={FiStar} boxSize={6} />
+        </Center>
+        <Box minW={0} flex="1">
+          <Heading size="sm" noOfLines={1}>{group.title}</Heading>
+          <Text color={muted} fontSize="sm" mt={1}>
+            {group.members.length} connected {group.members.length === 1 ? "memory" : "memories"}
+          </Text>
+          {group.overview && <Text color={muted} fontSize="sm" mt={2} noOfLines={2}>{group.overview}</Text>}
+        </Box>
+        <HStack flex="0 0 auto" spacing={3} color="#3D7168">
+          <Text display={{ base: "none", sm: "block" }} fontSize="sm" fontWeight="700">
+            {group.publication_id ? "Public" : "Private"}
+          </Text>
+          <Icon as={FiArrowRight} boxSize={5} />
+        </HStack>
+      </Flex>
+    })}
+  </Stack>
 }
 
 function ContinueStory({

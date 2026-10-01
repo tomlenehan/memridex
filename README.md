@@ -112,8 +112,8 @@ Google under **Your account > My profile** before using Google to sign in.
 
 The frontend is configured as the public app. It serves static files and proxies
 `/api`, `/docs`, and `/redoc` to the API service's Render-managed public hostname.
-The frontend remains on Render's free web-service plan. The API uses
-`0.5c-512mb`, so it stays available instead of sleeping after inactivity. The
+The frontend and API both use Render's `0.5c-512mb` plan, so they stay
+available instead of sleeping after inactivity. The
 database uses `0.1c-256mb` with 1 GB of storage so it does not expire under the
 free database limit. The backend runs migrations and seeds initial data from
 `backend/prestart.sh` before starting.

@@ -26,7 +26,7 @@ import "./public-night-sky.css"
 export const Route = createFileRoute("/night-sky/")({ component: PublicSky })
 
 function PublicSky() {
-  const [sort, setSort] = useState<"recent" | "appreciated">("recent")
+  const [sort, setSort] = useState<"recent" | "celebrated">("recent")
   const [view, setView] = useState<"sky" | "list">("sky")
   const [page, setPage] = useState(0)
   const signedIn =
@@ -148,13 +148,13 @@ function PublicSky() {
               <Button
                 size="sm"
                 onClick={() => {
-                  setSort("appreciated")
+                  setSort("celebrated")
                   setPage(0)
                 }}
-                variant={sort === "appreciated" ? "solid" : "outline"}
+                variant={sort === "celebrated" ? "solid" : "outline"}
                 colorScheme="yellow"
               >
-                Appreciated
+                Celebrated
               </Button>
             </HStack>
             <Button
@@ -235,7 +235,7 @@ function PublicSky() {
                       <Text fontWeight="800">{item.title}</Text>
                       <Text fontSize="sm" color="#BED8CF">
                         {item.author_name} · Level {item.author_level} ·{" "}
-                        {item.star_count} stars · {item.votes} appreciations
+                        {item.star_count} stars · {item.votes} celebrations
                       </Text>
                     </Box>
                     <FiArrowRight />
@@ -425,7 +425,7 @@ function Cluster({ item }: { item: SkyCluster }) {
         fontSize="sm"
         gap={2}
       >
-        <Text whiteSpace="nowrap">{item.votes} appreciations</Text>
+        <Text whiteSpace="nowrap">{item.votes} celebrations</Text>
         <HStack spacing={1} whiteSpace="nowrap">
           <Text>Open</Text>
           <FiArrowRight />

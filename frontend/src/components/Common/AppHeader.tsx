@@ -80,6 +80,7 @@ function AppHeader() {
               key={item.label}
               as={Link}
               to={item.to}
+              search={item.to === "/conversations" ? {} : undefined}
               variant="ghost"
               leftIcon={<Icon as={item.icon} />}
               borderRadius="full"
@@ -145,6 +146,7 @@ function AppHeader() {
                   key={item.label}
                   as={Link}
                   to={item.to}
+                  search={item.to === "/conversations" ? {} : undefined}
                   onClick={onClose}
                   justifyContent="flex-start"
                   leftIcon={<Icon as={item.icon} />}

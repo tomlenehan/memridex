@@ -29,10 +29,10 @@ type StarNode = Node<{
 
 function Star({ data }: NodeProps<StarNode>) {
   const title = data.story.title || "A remembered moment"
-  return <div className={`sky-node ${data.active ? "active" : ""} ${data.picked ? "picked" : ""}`}>
+  return <div className={`sky-node ${data.active ? "active" : ""} ${data.picked ? "picked" : ""} ${data.crafting ? "crafting" : ""}`}>
     <Handle type="target" position={Position.Left} className="sky-node-handle" />
     <button type="button" className="sky-node-hit nodrag nopan"
-      aria-label={`${data.crafting ? "Choose" : "Explore"} ${title}`}
+      aria-label={data.crafting ? `${data.picked ? "Remove" : "Choose"} ${title} ${data.picked ? "from" : "for"} constellation` : `Explore ${title}`}
       aria-pressed={data.active || data.picked} onClick={() => data.onChoose(data.story.id)} title={title}>
       <span className="sky-node-button" style={{ "--node-tint": data.tint } as CSSProperties}>
         {data.story.image_url ? <img src={data.story.image_url} alt="" /> : <FiStar aria-hidden="true" />}
@@ -58,18 +58,20 @@ function layout(stories: StorySummaryPublic[], compact: boolean, narrow: boolean
   }]))
 }
 
-export default function ConstellationMap({ stories, relationships, groups = [], mode, crafting, onCraftingChange, toolbar, memoryList }: {
+export default function ConstellationMap({ stories, relationships, groups = [], mode, crafting, onCraftingChange, focusedGroupId, onFocusedGroupChange, toolbar, headerActions, listContent }: {
   stories: StorySummaryPublic[]
   relationships: StoryRelationshipPublic[]
   groups?: Constellation[]
   mode: "memories" | "constellations"
   crafting: boolean
   onCraftingChange: (crafting: boolean) => void
+  focusedGroupId: number | null
+  onFocusedGroupChange: (id: number | null) => void
   toolbar: ReactNode
-  memoryList: ReactNode
+  headerActions: ReactNode
+  listContent: ReactNode
 }) {
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [focusedGroupId, setFocusedGroupId] = useState<number | null>(null)
   const [picked, setPicked] = useState<number[]>([])
   const [naming, setNaming] = useState(false)
   const [name, setName] = useState("")
@@ -96,8 +98,8 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
     if (!crafting) return
     setPicked([])
     setSelectedId(null)
-    setFocusedGroupId(null)
-  }, [crafting])
+    onFocusedGroupChange(null)
+  }, [crafting, onFocusedGroupChange])
   useEffect(() => { setSelectedId(null) }, [mode])
   const selectedIndex = visibleStories.findIndex((story) => story.id === selectedId)
   const stepSelection = (direction: number) => {
@@ -142,7 +144,7 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
     }),
     onSuccess: async (group) => {
       setNaming(false); onCraftingChange(false); setPicked([]); setName("")
-      setFocusedGroupId(group.id)
+      onFocusedGroupChange(group.id)
       queryClient.setQueryData<Constellation[]>(["constellations"], (current = []) => [...current, group])
       celebrateConnection()
       await Promise.all([
@@ -189,13 +191,15 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
   const groupPanel = focusedGroup && !crafting && !selected && <Box as="aside" className="sky-story-panel sky-group-panel" aria-label={`${focusedGroup.title} constellation`}>
     <Flex align="center" justify="space-between" gap={2}>
       <Text className="sky-story-count">SAVED CONSTELLATION</Text>
-      <IconButton aria-label="Show all constellations" icon={<FiX />} variant="ghost" onClick={() => setFocusedGroupId(null)} />
+      <IconButton aria-label="Show all constellations" icon={<FiX />} variant="ghost" onClick={() => onFocusedGroupChange(null)} />
     </Flex>
     <Box className="sky-group-panel-symbol" style={{ "--group-color": groupColor(focusedGroup.id) } as CSSProperties}>
       <FiStar aria-hidden="true" />
     </Box>
     <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>{focusedGroup.title}</Heading>
-    {focusedGroup.overview && <Box mt={4}><NarrationControl path={`constellations/${focusedGroup.id}`} /></Box>}
+    <Button as={Link} to="/constellation/$constellationId" params={{ constellationId: String(focusedGroup.id) }}
+      className="sky-group-edit" variant="outline" leftIcon={<FiEdit3 />} mt={4}>Edit or share</Button>
+    {focusedGroup.overview && <Box mt={3}><NarrationControl path={`constellations/${focusedGroup.id}`} /></Box>}
     <Text className="sky-group-panel-overview" whiteSpace="pre-wrap" mt={4}>
       {focusedGroup.overview || "These memories are connected in your private night sky."}
     </Text>
@@ -241,26 +245,26 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
         {crafting ? <HStack w={{ base: "full", md: "auto" }} flexWrap="wrap" spacing={2}>
           <Button className="sky-quiet" size="md" leftIcon={<FiX />} onClick={() => { onCraftingChange(false); setPicked([]) }}>Cancel</Button>
           <Button className="sky-gold" size="md" rightIcon={<FiArrowRight />} onClick={() => setNaming(true)} isDisabled={picked.length < 2}>Name constellation</Button>
-        </HStack> : null}
+        </HStack> : headerActions}
         </Flex>
       </Box>
-      {memoryList ? <Box className="sky-memory-list">{memoryList}</Box> : <>
+      {listContent ? <Box className="sky-list-content">{listContent}</Box> : <>
       {mode === "constellations" && groups.length > 0 && <Box className="sky-constellation-bar">
         <Text className="sky-constellation-label">Saved constellations</Text>
         <Select className="sky-constellation-select" aria-label="Saved constellations" display={{ base: "block", md: "none" }}
           style={{ "--group-color": focusedGroup ? groupColor(focusedGroup.id) : "#b6d8c7" } as CSSProperties}
-          value={focusedGroup?.id ?? ""} onChange={(event) => { setFocusedGroupId(event.target.value ? Number(event.target.value) : null); setSelectedId(null) }}>
+          value={focusedGroup?.id ?? ""} onChange={(event) => { onFocusedGroupChange(event.target.value ? Number(event.target.value) : null); setSelectedId(null) }}>
           <option value="">All constellations</option>
           {groups.map((group) => <option key={group.id} value={group.id}>{group.title}</option>)}
         </Select>
         <Flex className="sky-constellation-options" display={{ base: "none", md: "flex" }} gap={2} role="group" aria-label="Choose a constellation to explore">
-          <Button className="sky-constellation-choice" aria-pressed={!focusedGroup} onClick={() => { setFocusedGroupId(null); setSelectedId(null) }}>
+          <Button className="sky-constellation-choice" aria-pressed={!focusedGroup} onClick={() => { onFocusedGroupChange(null); setSelectedId(null) }}>
             All constellations
           </Button>
           {groups.map((group) => <Button key={group.id} className="sky-constellation-choice"
             style={{ "--group-color": groupColor(group.id) } as CSSProperties}
-            aria-pressed={focusedGroup?.id === group.id}
-            onClick={() => { setFocusedGroupId(group.id); setSelectedId(null) }}>
+            aria-pressed={!focusedGroup || focusedGroup.id === group.id}
+            onClick={() => { onFocusedGroupChange(group.id); setSelectedId(null) }}>
             <Box as="span" className="sky-group-symbol"><FiStar aria-hidden="true" /></Box>
             {group.title}
           </Button>)}
