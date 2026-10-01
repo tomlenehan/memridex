@@ -11,6 +11,7 @@ backend/.coverage
 backend/htmlcov/
 backend/uploads/
 backend/.demo-credentials.local.json
+backend/.demo-credentials-daniel.local.json
 
 # Frontend generated files
 frontend/dist/

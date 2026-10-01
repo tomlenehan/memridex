@@ -29,8 +29,8 @@ import UserMenu from "./UserMenu"
 import { PUBLIC_SKY_ENABLED } from "../../config"
 
 const links = [
-  { label: "My night sky", to: "/conversations", icon: FiGitBranch },
-  { label: "Public night sky", to: "/night-sky", icon: FiStar },
+  { label: "My Night Sky", to: "/conversations", icon: FiStar },
+  { label: "Global Night Sky", to: "/night-sky", icon: FiGitBranch },
 ] as const
 
 function AppHeader() {

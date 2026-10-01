@@ -33,6 +33,7 @@ import {
   type StorySummaryPublic,
 } from "../../client"
 import ConstellationMap from "../../components/MemoryMap/ConstellationMap"
+import NightSkyPageHeader from "../../components/MemoryMap/NightSkyPageHeader"
 import ConstellationStar from "../../components/Common/ConstellationStar"
 import NarrationControl from "../../components/Common/NarrationControl"
 import StoryTopicPicker from "../../components/Conversations/StoryTopicPicker"
@@ -170,10 +171,10 @@ function MemoryMap() {
 
   return (
     <Box color={ink} maxW="1280px" mx="auto" pb={{ base: 12, md: 20 }}>
-      <Heading as="h1" fontFamily={'"Iowan Old Style", "Palatino Linotype", Georgia, serif'}
-        fontSize={{ base: "3xl", md: "4xl" }} lineHeight="1.08" mb={{ base: 5, md: 4 }}>
-        Your night sky.
-      </Heading>
+      <NightSkyPageHeader
+        title="My Night Sky"
+        description="Your memories and the stories they form."
+      />
 
       {hasError && (
         <Alert status="error" borderRadius="xl" mb={6}>

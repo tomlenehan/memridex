@@ -230,6 +230,7 @@
 
 @media (max-width: 899px) {
   .personal-sky-body { flex-direction: column; }
+  .personal-sky-viewport { flex: 0 0 auto; width: 100%; }
   .sky-story-panel { width: 100%; height: auto; max-height: 500px; border-top: 1px solid #dce9db; border-left: 0; }
   .public-sky-map .scene-sky { border-radius: 26px 26px 0 0; }
   .public-sky-memory-reader { flex-basis: auto; width: 100%; height: auto; max-height: 500px; border-top: 0; border-left: 1px solid #dce9db; border-radius: 0 0 26px 26px; }
