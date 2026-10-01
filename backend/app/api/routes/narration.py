@@ -1,7 +1,9 @@
 """Read saved memories and published stories aloud without accepting arbitrary text."""
 import asyncio
 import io
+import json
 import logging
+import re
 import wave
 from collections import OrderedDict
 from collections.abc import AsyncIterator
@@ -27,6 +29,34 @@ _public_cache: OrderedDict[tuple[int, int, int | None], bytes] = OrderedDict()
 _public_cache_lock = asyncio.Lock()
 
 
+def _sentences(text: str) -> list[str]:
+    """Split readable prose at sentence boundaries while retaining punctuation."""
+    parts = re.findall(r"[^.!?]+[.!?]+(?:[\"'”’)]*)|[^.!?]+$", text)
+    return [part.strip() for part in parts if part.strip()]
+
+
+def _packet(kind: int, payload: bytes = b"") -> bytes:
+    """Frame a narration-stream packet: type byte, 32-bit big-endian size, payload."""
+    return bytes((kind,)) + len(payload).to_bytes(4, "big") + payload
+
+
+def _split_stream_chunks(text: str, max_chunk: int = STREAM_CHUNK) -> list[str]:
+    chunks: list[str] = []
+    current = ""
+    for sentence in _sentences(text):
+        parts = split_for_speech(sentence, max_chunk) if len(sentence) > max_chunk else [sentence]
+        for part in parts:
+            candidate = f"{current} {part}" if current else part
+            if current and len(candidate) > max_chunk:
+                chunks.append(current)
+                current = part
+            else:
+                current = candidate
+    if current:
+        chunks.append(current)
+    return chunks
+
+
 def split_for_speech(text: str, max_chunk: int = MAX_CHUNK) -> list[str]:
     words = text.split()
     chunks: list[str] = []
@@ -44,12 +74,16 @@ def split_for_speech(text: str, max_chunk: int = MAX_CHUNK) -> list[str]:
     return chunks
 
 
-async def _pcm_stream(text: str) -> AsyncIterator[bytes]:
-    """Yield audio as it is generated so a listener does not wait for the full story."""
+async def _pcm_stream(text: str, with_sentences: bool = False) -> AsyncIterator[bytes]:
+    """Stream PCM, optionally framing chunks with sentence metadata for highlighting."""
     if not settings.OPENAI_API_KEY:
         raise HTTPException(503, "Voice reading is not configured yet")
     try:
-        chunks = split_for_speech(text, STREAM_CHUNK)
+        chunks = (
+            _split_stream_chunks(text)
+            if with_sentences
+            else split_for_speech(text, STREAM_CHUNK)
+        )
     except ValueError:
         raise HTTPException(422, "This story cannot be read aloud") from None
     if not chunks:
@@ -58,6 +92,12 @@ async def _pcm_stream(text: str) -> AsyncIterator[bytes]:
     try:
         async with httpx.AsyncClient(timeout=120) as client:
             for chunk in chunks:
+                if with_sentences:
+                    sentences = _sentences(chunk)
+                    metadata = json.dumps(
+                        {"sentences": sentences}, ensure_ascii=False
+                    ).encode("utf-8")
+                    yield _packet(2, metadata)
                 async with client.stream(
                     "POST",
                     "https://api.openai.com/v1/audio/speech",
@@ -74,7 +114,11 @@ async def _pcm_stream(text: str) -> AsyncIterator[bytes]:
                     response.raise_for_status()
                     async for audio in response.aiter_bytes():
                         if audio:
-                            yield audio
+                            yield _packet(1, audio) if with_sentences else audio
+                if with_sentences:
+                    yield _packet(3)
+        if with_sentences:
+            yield _packet(0)
     except httpx.HTTPError:
         logger.exception("Could not stream story narration")
         raise HTTPException(
@@ -82,10 +126,14 @@ async def _pcm_stream(text: str) -> AsyncIterator[bytes]:
         ) from None
 
 
-def _streaming_speech(text: str) -> StreamingResponse:
+def _streaming_speech(text: str, with_sentences: bool = False) -> StreamingResponse:
     return StreamingResponse(
-        _pcm_stream(text),
-        media_type=f"audio/L16;rate={PCM_SAMPLE_RATE};channels=1",
+        _pcm_stream(text, with_sentences),
+        media_type=(
+            "application/vnd.memriplace.narration-stream"
+            if with_sentences
+            else f"audio/L16;rate={PCM_SAMPLE_RATE};channels=1"
+        ),
         headers={"Cache-Control": "private, no-store"},
     )
 
@@ -184,7 +232,8 @@ async def _public_speech(key: tuple[int, int, int | None], text: str) -> Respons
 
 @router.post("/memories/{story_id}")
 async def narrate_memory(
-    story_id: int, session: SessionDep, current_user: CurrentUser, stream: bool = False
+    story_id: int, session: SessionDep, current_user: CurrentUser, stream: bool = False,
+    sentences: bool = False,
 ) -> Response:
     story = session.exec(
         select(StorySummary).where(
@@ -195,7 +244,7 @@ async def narrate_memory(
     if not story:
         raise HTTPException(404, "Memory not found")
     text = f"{story.title or 'A remembered moment'}. {story.summary_text}"
-    return _streaming_speech(text) if stream else await _speech(text)
+    return _streaming_speech(text, sentences) if stream else await _speech(text)
 
 
 @router.post("/constellations/{constellation_id}")
@@ -204,15 +253,16 @@ async def narrate_constellation(
     session: SessionDep,
     current_user: CurrentUser,
     stream: bool = False,
+    sentences: bool = False,
 ) -> Response:
     constellation = _owned(session, current_user.id, constellation_id)
     text = f"{constellation.title}. {constellation.overview}"
-    return _streaming_speech(text) if stream else await _speech(text)
+    return _streaming_speech(text, sentences) if stream else await _speech(text)
 
 
 @router.post("/public/{publication_id}")
 async def narrate_public_constellation(
-    publication_id: int, session: SessionDep, stream: bool = False
+    publication_id: int, session: SessionDep, stream: bool = False, sentences: bool = False
 ) -> Response:
     _enabled()
     publication = session.get(PublishedConstellation, publication_id)
@@ -221,7 +271,7 @@ async def narrate_public_constellation(
     snapshot = _published_detail(session, publication)
     text = f"{snapshot.title}. {snapshot.overview}"
     return (
-        _streaming_speech(text)
+        _streaming_speech(text, sentences)
         if stream
         else await _public_speech((publication.id, publication.revision, None), text)
     )
@@ -229,7 +279,8 @@ async def narrate_public_constellation(
 
 @router.post("/public/{publication_id}/memories/{star_index}")
 async def narrate_public_memory(
-    publication_id: int, star_index: int, session: SessionDep, stream: bool = False
+    publication_id: int, star_index: int, session: SessionDep, stream: bool = False,
+    sentences: bool = False,
 ) -> Response:
     _enabled()
     publication = session.get(PublishedConstellation, publication_id)
@@ -241,7 +292,7 @@ async def narrate_public_memory(
         raise HTTPException(404, "This memory was not shared")
     text = f"{star.title}. {star.story_text}"
     return (
-        _streaming_speech(text)
+        _streaming_speech(text, sentences)
         if stream
         else await _public_speech(
             (publication.id, publication.revision, star_index), text

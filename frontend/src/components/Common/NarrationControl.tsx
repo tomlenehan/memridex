@@ -6,8 +6,31 @@ import { API_BASE_URL } from "../../config"
 let stopOtherNarration: (() => void) | null = null
 const PCM_SAMPLE_RATE = 24_000
 const MIN_INITIAL_BUFFER_BYTES = Math.round(PCM_SAMPLE_RATE * 2 * 0.35)
+const WORDS_PER_MINUTE = 150
 
-export default function NarrationControl({ path, publicStory = false }: { path: string; publicStory?: boolean }) {
+type SentenceTiming = { index: number; start: number; end: number }
+type NarrationPacket = { type: number; payload: Uint8Array }
+type NarrationSegment = { sentences: string[]; start: number | null; duration: number; startIndex: number }
+
+function readPacket(buffer: Uint8Array): NarrationPacket | null {
+  if (buffer.length < 5) return null
+  const length = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength).getUint32(1, false)
+  if (buffer.length < 5 + length) return null
+  return { type: buffer[0], payload: buffer.slice(5, 5 + length) }
+}
+
+function splitSentences(text: string) {
+  return text.match(/[^.!?]+[.!?]+(?:["'”’)]*)\s*|[^.!?]+$/g) ?? [text]
+}
+
+export default function NarrationControl({ path, publicStory = false, displayText, spokenTitle, displaySentenceOffset = 0, displayTextLines }: {
+  path: string
+  publicStory?: boolean
+  displayText?: string
+  spokenTitle?: string
+  displaySentenceOffset?: number
+  displayTextLines?: number
+}) {
   const [phase, setPhase] = useState<"idle" | "loading" | "playing" | "paused">("idle")
   const [error, setError] = useState("")
   const audio = useRef<HTMLAudioElement | null>(null)
@@ -15,6 +38,22 @@ export default function NarrationControl({ path, publicStory = false }: { path: 
   const objectUrl = useRef<string | null>(null)
   const context = useRef<AudioContext | null>(null)
   const sources = useRef(new Set<AudioBufferSourceNode>())
+  const sentenceTimings = useRef<SentenceTiming[]>([])
+  const [activeSentence, setActiveSentence] = useState<number | null>(null)
+  const titleSentenceOffset = spokenTitle === undefined
+    ? displaySentenceOffset
+    : splitSentences(`${spokenTitle}.`).length
+
+  useEffect(() => {
+    if (phase !== "playing") return
+    const timer = window.setInterval(() => {
+      const now = context.current?.currentTime
+      if (now === undefined) return
+      const active = sentenceTimings.current.find(({ start, end }) => now >= start && now < end)
+      setActiveSentence(active?.index ?? null)
+    }, 80)
+    return () => window.clearInterval(timer)
+  }, [phase])
 
   const stop = useCallback(() => {
     controller.current?.abort()
@@ -23,6 +62,8 @@ export default function NarrationControl({ path, publicStory = false }: { path: 
     audio.current = null
     for (const source of sources.current) source.stop()
     sources.current.clear()
+    sentenceTimings.current = []
+    setActiveSentence(null)
     const currentContext = context.current
     context.current = null
     if (currentContext && currentContext.state !== "closed") void currentContext.close()
@@ -64,7 +105,7 @@ export default function NarrationControl({ path, publicStory = false }: { path: 
     headers: HeadersInit,
     playerContext: AudioContext,
   ) => {
-    const response = await fetch(`${API_BASE_URL}/api/v1/narration/${path}?stream=true`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/narration/${path}?stream=true&sentences=true`, {
       method: "POST", signal: request.signal, headers,
     })
     if (!response.ok) {
@@ -74,17 +115,20 @@ export default function NarrationControl({ path, publicStory = false }: { path: 
     if (!response.body) throw new Error("Your browser couldn't receive the voice recording.")
 
     const reader = response.body.getReader()
+    const framedStream = response.headers.get("content-type")?.includes("application/vnd.memriplace.narration-stream") ?? false
     let started = false
     let finished = false
     let nextStart = 0
-    let partial = new Uint8Array(0)
+    let pending = new Uint8Array(0)
+    let pcmRemainder = new Uint8Array(0)
     let buffered: Uint8Array[] = []
     let bufferedBytes = 0
+    let segment: NarrationSegment | null = null
 
     const finishWhenDone = () => {
       if (finished && sources.current.size === 0 && !request.signal.aborted) stop()
     }
-    const schedule = (bytes: Uint8Array) => {
+    const schedule = (bytes: Uint8Array, activeSegment: typeof segment) => {
       const alignedLength = bytes.byteLength - (bytes.byteLength % 2)
       if (!alignedLength) return
       const data = new DataView(bytes.buffer, bytes.byteOffset, alignedLength)
@@ -97,12 +141,33 @@ export default function NarrationControl({ path, publicStory = false }: { path: 
       source.connect(playerContext.destination)
       source.onended = () => { sources.current.delete(source); finishWhenDone() }
       const startAt = Math.max(nextStart, playerContext.currentTime + (started ? 0.02 : 0.12))
+      if (activeSegment) {
+        if (activeSegment.start === null) activeSegment.start = startAt
+        activeSegment.duration += buffer.duration
+      }
       source.start(startAt)
       nextStart = startAt + buffer.duration
       started = true
       sources.current.add(source)
       setPhase("playing")
     }
+    const updateEstimatedSentenceTimings = (activeSegment: NarrationSegment, exact = false) => {
+      if (activeSegment.start === null || activeSegment.sentences.length === 0) return
+      const weights = activeSegment.sentences.map((sentence) => Math.max(1, sentence.trim().split(/\s+/).length))
+      const totalWeight = weights.reduce((sum, weight) => sum + weight, 0)
+      const estimatedDuration = totalWeight / (WORDS_PER_MINUTE / 60)
+      const duration = exact ? activeSegment.duration : Math.max(activeSegment.duration, estimatedDuration)
+      let cursor = activeSegment.start
+      const entries = activeSegment.sentences.map((_, sentenceIndex) => {
+        const start = cursor
+        cursor += duration * (weights[sentenceIndex] / totalWeight)
+        return { index: activeSegment.startIndex + sentenceIndex, start, end: cursor }
+      })
+      sentenceTimings.current = [...sentenceTimings.current.filter(({ index }) =>
+        index < activeSegment.startIndex || index >= activeSegment.startIndex + activeSegment.sentences.length
+      ), ...entries].sort((a, b) => a.start - b.start)
+    }
+    let sentenceIndex = 0
     const flushInitialBuffer = () => {
       if (!bufferedBytes) return
       const joined = new Uint8Array(bufferedBytes)
@@ -110,26 +175,63 @@ export default function NarrationControl({ path, publicStory = false }: { path: 
       for (const item of buffered) { joined.set(item, offset); offset += item.length }
       buffered = []
       bufferedBytes = 0
-      schedule(joined)
+      schedule(joined, segment)
+      if (segment) updateEstimatedSentenceTimings(segment)
     }
 
     try {
       while (!request.signal.aborted) {
         const { done, value } = await reader.read()
         if (done) break
-        const incoming = new Uint8Array(partial.length + value.length)
-        incoming.set(partial)
-        incoming.set(value, partial.length)
-        const usableLength = incoming.length - (incoming.length % 2)
-        partial = incoming.slice(usableLength)
-        const usable = incoming.slice(0, usableLength)
-        if (!usable.length) continue
-        if (!started) {
-          buffered.push(usable)
-          bufferedBytes += usable.length
-          if (bufferedBytes >= MIN_INITIAL_BUFFER_BYTES) flushInitialBuffer()
-        } else {
-          schedule(usable)
+        const incoming = new Uint8Array(pending.length + value.length)
+        incoming.set(pending)
+        incoming.set(value, pending.length)
+        pending = incoming
+        if (!framedStream) {
+          const usableLength = pending.length - (pending.length % 2)
+          const usable = pending.slice(0, usableLength)
+          pending = pending.slice(usableLength)
+          if (!usable.length) continue
+          if (!started) {
+            buffered.push(usable)
+            bufferedBytes += usable.length
+            if (bufferedBytes >= MIN_INITIAL_BUFFER_BYTES) flushInitialBuffer()
+          } else {
+            schedule(usable, null)
+          }
+          continue
+        }
+        while (true) {
+          const packet = readPacket(pending)
+          if (!packet) break
+          pending = pending.slice(5 + packet.payload.length)
+          if (packet.type === 2) {
+            const metadata = JSON.parse(new TextDecoder().decode(packet.payload)) as { sentences: string[] }
+            segment = { sentences: metadata.sentences, start: null, duration: 0, startIndex: sentenceIndex }
+            sentenceIndex += metadata.sentences.length
+          } else if (packet.type === 1) {
+            const audio = new Uint8Array(pcmRemainder.length + packet.payload.length)
+            audio.set(pcmRemainder)
+            audio.set(packet.payload, pcmRemainder.length)
+            const usableLength = audio.length - (audio.length % 2)
+            pcmRemainder = audio.slice(usableLength)
+            const usable = audio.slice(0, usableLength)
+            if (!usable.length) continue
+            if (!started) {
+              buffered.push(usable)
+              bufferedBytes += usable.length
+              if (bufferedBytes >= MIN_INITIAL_BUFFER_BYTES) flushInitialBuffer()
+            } else {
+              schedule(usable, segment)
+              if (segment) updateEstimatedSentenceTimings(segment)
+            }
+          } else if (packet.type === 3 && segment) {
+            if (!started) flushInitialBuffer()
+            updateEstimatedSentenceTimings(segment, true)
+            segment = null
+          } else if (packet.type === 0) {
+            finished = true
+          }
         }
       }
       finished = true
@@ -184,16 +286,28 @@ export default function NarrationControl({ path, publicStory = false }: { path: 
 
   return <div>
     <HStack spacing={2} flexWrap="wrap">
-      <Button type="button" size="md" variant="secondary" leftIcon={phase === "playing" ? <FiPause /> : <FiPlay />}
-        onClick={toggle} isLoading={phase === "loading"} loadingText="Preparing voice" minH="48px" fontWeight="750">
-        {phase === "playing" ? "Pause" : phase === "paused" ? "Resume" : "Listen"}
-      </Button>
+      <HStack spacing={2} flexWrap="nowrap" flexShrink={0}>
+        <Button type="button" size="md" variant="secondary" leftIcon={phase === "playing" ? <FiPause /> : <FiPlay />}
+          onClick={toggle} isLoading={phase === "loading"} loadingText="Preparing voice" minH="48px" fontWeight="750">
+          {phase === "playing" ? "Pause" : phase === "paused" ? "Resume" : "Listen"}
+        </Button>
+        <Tooltip label="AI-generated voice" hasArrow>
+          <IconButton aria-label="About the AI-generated voice" icon={<FiInfo />} variant="ghost" size="sm" minH="40px"
+            _hover={{ bg: "transparent" }} />
+        </Tooltip>
+      </HStack>
       {phase !== "idle" && <Button type="button" size="sm" variant="ghost" leftIcon={<FiSquare />}
         onClick={stop} minH="44px">Stop</Button>}
-      <Tooltip label="AI-generated voice" hasArrow>
-        <IconButton aria-label="About the AI-generated voice" icon={<FiInfo />} variant="ghost" size="sm" minH="40px" />
-      </Tooltip>
     </HStack>
     {error && <Text role="alert" color="red.600" fontSize="sm" mt={2}>{error}</Text>}
+    {displayText && <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.8" noOfLines={displayTextLines} aria-live="off">
+      {splitSentences(displayText).map((sentence, index, sentences) => {
+        const isActive = activeSentence === index + titleSentenceOffset
+        return <Text as="span" key={`${index}-${sentence}`} fontWeight={isActive ? "700" : "inherit"}
+          transition="font-weight 120ms ease">
+          {sentence}{index < sentences.length - 1 ? " " : ""}
+        </Text>
+      })}
+    </Text>}
   </div>
 }
