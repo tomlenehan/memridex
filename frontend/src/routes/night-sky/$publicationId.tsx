@@ -8,6 +8,7 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import { FiArrowLeft, FiFlag, FiHeart, FiStar } from "react-icons/fi"
 import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
+import AppHeader from "../../components/Common/AppHeader"
 import SkyScene from "../../components/MemoryMap/SkyScene"
 import NarrationControl from "../../components/Common/NarrationControl"
 import { nightSkyApi } from "../../lib/nightSkyApi"
@@ -40,10 +41,10 @@ function PublicConstellationPage() {
   const star = selected == null ? null : constellation?.stars[selected]
   const selectStar = (index: number) => setSelected(index)
   return <Box bg="#FFFDF5" minH="100vh" color="#17353B">
-    <Flex as="header" px={{ base: 5, md: 10 }} py={4} align="center" justify="space-between" gap={3}>
+    {signedIn ? <AppHeader /> : <Flex as="header" px={{ base: 5, md: 10 }} py={4} align="center" justify="space-between" gap={3}>
       <HStack as={Link} to="/landing" spacing={3}><Image src={memriPlaceMark} alt="MemriPlace" boxSize="45px" objectFit="contain" /><Text fontWeight="800">MemriPlace</Text></HStack>
       <Button as={Link} to="/night-sky" variant="ghost" leftIcon={<FiArrowLeft />}>Global Night Sky</Button>
-    </Flex>
+    </Flex>}
     <Container maxW="6xl" pb={16} px={{ base: 4, md: 8 }}>
       {query.isLoading && <Flex minH="65vh" align="center" justify="center"><Spinner size="xl" color="#4B8D82" /></Flex>}
       {query.isError && <Alert status="error" borderRadius="xl"><AlertIcon />This constellation is unavailable.</Alert>}

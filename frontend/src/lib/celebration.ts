@@ -1,25 +1,8 @@
 import { Howl } from "howler"
 
-const soundKey = "memriplace.reward-sound"
 let chime: Howl | undefined
-let sessionPreference: boolean | undefined
 export function soundEnabled() {
-  if (sessionPreference !== undefined) return sessionPreference
-  try {
-    return localStorage.getItem(soundKey) === "on"
-  } catch {
-    return false
-  }
-}
-export function setSoundEnabled(enabled: boolean) {
-  sessionPreference = enabled
-  try {
-    localStorage.setItem(soundKey, enabled ? "on" : "off")
-  } catch {
-    /* Session-only when storage is blocked. */
-  }
-  if (enabled) playChime()
-  else chime?.stop()
+  return true
 }
 function playChime() {
   try {

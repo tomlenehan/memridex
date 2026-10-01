@@ -25,13 +25,12 @@ import {
 
 import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import useAuth from "../../hooks/useAuth"
-import SoundToggle from "../Progress/SoundToggle"
 import UserMenu from "./UserMenu"
 import { PUBLIC_SKY_ENABLED } from "../../config"
 
 const links = [
   { label: "My night sky", to: "/conversations", icon: FiGitBranch },
-  { label: "Global Night Sky", to: "/night-sky", icon: FiStar },
+  { label: "Public night sky", to: "/night-sky", icon: FiStar },
 ] as const
 
 function AppHeader() {
@@ -121,7 +120,6 @@ function AppHeader() {
           gap={{ base: 1, md: 3 }}
           ml={{ base: "auto", md: 0 }}
         >
-          <SoundToggle />
           <UserMenu />
           <IconButton
             aria-label="Open navigation menu"
