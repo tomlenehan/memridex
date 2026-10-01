@@ -1,12 +1,12 @@
 import {
-  Alert, AlertIcon, Box, Button, Container, Flex, Heading, HStack, Image,
+  Alert, AlertIcon, Box, Button, Container, Flex, Heading, HStack, IconButton, Image,
   Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader,
   ModalOverlay, Spinner, Text, Textarea, useMediaQuery,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
-import { FiArrowLeft, FiFlag, FiHeart, FiStar } from "react-icons/fi"
+import { FiArrowLeft, FiFlag, FiHeart, FiStar, FiX } from "react-icons/fi"
 import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import AppHeader from "../../components/Common/AppHeader"
 import SkyScene from "../../components/MemoryMap/SkyScene"
@@ -45,7 +45,7 @@ function PublicConstellationPage() {
   } })
   const constellation = query.data
   const star = selected == null ? null : constellation?.stars[selected]
-  const selectStar = (index: number) => setSelected(index)
+  const selectStar = (index: number) => setSelected((current) => current === index ? null : index)
   return <Box bg="#FFFDF5" minH="100vh" color="#17353B">
     {signedIn ? <AppHeader /> : <Flex as="header" px={{ base: 5, md: 10 }} py={4} align="center" justify="space-between" gap={3}>
       <HStack as={Link} to="/landing" spacing={3}><Image src={memriPlaceMark} alt="MemriPlace" boxSize="45px" objectFit="contain" /><Text fontWeight="800">MemriPlace</Text></HStack>
@@ -55,24 +55,18 @@ function PublicConstellationPage() {
       {query.isLoading && <Flex minH="65vh" align="center" justify="center"><Spinner size="xl" color="#4B8D82" /></Flex>}
       {query.isError && <Alert status="error" borderRadius="xl"><AlertIcon />This constellation is unavailable.</Alert>}
       {constellation && <>
-        <Box textAlign="center" pt={{ base: 8, md: 12 }} pb={7}>
+        <Box pt={{ base: 5, md: 7 }}>
+          <Button as={Link} to="/night-sky" variant="ghost" leftIcon={<FiArrowLeft />} color="#286B69" fontWeight="800"
+            _hover={{ bg: "#EDF5EF" }}>
+            Back to Global Night Sky
+          </Button>
+        </Box>
+        <Box textAlign="center" pt={{ base: 4, md: 5 }} pb={7}>
           <HStack justify="center" color="#6A8D70" fontSize="xs" fontWeight="800" letterSpacing=".12em"><FiStar /> A SHARED STORY</HStack>
           <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize={{ base: "3xl", md: "5xl" }} mt={3}>{constellation.title}</Heading>
           <Text color="#61777A" mt={3}>{constellation.author_name} · Level {constellation.author_level} · {constellation.stars.length} stars</Text>
         </Box>
-        <Flex direction={wideReader ? "row" : "column"} gap={0} mt={4} align="stretch">
-          <Box className="public-sky-map" flex="1" minW={0}>
-            <SkyScene stars={constellation.stars} links={constellation.links} selected={selected} onSelect={selectStar} label={`Constellation: ${constellation.title}`} />
-          </Box>
-          <Box as="aside" className="public-sky-memory-reader" aria-label="Selected memory" aria-live="polite">
-            <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md">{star?.title || "Choose a memory"}</Heading>
-            {star?.story_text && <Box mt={4}><NarrationControl path={`public/${id}/memories/${star.index}`} publicStory /></Box>}
-            {star?.story_text ? <Text className="sky-story-text" mt={5} lineHeight="1.8" whiteSpace="pre-wrap">{star.story_text}</Text> :
-              <Text color="ui.muted" mt={3}>{star ? "This storyteller kept the memory itself private. Its star still belongs to the shared shape." : "Choose a star to read one memory that shapes this shared story."}</Text>}
-            {star?.image_url && <Image src={star.image_url} alt={star.title} mt={4} borderRadius="lg" maxH="230px" objectFit="cover" />}
-          </Box>
-        </Flex>
-        <Box mt={6} bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={{ base: 5, md: 8 }}>
+        <Box className="public-constellation-story" bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={{ base: 5, md: 8 }}>
           <Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">THE STORY</Text>
           {constellation.overview && <Box mt={4}><NarrationControl path={`public/${id}`} publicStory /></Box>}
           <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
@@ -86,6 +80,21 @@ function PublicConstellationPage() {
             {signedIn && <Button size="sm" mt={3} variant="ghost" leftIcon={<FiFlag />} onClick={() => setReportOpen(true)}>Report a concern</Button>}
           </Box>
         </Box>
+        <Flex direction={wideReader ? "row" : "column"} gap={0} mt={4} align="stretch">
+          <Box className={star && wideReader ? "public-sky-map public-sky-map--with-reader" : "public-sky-map"} flex="1" minW={0}>
+            <SkyScene stars={constellation.stars} links={constellation.links} selected={selected} onSelect={selectStar} label={`Constellation: ${constellation.title}`} />
+          </Box>
+          {star && <Box as="aside" className="public-sky-memory-reader" aria-label="Selected memory" aria-live="polite">
+            <Flex align="start" justify="space-between" gap={3}>
+              <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md">{star.title}</Heading>
+              <IconButton aria-label="Close memory" icon={<FiX />} variant="ghost" size="sm" onClick={() => setSelected(null)} />
+            </Flex>
+            {star.story_text && <Box mt={4}><NarrationControl path={`public/${id}/memories/${star.index}`} publicStory /></Box>}
+            {star.story_text ? <Text className="sky-story-text" mt={5} lineHeight="1.8" whiteSpace="pre-wrap">{star.story_text}</Text> :
+              <Text color="ui.muted" mt={3}>This storyteller kept the memory itself private. Its star still belongs to the shared shape.</Text>}
+            {star.image_url && <Image src={star.image_url} alt={star.title} mt={4} borderRadius="lg" maxH="230px" objectFit="cover" />}
+          </Box>}
+        </Flex>
       </>}
     </Container>
     <Modal isOpen={reportOpen} onClose={() => setReportOpen(false)} isCentered><ModalOverlay /><ModalContent borderRadius="24px">

@@ -1,3 +1,5 @@
+:root { --night-sky-canvas-height: clamp(400px, 48vw, 560px); }
+
 .personal-sky {
   overflow: hidden;
   border: 1px solid #355b64;
@@ -7,11 +9,12 @@
 }
 
 .scene-sky { overflow: hidden; border: 1px solid #355b64; border-radius: 26px; background: #0c2635; }
-.scene-viewport { height: 390px; }
+.scene-viewport { height: var(--night-sky-canvas-height); }
 
 .public-sky-memory-reader {
   flex: 0 0 340px;
-  height: 390px;
+  box-sizing: border-box;
+  height: var(--night-sky-canvas-height);
   overflow-y: auto;
   padding: 22px;
   border: 1px solid #dce9db;
@@ -21,11 +24,12 @@
   color: #17353b;
 }
 
-.public-sky-map .scene-sky { border-radius: 26px 0 0 26px; }
+.public-sky-map--with-reader .scene-sky { border-radius: 26px 0 0 26px; }
 
 .constellation-memory-reader {
   flex: 0 0 340px;
-  height: 390px;
+  box-sizing: border-box;
+  height: var(--night-sky-canvas-height);
   overflow-y: auto;
   padding: 22px;
   border: 1px solid #dce9db;
@@ -48,8 +52,10 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  min-height: 68px;
-  margin-bottom: 17px;
+  min-height: 72px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(206, 231, 222, .16);
 }
 
 .sky-toolbar > .sky-mode-switch {
@@ -79,7 +85,7 @@
 .sky-list-toggle { flex: 0 0 auto; color: #fff9e9 !important; min-height: 48px !important; white-space: nowrap !important; }
 .sky-list-toggle:hover { background: rgba(221, 239, 227, .12) !important; }
 .sky-list-toggle:focus-visible { outline: 3px solid #f8d881; outline-offset: 2px; }
-.sky-header-copy { padding-top: 16px; border-top: 1px solid rgba(206, 231, 222, .16); }
+.sky-header-copy { min-height: 96px; }
 .sky-list-content { min-height: 400px; padding: 24px; background: #f4f7ef; }
 .sky-constellation-list-row {
   width: 100%;
@@ -187,16 +193,17 @@
 
 .sky-overline {
   color: #f7d581;
-  font-size: .78rem;
+  font-size: .95rem;
   font-weight: 900;
-  letter-spacing: .1em;
+  line-height: 1.35;
+  letter-spacing: .07em;
 }
 
 .personal-sky-viewport {
   position: relative;
   flex: 1;
   min-width: 0;
-  height: clamp(400px, 48vw, 560px);
+  height: var(--night-sky-canvas-height);
   background:
     radial-gradient(ellipse at 22% 25%, rgba(80, 142, 137, .31), transparent 36%),
     radial-gradient(ellipse at 82% 70%, rgba(96, 92, 151, .25), transparent 42%),
@@ -207,7 +214,8 @@
   display: flex;
   flex: 0 0 340px;
   flex-direction: column;
-  height: clamp(400px, 48vw, 560px);
+  box-sizing: border-box;
+  height: var(--night-sky-canvas-height);
   overflow-y: auto;
   padding: 22px;
   border-left: 1px solid #dce9db;
@@ -219,6 +227,10 @@
 .sky-story-title { line-height: 1.25; }
 .sky-story-text { font-size: 17px; }
 .sky-story-actions { margin-top: auto; padding-top: 24px; }
+.sky-unfinished-panel { background: linear-gradient(160deg, #f4f8f1, #fffdf7 66%); }
+.sky-unfinished-panel-icon { display: grid; width: 52px; height: 52px; margin-top: 18px; place-items: center; border: 2px dashed #5f8b80; border-radius: 50%; background: #dce9df; color: #285a55; font-size: 24px; }
+.sky-unfinished-panel-copy { color: #4d6766; font-size: 16px; line-height: 1.65; }
+.sky-unfinished-panel-action { flex: 0 0 auto; min-height: 46px !important; margin-top: 28px !important; }
 
 .sky-group-panel-symbol { display: grid; place-items: center; width: 48px; height: 48px; margin-top: 16px; border: 2px solid var(--group-color); border-radius: 12px; background: color-mix(in srgb, var(--group-color) 36%, white); color: #17353b; font-size: 26px; }
 .sky-group-panel-overview { color: #4d6766; font-size: 16px; line-height: 1.65; }
@@ -232,7 +244,7 @@
   .personal-sky-body { flex-direction: column; }
   .personal-sky-viewport { flex: 0 0 auto; width: 100%; }
   .sky-story-panel { width: 100%; height: auto; max-height: 500px; border-top: 1px solid #dce9db; border-left: 0; }
-  .public-sky-map .scene-sky { border-radius: 26px 26px 0 0; }
+  .public-sky-map--with-reader .scene-sky { border-radius: 26px 26px 0 0; }
   .public-sky-memory-reader { flex-basis: auto; width: 100%; height: auto; max-height: 500px; border-top: 0; border-left: 1px solid #dce9db; border-radius: 0 0 26px 26px; }
   .constellation-sky-map .scene-sky { border-radius: 26px 26px 0 0; }
   .constellation-memory-reader { flex-basis: auto; width: 100%; height: auto; max-height: 500px; border-top: 0; border-left: 1px solid #dce9db; border-radius: 0 0 26px 26px; }
@@ -424,6 +436,69 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
+
+.sky-unfinished-node .sky-node-button {
+  width: 68px;
+  height: 68px;
+  border: 2px dashed rgba(205, 222, 214, .76);
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #d5dfd7, #82958f 58%, #4d6664);
+  box-shadow: 0 3px 0 rgba(5, 24, 30, .32), 0 0 0 7px rgba(190, 206, 198, .06), 0 0 20px rgba(184, 205, 193, .2);
+  color: #365150;
+  opacity: .84;
+  transform: rotate(8deg);
+}
+
+.sky-unfinished-node .sky-node-button > svg {
+  width: 32px;
+  height: 32px;
+  fill: rgba(244, 247, 238, .7);
+}
+
+.sky-unfinished-node .sky-node-title {
+  min-height: 45px;
+  border-style: dashed;
+  border-color: rgba(202, 221, 211, .32);
+  background: rgba(12, 42, 51, .72);
+  color: #e4eee7;
+  font-size: 14px;
+}
+
+.sky-unfinished-node-kicker {
+  display: block;
+  margin-bottom: 2px;
+  color: #b9d0c2;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .09em;
+}
+
+.sky-unfinished-node-icon {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 2px solid #dce8df;
+  border-radius: 50%;
+  background: #264b4d;
+  color: #f7d581;
+  box-shadow: 0 2px 6px rgba(5, 24, 30, .4);
+}
+
+.sky-unfinished-node-icon svg { width: 12px; height: 12px; }
+
+.sky-unfinished-node.active .sky-node-button,
+.sky-unfinished-node .sky-node-hit:hover .sky-node-button,
+.sky-unfinished-node .sky-node-hit:focus-visible .sky-node-button {
+  border-color: #dce8df;
+  box-shadow: 0 4px 0 rgba(5, 24, 30, .32), 0 0 0 5px rgba(173, 211, 193, .5), 0 0 28px rgba(183, 218, 200, .48);
+  opacity: 1;
+  transform: rotate(0deg) translateY(-3px) scale(1.04);
+}
+
 .sky-flow-node-selected { z-index: 10 !important; }
 
 .sky-hint {
@@ -454,10 +529,12 @@
 @media (max-width: 600px) {
   .personal-sky { border-radius: 25px; }
   .personal-sky-header { padding: 20px; }
-  .sky-toolbar { display: flex; flex-direction: column; gap: 12px; align-items: stretch; min-height: 0; }
+  .sky-toolbar { display: flex; flex-direction: column; gap: 12px; align-items: stretch; min-height: 0; margin-top: 18px; padding-top: 18px; }
   .sky-toolbar > .sky-mode-switch { justify-content: center; }
   .sky-mode-button { flex: 1; padding: 0 8px !important; font-size: 16px !important; }
   .sky-header-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+  .sky-header-copy { min-height: 0; }
+  .sky-overline { font-size: .84rem; }
   .sky-primary-action { min-width: 0 !important; }
   .sky-list-content { padding: 16px; }
   .sky-constellation-list-row { min-height: 84px; padding: 14px; }

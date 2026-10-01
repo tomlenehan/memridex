@@ -125,11 +125,12 @@ function AppHeader() {
             aria-label="Log out"
             onClick={logout}
             variant="ghost"
-            color="ui.danger"
+            color="ui.main"
             fontWeight="700"
             minH="44px"
             minW={{ base: "44px", md: "auto" }}
             px={{ base: 0, md: 3 }}
+            _hover={{ bg: "#EAF3F1", color: "ui.mainDark" }}
           >
             <Icon as={FiLogOut} mr={{ base: 0, md: 2 }} />
             <Box as="span" display={{ base: "none", md: "inline" }}>
@@ -216,9 +217,10 @@ function AppHeader() {
                 justifyContent="flex-start"
                 leftIcon={<FiLogOut />}
                 variant="ghost"
-                color="ui.danger"
+                color="ui.main"
                 minH="54px"
                 fontSize="lg"
+                _hover={{ bg: "#EAF3F1", color: "ui.mainDark" }}
               >
                 Log out
               </Button>

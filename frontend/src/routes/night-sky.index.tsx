@@ -21,7 +21,6 @@ import { useEffect, useState } from "react"
 import { FiArrowRight, FiList, FiStar } from "react-icons/fi"
 import memriPlaceMark from "../assets/images/MemriPlaceLighterLogo.png"
 import AppHeader from "../components/Common/AppHeader"
-import NightSkyPageHeader from "../components/MemoryMap/NightSkyPageHeader"
 import { type SkyCluster, nightSkyApi } from "../lib/nightSkyApi"
 import "./public-night-sky.css"
 
@@ -82,10 +81,6 @@ function PublicSky() {
       </Flex>}
       <Box as="main" w="full" px={{ base: 4, sm: 6, md: 8 }} py={{ base: 6, md: 8 }}>
         <Box maxW="1280px" mx="auto" pb={{ base: 12, md: 20 }}>
-          <NightSkyPageHeader
-            title="Global Night Sky"
-            description="Constellations people have chosen to share."
-          />
           <Box className="public-night-sky" color="#FFF9E8">
             <Box className="public-night-sky-header">
               <Flex className="public-sky-header-copy" justify="space-between" align={{ base: "start", md: "center" }} direction={{ base: "column", md: "row" }} gap={4}>

@@ -11,7 +11,7 @@
   box-shadow: 0 18px 48px rgba(20, 53, 58, .17), inset 0 1px rgba(255,255,255,.12);
 }
 .public-night-sky-header { padding: 22px 26px; background: linear-gradient(105deg, #173e4a, #102e3d 75%); border-bottom: 1px solid rgba(206, 231, 222, .16); }
-.public-sky-overline { color: #f7d581; font-size: .78rem; font-weight: 900; letter-spacing: .1em; }
+.public-sky-overline { color: #f7d581; font-size: .95rem; font-weight: 900; line-height: 1.35; letter-spacing: .07em; }
 .public-sky-header-actions { flex: 0 0 auto; }
 .public-sky-sort-select { width: 205px !important; min-height: 48px !important; border-color: rgba(221, 229, 217, .72) !important; background: #173e4a !important; color: #fff9e9 !important; font-weight: 750; cursor: pointer; }
 .public-sky-sort-select:hover { border-color: #f7d581 !important; }
@@ -72,6 +72,7 @@
   .public-night-sky { border-radius: 25px; }
   .public-night-sky-header { padding: 20px; }
   .public-sky-header-copy { align-items: stretch; }
+  .public-sky-overline { font-size: .84rem; }
   .public-sky-header-actions { width: 100%; }
   .public-sky-sort-select { width: auto !important; flex: 1; }
   .public-sky-viewport { height: 560px; min-height: 0; }
