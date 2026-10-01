@@ -36,6 +36,7 @@ import NarrationControl from "../../components/Common/NarrationControl"
 import StoryTopicPicker from "../../components/Conversations/StoryTopicPicker"
 import { nightSkyApi, type Constellation } from "../../lib/nightSkyApi"
 import { type StoryStarterTopic } from "../../lib/storyStarters"
+import { organizeStoryPaths } from "../../lib/storyPaths"
 
 export const Route = createFileRoute("/_layout/conversations")({
   validateSearch: (search: Record<string, unknown>): { mode?: "constellations" } =>
@@ -112,23 +113,8 @@ function MemoryMap() {
     () => new Map(stories.map((story) => [story.id, story])),
     [stories],
   )
-  const storyConversationIds = useMemo(
-    () => new Set(stories.map((story) => story.conversation_id)),
-    [stories],
-  )
-  const inProgress = useMemo(
-    () =>
-      (conversationsQuery.data?.data ?? [])
-        .filter((node) => {
-          const isOpen =
-            node.status === "active" ||
-            node.status === "ready_for_summary" ||
-            node.status === "inactive"
-          return isOpen && !storyConversationIds.has(node.id)
-        })
-        .sort((a, b) => Number(a.status === "inactive") - Number(b.status === "inactive") || b.created_at.localeCompare(a.created_at)),
-    [conversationsQuery.data, storyConversationIds],
-  )
+  const paths = useMemo(() => organizeStoryPaths(conversationsQuery.data?.data ?? [], stories),
+    [conversationsQuery.data, stories])
 
   const isLoading = conversationsQuery.isLoading || storiesQuery.isLoading
   const hasError = conversationsQuery.isError || storiesQuery.isError
@@ -175,7 +161,7 @@ function MemoryMap() {
           again.
         </Alert>
       )}
-      {stories.length === 0 && inProgress.length === 0 ? (
+      {stories.length === 0 && paths.inProgress.length === 0 && paths.suggested.length === 0 ? (
         <Box
           bg="linear-gradient(135deg, #F8FAE9, #FFF5DC 65%, #F7ECDF)"
           border="1px solid #E8E2D3"
@@ -224,7 +210,9 @@ function MemoryMap() {
       ) : (
         <ConstellationMap
           stories={stories}
-          unfinishedStories={inProgress}
+          unfinishedStories={[...paths.inProgress, ...paths.suggested]}
+          conversations={conversationsQuery.data?.data ?? []}
+          onStartMemory={openTopics}
           relationships={relationships}
           groups={groupsQuery.data ?? []}
           mode={mode}
