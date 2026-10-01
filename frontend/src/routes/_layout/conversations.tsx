@@ -157,7 +157,7 @@ function MemoryMap() {
       {hasError && (
         <Alert status="error" borderRadius="xl" mb={6}>
           <AlertIcon />
-          We couldn’t load part of your memory map. Refresh the page to try
+          We couldn’t load part of your Night Sky. Refresh the page to try
           again.
         </Alert>
       )}
