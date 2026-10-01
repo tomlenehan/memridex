@@ -319,10 +319,11 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
     <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>{focusedGroup.title}</Heading>
     <Button as={Link} to="/constellation/$constellationId" params={{ constellationId: String(focusedGroup.id) }}
       className="sky-group-edit" variant="outline" leftIcon={<FiEdit3 />} mt={4}>Edit or share</Button>
-    {focusedGroup.overview && <Box mt={3}><NarrationControl path={`constellations/${focusedGroup.id}`} /></Box>}
-    <Text className="sky-group-panel-overview" whiteSpace="pre-wrap" mt={4}>
-      {focusedGroup.overview || "These memories are connected in your personal night sky."}
-    </Text>
+    {focusedGroup.overview && <Box mt={3}><NarrationControl path={`constellations/${focusedGroup.id}`}
+      displayText={focusedGroup.overview} spokenTitle={focusedGroup.title} /></Box>}
+    {!focusedGroup.overview && <Text className="sky-group-panel-overview" whiteSpace="pre-wrap" mt={4}>
+      These memories are connected in your personal night sky.
+    </Text>}
     <Text className="sky-group-panel-label" mt={6}>{focusedGroup.members.length} connected memories</Text>
     <Stack spacing={1} mt={2}>
       {focusedGroup.members.map((member) => <Button key={member.story_id} className="sky-group-memory" variant="ghost"
@@ -339,9 +340,9 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
       <IconButton aria-label="Close memory" icon={<FiX />} variant="ghost" onClick={() => setSelectedId(null)} />
     </Flex>
     <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>{selected.title || "A remembered moment"}</Heading>
-    <Box mt={4}><NarrationControl path={`memories/${selected.id}`} /></Box>
     {selected.image_url && <Image src={selected.image_url} alt="" maxH="180px" w="full" objectFit="contain" mt={5} />}
-    <Text className="sky-story-text" whiteSpace="pre-wrap" lineHeight="1.8" mt={5}>{selected.summary_text}</Text>
+    <Box mt={4}><NarrationControl path={`memories/${selected.id}`} displayText={selected.summary_text}
+      spokenTitle={selected.title || "A remembered moment"} /></Box>
     <Box className="sky-story-actions">
       <HStack justify="space-between" mb={4}>
         <IconButton aria-label="Previous memory" icon={<FiChevronLeft />} variant="outline" onClick={() => stepSelection(-1)} isDisabled={visibleStories.length < 2} />

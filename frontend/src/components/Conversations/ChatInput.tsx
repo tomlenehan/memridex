@@ -19,7 +19,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
-import { FiCheck, FiEdit3, FiHeadphones, FiMic, FiMicOff, FiSend, FiVolume2 } from "react-icons/fi"
+import { FiArrowLeft, FiCheck, FiEdit3, FiHeadphones, FiMic, FiMicOff, FiSend, FiVolume2 } from "react-icons/fi"
 import { GiSecretBook } from "react-icons/gi"
 import { useDispatch, useSelector } from "react-redux"
 
@@ -384,6 +384,11 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
     void start()
   }
 
+  const handleBackToEntryChoice = () => {
+    if (isVoiceActive) stop()
+    setStartMode("choose")
+  }
+
   const handleChooseTyping = () => setStartMode("type")
 
   const handleChooseVoice = () => {
@@ -477,18 +482,31 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
               </Text>
             </Box>
           </HStack>
-          <Button
-            type="button"
-            flexShrink={0}
-            variant={isVoiceActive ? "danger" : "primary"}
-            leftIcon={isVoiceActive ? <FiMicOff /> : <FiMic />}
-            isLoading={voiceStatus === "connecting"}
-            isDisabled={!isVoiceActive && !canStartVoice}
-            onClick={handleVoiceToggle}
-            aria-label={isVoiceActive ? "End voice conversation" : "Start voice conversation"}
-          >
-            {isVoiceActive ? "End voice chat" : voiceStatus === "error" ? "Try voice again" : "Start voice chat"}
-          </Button>
+          <HStack flexShrink={0}>
+            {isFirstTurn && startMode !== "choose" && (
+              <Button
+                type="button"
+                variant="ghost"
+                color="#477B70"
+                leftIcon={<FiArrowLeft />}
+                onClick={handleBackToEntryChoice}
+              >
+                Back
+              </Button>
+            )}
+            <Button
+              type="button"
+              flexShrink={0}
+              variant={isVoiceActive ? "danger" : "primary"}
+              leftIcon={isVoiceActive ? <FiMicOff /> : <FiMic />}
+              isLoading={voiceStatus === "connecting"}
+              isDisabled={!isVoiceActive && !canStartVoice}
+              onClick={handleVoiceToggle}
+              aria-label={isVoiceActive ? "End voice conversation" : "Start voice conversation"}
+            >
+              {isVoiceActive ? "End voice chat" : voiceStatus === "error" ? "Try voice again" : "Start voice chat"}
+            </Button>
+          </HStack>
         </Flex>
         )}
 
@@ -564,7 +582,20 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
         <ModalOverlay bg="blackAlpha.600" />
         <ModalContent mx={4} borderRadius="16px" bg="#FFFDF7">
           <ModalHeader color="#244D4C" fontSize="2xl" pb={1}>
-            How would you like to tell your story?
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              color="#477B70"
+              leftIcon={<FiArrowLeft />}
+              mb={3}
+              onClick={() => void navigate({ to: "/conversations" })}
+            >
+              Back to my night sky
+            </Button>
+            <Text as="h2" fontSize="inherit" fontWeight="inherit" lineHeight="inherit">
+              How would you like to tell your story?
+            </Text>
           </ModalHeader>
           <ModalBody pb={6}>
             <Text color="#66807E" lineHeight="1.6" mb={5}>

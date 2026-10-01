@@ -220,7 +220,7 @@ function MemoryMap() {
           focusedGroupId={focusedGroupId}
           onFocusedGroupChange={setFocusedGroupId}
           toolbar={<Box className="sky-toolbar">
-            <HStack className="sky-mode-switch" spacing={1} role="group" aria-label="Night Sky view">
+            <HStack className="sky-mode-switch" spacing={0} role="group" aria-label="Night Sky view">
               <Button className="sky-mode-button" aria-pressed={mode === "memories"}
                 onClick={() => { void navigate({ to: "/conversations", search: {} }); setView("sky"); setCrafting(false) }}>Memories</Button>
               <Button className="sky-mode-button" aria-pressed={mode === "constellations"}
@@ -388,10 +388,8 @@ function MemoryCard({
             <Icon as={FiArrowRight} />
           </Button>
         </HStack>
-        <NarrationControl path={`memories/${story.id}`} />
-        <Text color={muted} fontSize="sm" lineHeight="1.55" noOfLines={3}>
-          {story.summary_text}
-        </Text>
+        <NarrationControl path={`memories/${story.id}`} displayText={story.summary_text}
+          spokenTitle={story.title || "A remembered moment"} displayTextLines={3} />
         {connected.length > 0 && (
           <Box mt="auto" pt={2} borderTop="1px solid #EFEADD">
             <Text fontSize="xs" color="#4B8D82" fontWeight="700" mb={1}>

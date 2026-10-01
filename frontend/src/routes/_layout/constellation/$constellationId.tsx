@@ -140,8 +140,7 @@ function ConstellationPage() {
         </HStack>
         {saveStory.isError && <Text color="red.600" role="alert" mt={3}>{String(saveStory.error)}</Text>}
       </Box> : !storyCollapsed && <Box className="constellation-story-scroll" mt={4}>
-        <NarrationControl path={`constellations/${id}`} />
-        <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
+        <NarrationControl path={`constellations/${id}`} displayText={constellation.overview} spokenTitle={constellation.title} />
       </Box>}
       {makePrivate.isError && <Text color="red.600" role="alert" mt={3}>{String(makePrivate.error)}</Text>}
       {makePublic.isError && <Text color="red.600" role="alert" mt={3}>{String(makePublic.error)}</Text>}

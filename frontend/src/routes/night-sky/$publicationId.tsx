@@ -123,7 +123,8 @@ function PublicConstellationPage() {
               onClick={() => setStoryCollapsed((collapsed) => !collapsed)}
             />
           </Flex>
-          {!storyCollapsed && constellation.overview && <Box mt={4}><NarrationControl path={`public/${id}`} publicStory /></Box>}
+          {!storyCollapsed && constellation.overview && <Box mt={4}><NarrationControl path={`public/${id}`} publicStory
+            displayText={constellation.overview} spokenTitle={constellation.title} /></Box>}
           <Flex mt={4} align={{ base: "stretch", sm: "center" }} justify="space-between" gap={4} direction={{ base: "column", sm: "row" }}>
             <HStack spacing={{ base: 2, sm: 3 }} flexWrap="wrap">
               <Tooltip label="Sign in to add a glow to this constellation." hasArrow shouldWrapChildren isDisabled={signedIn}>
@@ -159,8 +160,9 @@ function PublicConstellationPage() {
               <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md">{star.title}</Heading>
               <IconButton aria-label="Close memory" icon={<FiX />} variant="ghost" size="sm" onClick={() => setSelected(null)} />
             </Flex>
-            {star.story_text && <Box mt={4}><NarrationControl path={`public/${id}/memories/${star.index}`} publicStory /></Box>}
-            {star.story_text ? <Text className="sky-story-text" mt={5} lineHeight="1.8" whiteSpace="pre-wrap">{star.story_text}</Text> :
+            {star.story_text && <Box mt={4}><NarrationControl path={`public/${id}/memories/${star.index}`} publicStory
+              displayText={star.story_text} spokenTitle={star.title} /></Box>}
+            {!star.story_text &&
               <Text color="ui.muted" mt={3}>This storyteller kept the memory itself private. Its star still belongs to the shared shape.</Text>}
             {star.image_url && <Image src={star.image_url} alt={star.title} mt={4} borderRadius="lg" maxH="230px" objectFit="cover" />}
           </Box>}
