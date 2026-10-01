@@ -229,7 +229,7 @@ function MemoryMap() {
             </HStack>
           </Box>}
           headerActions={<Flex className="sky-header-actions">
-            {mode === "memories" ? <Button className="sky-primary-action sky-primary-action-add" variant="accent" size="md" leftIcon={<FiPlus />} onClick={openTopics}>Add memory</Button> : <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiPlus />}
+            {mode === "memories" ? <Button className="sky-primary-action sky-primary-action-add" variant="accent" size="md" leftIcon={<FiPlus />} onClick={openTopics}>Add memory</Button> : <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiStar />}
               isDisabled={crafting} onClick={() => setCrafting(true)}>Create constellation</Button>}
             <Button className="sky-list-toggle" size="md" variant="ghost" leftIcon={<FiList />}
               isDisabled={stories.length === 0} onClick={() => setView(view === "sky" ? "list" : "sky")}>
