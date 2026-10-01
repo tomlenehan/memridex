@@ -1,17 +1,20 @@
-from typing import AsyncIterable, List
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.schema import HumanMessage, AIMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_community.vectorstores import FAISS
-from app.llm.tracing import llm_trace_config
 import logging
+from collections.abc import AsyncIterable
+
+from langchain.schema import HumanMessage
+from langchain_community.vectorstores import FAISS
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+from app.llm.tracing import llm_trace_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MODEL_NAME = "gpt-4-turbo"
 
-async def index_messages(messages: List[HumanMessage]) -> FAISS:
+
+async def index_messages(messages: list[HumanMessage]) -> FAISS:
     message_texts = [message.content for message in messages]
 
     embeddings = OpenAIEmbeddings()
@@ -20,24 +23,29 @@ async def index_messages(messages: List[HumanMessage]) -> FAISS:
 
     return index
 
-async def get_relevant_messages(index: FAISS, query: str, k: int = 20) -> List[HumanMessage]:
+
+async def get_relevant_messages(
+    index: FAISS, query: str, k: int = 20
+) -> list[HumanMessage]:
     docs = index.similarity_search(query, k=k)
 
     relevant_messages = [HumanMessage(content=doc.page_content) for doc in docs]
 
     return relevant_messages
 
-async def generate_summary(system_prompt: str, chat_history: List[str], tone: int) -> AsyncIterable[str]:
+
+async def generate_summary(
+    system_prompt: str, chat_history: list[str], tone: int
+) -> AsyncIterable[str]:
     index = await index_messages(chat_history)
-    relevant_messages = await get_relevant_messages(index, "Please summarize this conversation")
+    relevant_messages = await get_relevant_messages(
+        index, "Please summarize this conversation"
+    )
 
     temperature = tone / 100
 
     model = ChatOpenAI(
-        model=MODEL_NAME,
-        streaming=True,
-        verbose=True,
-        temperature=temperature
+        model=MODEL_NAME, streaming=True, verbose=True, temperature=temperature
     )
 
     prompt = ChatPromptTemplate.from_messages(
@@ -60,7 +68,6 @@ async def generate_summary(system_prompt: str, chat_history: List[str], tone: in
 
 
 def generate_title(system_prompt: str, summary: str) -> str:
-
     model = ChatOpenAI(
         model=MODEL_NAME,
         streaming=True,

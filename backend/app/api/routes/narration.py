@@ -77,7 +77,9 @@ async def _pcm_stream(text: str) -> AsyncIterator[bytes]:
                             yield audio
     except httpx.HTTPError:
         logger.exception("Could not stream story narration")
-        raise HTTPException(502, "Voice reading is unavailable. Please try again.") from None
+        raise HTTPException(
+            502, "Voice reading is unavailable. Please try again."
+        ) from None
 
 
 def _streaming_speech(text: str) -> StreamingResponse:
@@ -117,7 +119,12 @@ async def _speech(text: str) -> Response:
                 )
                 response.raise_for_status()
                 with wave.open(io.BytesIO(response.content), "rb") as part:
-                    format_info = (part.getnchannels(), part.getsampwidth(), part.getframerate(), part.getcomptype())
+                    format_info = (
+                        part.getnchannels(),
+                        part.getsampwidth(),
+                        part.getframerate(),
+                        part.getcomptype(),
+                    )
                     if audio_params is None:
                         audio_params = part.getparams()
                         audio_format = format_info
@@ -126,14 +133,27 @@ async def _speech(text: str) -> Response:
                     frames.append(part.readframes(part.getnframes()))
     except (httpx.HTTPError, wave.Error, ValueError):
         logger.exception("Could not generate story narration")
-        raise HTTPException(502, "Voice reading is unavailable. Please try again.") from None
+        raise HTTPException(
+            502, "Voice reading is unavailable. Please try again."
+        ) from None
     with wave.open(output, "wb") as combined:
-        combined.setparams((audio_params.nchannels, audio_params.sampwidth,
-                            audio_params.framerate, 0, audio_params.comptype,
-                            audio_params.compname))
+        combined.setparams(
+            (
+                audio_params.nchannels,
+                audio_params.sampwidth,
+                audio_params.framerate,
+                0,
+                audio_params.comptype,
+                audio_params.compname,
+            )
+        )
         for segment in frames:
             combined.writeframes(segment)
-    return Response(output.getvalue(), media_type="audio/wav", headers={"Cache-Control": "private, no-store"})
+    return Response(
+        output.getvalue(),
+        media_type="audio/wav",
+        headers={"Cache-Control": "private, no-store"},
+    )
 
 
 async def _public_speech(key: tuple[int, int, int | None], text: str) -> Response:
@@ -141,21 +161,37 @@ async def _public_speech(key: tuple[int, int, int | None], text: str) -> Respons
         saved = _public_cache.get(key)
         if saved is not None:
             _public_cache.move_to_end(key)
-            return Response(saved, media_type="audio/wav", headers={"Cache-Control": "public, max-age=300"})
+            return Response(
+                saved,
+                media_type="audio/wav",
+                headers={"Cache-Control": "public, max-age=300"},
+            )
         result = await _speech(text)
         if len(result.body) <= PUBLIC_CACHE_LIMIT:
-            while _public_cache and sum(map(len, _public_cache.values())) + len(result.body) > PUBLIC_CACHE_LIMIT:
+            while (
+                _public_cache
+                and sum(map(len, _public_cache.values())) + len(result.body)
+                > PUBLIC_CACHE_LIMIT
+            ):
                 _public_cache.popitem(last=False)
             _public_cache[key] = result.body
-        return Response(result.body, media_type="audio/wav", headers={"Cache-Control": "public, max-age=300"})
+        return Response(
+            result.body,
+            media_type="audio/wav",
+            headers={"Cache-Control": "public, max-age=300"},
+        )
 
 
 @router.post("/memories/{story_id}")
-async def narrate_memory(story_id: int, session: SessionDep, current_user: CurrentUser,
-                         stream: bool = False) -> Response:
-    story = session.exec(select(StorySummary).where(
-        StorySummary.id == story_id, StorySummary.user_id == current_user.id,
-    )).first()
+async def narrate_memory(
+    story_id: int, session: SessionDep, current_user: CurrentUser, stream: bool = False
+) -> Response:
+    story = session.exec(
+        select(StorySummary).where(
+            StorySummary.id == story_id,
+            StorySummary.user_id == current_user.id,
+        )
+    ).first()
     if not story:
         raise HTTPException(404, "Memory not found")
     text = f"{story.title or 'A remembered moment'}. {story.summary_text}"
@@ -163,30 +199,38 @@ async def narrate_memory(story_id: int, session: SessionDep, current_user: Curre
 
 
 @router.post("/constellations/{constellation_id}")
-async def narrate_constellation(constellation_id: int, session: SessionDep, current_user: CurrentUser,
-                                stream: bool = False) -> Response:
+async def narrate_constellation(
+    constellation_id: int,
+    session: SessionDep,
+    current_user: CurrentUser,
+    stream: bool = False,
+) -> Response:
     constellation = _owned(session, current_user.id, constellation_id)
     text = f"{constellation.title}. {constellation.overview}"
     return _streaming_speech(text) if stream else await _speech(text)
 
 
 @router.post("/public/{publication_id}")
-async def narrate_public_constellation(publication_id: int, session: SessionDep,
-                                       stream: bool = False) -> Response:
+async def narrate_public_constellation(
+    publication_id: int, session: SessionDep, stream: bool = False
+) -> Response:
     _enabled()
     publication = session.get(PublishedConstellation, publication_id)
     if not publication:
         raise HTTPException(404, "Constellation not found")
     snapshot = _published_detail(session, publication)
     text = f"{snapshot.title}. {snapshot.overview}"
-    return _streaming_speech(text) if stream else await _public_speech(
-        (publication.id, publication.revision, None), text
+    return (
+        _streaming_speech(text)
+        if stream
+        else await _public_speech((publication.id, publication.revision, None), text)
     )
 
 
 @router.post("/public/{publication_id}/memories/{star_index}")
-async def narrate_public_memory(publication_id: int, star_index: int, session: SessionDep,
-                                stream: bool = False) -> Response:
+async def narrate_public_memory(
+    publication_id: int, star_index: int, session: SessionDep, stream: bool = False
+) -> Response:
     _enabled()
     publication = session.get(PublishedConstellation, publication_id)
     if not publication:
@@ -196,6 +240,10 @@ async def narrate_public_memory(publication_id: int, star_index: int, session: S
     if not star or not star.story_text:
         raise HTTPException(404, "This memory was not shared")
     text = f"{star.title}. {star.story_text}"
-    return _streaming_speech(text) if stream else await _public_speech(
-        (publication.id, publication.revision, star_index), text
+    return (
+        _streaming_speech(text)
+        if stream
+        else await _public_speech(
+            (publication.id, publication.revision, star_index), text
+        )
     )

@@ -37,6 +37,7 @@ DEMO_EMAIL = "evelyn.demo@memriplace.test"
 DEMO_NAME = "Evelyn Carter [Demo]"
 CREDENTIALS_PATH = Path(__file__).resolve().parents[1] / ".demo-credentials.local.json"
 
+
 # Fictional stories with the same summary / transcript split as real memories.
 # The varied lengths are intentional: the demo should expose real reading and
 # layout constraints rather than make every story fit neatly into a small card.
@@ -193,7 +194,9 @@ def _credentials(password: str | None, write_file: bool) -> tuple[str, bool]:
         if data.get("email") != DEMO_EMAIL or not isinstance(data.get("password"), str):
             raise ValueError(f"Unexpected credential file: {CREDENTIALS_PATH}")
         if password and password != data["password"]:
-            raise ValueError("DEMO_PASSWORD does not match the existing local credential file")
+            raise ValueError(
+                "DEMO_PASSWORD does not match the existing local credential file"
+            )
         return data["password"], False
     password = password or secrets.token_urlsafe(24)
     fd = os.open(CREDENTIALS_PATH, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -208,99 +211,163 @@ def seed(write_file: bool = True) -> None:
         existing = session.exec(select(User).where(User.email == DEMO_EMAIL)).first()
         if existing:
             if existing.full_name != DEMO_NAME or existing.is_superuser:
-                raise ValueError("Demo email belongs to a different account; refusing to change it")
+                raise ValueError(
+                    "Demo email belongs to a different account; refusing to change it"
+                )
             print("Demo account already exists. No data or password was changed.")
             return
 
-        password, created_file = _credentials(os.environ.get("DEMO_PASSWORD"), write_file)
+        password, created_file = _credentials(
+            os.environ.get("DEMO_PASSWORD"), write_file
+        )
         now = datetime.utcnow()
         try:
-            user = User(email=DEMO_EMAIL, full_name=DEMO_NAME,
-                        hashed_password=get_password_hash(password), is_active=True,
-                        is_superuser=False)
+            user = User(
+                email=DEMO_EMAIL,
+                full_name=DEMO_NAME,
+                hashed_password=get_password_hash(password),
+                is_active=True,
+                is_superuser=False,
+            )
             session.add(user)
             session.flush()
             stories = []
-            for index, (title, summary, question1, answer1, question2, answer2) in enumerate(MEMORIES):
+            for index, (
+                title,
+                summary,
+                question1,
+                answer1,
+                question2,
+                answer2,
+            ) in enumerate(MEMORIES):
                 timestamp = now - timedelta(days=len(MEMORIES) - index - 1)
                 conversation = Conversation(
-                    user_id=user.id, node_title=title, node_prompt=question1,
-                    status=ConversationStatus.COMPLETE, user_turn_count=2,
-                    ready_to_save=True, created_at=timestamp,
+                    user_id=user.id,
+                    node_title=title,
+                    node_prompt=question1,
+                    status=ConversationStatus.COMPLETE,
+                    user_turn_count=2,
+                    ready_to_save=True,
+                    created_at=timestamp,
                 )
                 session.add(conversation)
                 session.flush()
-                for offset, (sender, content) in enumerate((
-                    (ChatMessageSender.AI, question1), (ChatMessageSender.USER, answer1),
-                    (ChatMessageSender.AI, question2), (ChatMessageSender.USER, answer2),
-                )):
-                    session.add(ChatMessage(
-                        conversation_id=conversation.id, sender_id=user.id,
-                        sender_type=sender, content=content,
-                        timestamp=timestamp + timedelta(minutes=offset),
-                    ))
+                for offset, (sender, content) in enumerate(
+                    (
+                        (ChatMessageSender.AI, question1),
+                        (ChatMessageSender.USER, answer1),
+                        (ChatMessageSender.AI, question2),
+                        (ChatMessageSender.USER, answer2),
+                    )
+                ):
+                    session.add(
+                        ChatMessage(
+                            conversation_id=conversation.id,
+                            sender_id=user.id,
+                            sender_type=sender,
+                            content=content,
+                            timestamp=timestamp + timedelta(minutes=offset),
+                        )
+                    )
                 story = StorySummary(
-                    conversation_id=conversation.id, user_id=user.id,
-                    title=title, summary_text=summary, created_at=timestamp,
+                    conversation_id=conversation.id,
+                    user_id=user.id,
+                    title=title,
+                    summary_text=summary,
+                    created_at=timestamp,
                     modified_at=timestamp,
                 )
                 session.add(story)
                 session.flush()
                 stories.append(story)
-                session.add(MemoryXP(user_id=user.id, conversation_key=conversation.id,
-                                     points=25, earned_at=timestamp))
+                session.add(
+                    MemoryXP(
+                        user_id=user.id,
+                        conversation_key=conversation.id,
+                        points=25,
+                        earned_at=timestamp,
+                    )
+                )
                 session.add(MemoryDay(user_id=user.id, activity_date=timestamp.date()))
 
             relationships = {}
             for number, group in enumerate(GROUPS):
                 created_at = now - timedelta(days=2 - number)
                 constellation = Constellation(
-                    owner_id=user.id, title=group["title"], overview=group["overview"],
-                    created_at=created_at, modified_at=created_at,
+                    owner_id=user.id,
+                    title=group["title"],
+                    overview=group["overview"],
+                    created_at=created_at,
+                    modified_at=created_at,
                 )
                 session.add(constellation)
                 session.flush()
-                for order, (story_index, (x, y)) in enumerate(zip(group["stories"], group["positions"], strict=True)):
-                    session.add(ConstellationMemory(
-                        constellation_id=constellation.id, story_id=stories[story_index].id,
-                        display_order=order, x=x, y=y, share_story=group["public"],
-                        share_image=False,
-                    ))
+                for order, (story_index, (x, y)) in enumerate(
+                    zip(group["stories"], group["positions"], strict=True)
+                ):
+                    session.add(
+                        ConstellationMemory(
+                            constellation_id=constellation.id,
+                            story_id=stories[story_index].id,
+                            display_order=order,
+                            x=x,
+                            y=y,
+                            share_story=group["public"],
+                            share_image=False,
+                        )
+                    )
                 for a, b in group["links"]:
                     pair = tuple(sorted((a, b)))
                     if pair not in relationships:
                         relationship = StoryRelationship(
-                            user_id=user.id, story_a_id=stories[pair[0]].id,
+                            user_id=user.id,
+                            story_a_id=stories[pair[0]].id,
                             story_b_id=stories[pair[1]].id,
                         )
                         session.add(relationship)
                         session.flush()
                         relationships[pair] = relationship
-                    session.add(ConstellationLink(
-                        constellation_id=constellation.id,
-                        relationship_id=relationships[pair].id,
-                    ))
+                    session.add(
+                        ConstellationLink(
+                            constellation_id=constellation.id,
+                            relationship_id=relationships[pair].id,
+                        )
+                    )
                 if group["public"]:
                     publication = PublishedConstellation(
-                        constellation_id=constellation.id, owner_id=user.id,
-                        title=constellation.title, overview=constellation.overview,
-                        author_name=DEMO_NAME, author_level=3,
+                        constellation_id=constellation.id,
+                        owner_id=user.id,
+                        title=constellation.title,
+                        overview=constellation.overview,
+                        author_name=DEMO_NAME,
+                        author_level=3,
                         published_at=created_at,
                     )
                     session.add(publication)
                     session.flush()
-                    for order, (story_index, (x, y)) in enumerate(zip(group["stories"], group["positions"], strict=True)):
+                    for order, (story_index, (x, y)) in enumerate(
+                        zip(group["stories"], group["positions"], strict=True)
+                    ):
                         story = stories[story_index]
-                        session.add(PublishedMemory(
-                            publication_id=publication.id, source_story_id=story.id,
-                            display_order=order, title=story.title,
-                            story_text=story.summary_text, x=x, y=y,
-                        ))
+                        session.add(
+                            PublishedMemory(
+                                publication_id=publication.id,
+                                source_story_id=story.id,
+                                display_order=order,
+                                title=story.title,
+                                story_text=story.summary_text,
+                                x=x,
+                                y=y,
+                            )
+                        )
                     for a, b in group["links"]:
-                        session.add(PublishedLink(
-                            publication_id=publication.id,
-                            story_a_id=stories[a].id, story_b_id=stories[b].id,
-                        ))
+                        session.add(
+                            PublishedLink(
+                                publication_id=publication.id,
+                                story_a_id=stories[a].id,
+                                story_b_id=stories[b].id,
+                            )
+                        )
             session.commit()
         except Exception:
             session.rollback()
@@ -325,15 +392,27 @@ def refresh() -> None:
         if not user or user.full_name != DEMO_NAME or user.is_superuser:
             raise ValueError("Seed the expected demo account before refreshing it")
 
-        stories = session.exec(select(StorySummary).where(StorySummary.user_id == user.id)).all()
+        stories = session.exec(
+            select(StorySummary).where(StorySummary.user_id == user.id)
+        ).all()
         stories_by_title = {story.title: story for story in stories}
-        if len(stories_by_title) != len(stories) or any(title not in stories_by_title for title, *_ in MEMORIES):
-            raise ValueError("Demo memories no longer match the seed; refusing to overwrite them")
+        if len(stories_by_title) != len(stories) or any(
+            title not in stories_by_title for title, *_ in MEMORIES
+        ):
+            raise ValueError(
+                "Demo memories no longer match the seed; refusing to overwrite them"
+            )
 
-        constellations = session.exec(select(Constellation).where(Constellation.owner_id == user.id)).all()
+        constellations = session.exec(
+            select(Constellation).where(Constellation.owner_id == user.id)
+        ).all()
         groups_by_title = {group.title: group for group in constellations}
-        if len(groups_by_title) != len(constellations) or any(group["title"] not in groups_by_title for group in GROUPS):
-            raise ValueError("Demo constellations no longer match the seed; refusing to overwrite them")
+        if len(groups_by_title) != len(constellations) or any(
+            group["title"] not in groups_by_title for group in GROUPS
+        ):
+            raise ValueError(
+                "Demo constellations no longer match the seed; refusing to overwrite them"
+            )
 
         now = datetime.utcnow()
         for title, summary, question1, answer1, question2, answer2 in MEMORIES:
@@ -343,11 +422,19 @@ def refresh() -> None:
                 .where(ChatMessage.conversation_id == story.conversation_id)
                 .order_by(ChatMessage.timestamp, ChatMessage.id)
             ).all()
-            senders = [ChatMessageSender.AI, ChatMessageSender.USER,
-                       ChatMessageSender.AI, ChatMessageSender.USER]
+            senders = [
+                ChatMessageSender.AI,
+                ChatMessageSender.USER,
+                ChatMessageSender.AI,
+                ChatMessageSender.USER,
+            ]
             if [message.sender_type for message in messages] != senders:
-                raise ValueError(f"Transcript for {title!r} was edited; refusing to overwrite it")
-            for message, content in zip(messages, (question1, answer1, question2, answer2), strict=True):
+                raise ValueError(
+                    f"Transcript for {title!r} was edited; refusing to overwrite it"
+                )
+            for message, content in zip(
+                messages, (question1, answer1, question2, answer2), strict=True
+            ):
                 message.content = content
             story.summary_text = summary
             story.modified_at = now
@@ -357,22 +444,33 @@ def refresh() -> None:
             constellation.overview = group_data["overview"]
             constellation.modified_at = now
             publication = session.exec(
-                select(PublishedConstellation)
-                .where(PublishedConstellation.constellation_id == constellation.id)
+                select(PublishedConstellation).where(
+                    PublishedConstellation.constellation_id == constellation.id
+                )
             ).first()
             if publication:
                 publication.overview = constellation.overview
                 published_memories = session.exec(
-                    select(PublishedMemory)
-                    .where(PublishedMemory.publication_id == publication.id)
+                    select(PublishedMemory).where(
+                        PublishedMemory.publication_id == publication.id
+                    )
                 ).all()
                 for published_memory in published_memories:
-                    story = next((story for story in stories if story.id == published_memory.source_story_id), None)
+                    story = next(
+                        (
+                            story
+                            for story in stories
+                            if story.id == published_memory.source_story_id
+                        ),
+                        None,
+                    )
                     if story:
                         published_memory.story_text = story.summary_text
 
         session.commit()
-    print("Refreshed Evelyn's 8 memory narratives, 3 constellation overviews, and existing public snapshots.")
+    print(
+        "Refreshed Evelyn's 8 memory narratives, 3 constellation overviews, and existing public snapshots."
+    )
 
 
 def status() -> None:
@@ -381,20 +479,36 @@ def status() -> None:
         if not user:
             print("Demo account not present.")
             return
-        stories = session.exec(select(func.count(StorySummary.id)).where(StorySummary.user_id == user.id)).one()
-        groups = session.exec(select(func.count(Constellation.id)).where(Constellation.owner_id == user.id)).one()
-        public = session.exec(select(func.count(PublishedConstellation.id)).where(PublishedConstellation.owner_id == user.id)).one()
-        print(f"{DEMO_EMAIL}: {stories} memories, {groups} constellations, {public} public")
+        stories = session.exec(
+            select(func.count(StorySummary.id)).where(StorySummary.user_id == user.id)
+        ).one()
+        groups = session.exec(
+            select(func.count(Constellation.id)).where(
+                Constellation.owner_id == user.id
+            )
+        ).one()
+        public = session.exec(
+            select(func.count(PublishedConstellation.id)).where(
+                PublishedConstellation.owner_id == user.id
+            )
+        ).one()
+        print(
+            f"{DEMO_EMAIL}: {stories} memories, {groups} constellations, {public} public"
+        )
 
 
 def clear(confirm_email: str) -> None:
     if confirm_email != DEMO_EMAIL:
-        raise ValueError(f"Pass --confirm-email {DEMO_EMAIL} to remove only the demo account")
+        raise ValueError(
+            f"Pass --confirm-email {DEMO_EMAIL} to remove only the demo account"
+        )
     with Session(engine) as session:
         user = session.exec(select(User).where(User.email == DEMO_EMAIL)).first()
         if user:
             if user.full_name != DEMO_NAME or user.is_superuser:
-                raise ValueError("Demo email belongs to a different account; refusing to delete it")
+                raise ValueError(
+                    "Demo email belongs to a different account; refusing to delete it"
+                )
             _delete_account_data(session, user.id)
     CREDENTIALS_PATH.unlink(missing_ok=True)
     print("Demo account, its private data, and its public snapshots removed.")
@@ -404,11 +518,19 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     subcommands = parser.add_subparsers(dest="command", required=True)
     seed_parser = subcommands.add_parser("seed", help="Create the demo account once")
-    seed_parser.add_argument("--no-credentials-file", action="store_true",
-                             help="Use DEMO_PASSWORD from the environment; useful on Render")
-    subcommands.add_parser("refresh", help="Update text on the existing demo account without changing IDs or login")
+    seed_parser.add_argument(
+        "--no-credentials-file",
+        action="store_true",
+        help="Use DEMO_PASSWORD from the environment; useful on Render",
+    )
+    subcommands.add_parser(
+        "refresh",
+        help="Update text on the existing demo account without changing IDs or login",
+    )
     subcommands.add_parser("status", help="Count only demo-owned records")
-    clear_parser = subcommands.add_parser("clear", help="Delete only the demo account and its records")
+    clear_parser = subcommands.add_parser(
+        "clear", help="Delete only the demo account and its records"
+    )
     clear_parser.add_argument("--confirm-email", required=True)
     args = parser.parse_args()
     if args.command == "seed":

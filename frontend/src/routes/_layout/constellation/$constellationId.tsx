@@ -2,7 +2,7 @@ import {
   Alert, AlertIcon, Box, Button, Checkbox, Container, Flex, FormControl,
   FormLabel, Heading, HStack, Image, Input, Modal, ModalBody, ModalCloseButton,
   ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select, Spinner,
-  Stack, Text, Textarea,
+  Stack, Text, Textarea, useMediaQuery,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
@@ -34,13 +34,13 @@ function ConstellationEditor() {
   const [linking, setLinking] = useState(false)
   const [linkAnchor, setLinkAnchor] = useState<number | null>(null)
   const [selected, setSelected] = useState<number | null>(0)
-  const [storyOpen, setStoryOpen] = useState(false)
   const [authorName, setAuthorName] = useState("")
   const [proposal, setProposal] = useState<string | null>(null)
   const [proposalHash, setProposalHash] = useState<string | null>(null)
   const [sourceHash, setSourceHash] = useState<string | null>(null)
   const [preview, setPreview] = useState<PublicConstellation | null>(null)
   const [dirty, setDirty] = useState(false)
+  const [wideReader] = useMediaQuery("(min-width: 900px)")
 
   useEffect(() => {
     if (!groupQuery.data) return
@@ -94,12 +94,9 @@ function ConstellationEditor() {
     await navigate({ to: "/conversations" })
   } })
 
-  const choose = (index: number, openStory = false) => {
+  const choose = (index: number) => {
     setSelected(index)
-    if (!linking) {
-      if (openStory) setStoryOpen(true)
-      return
-    }
+    if (!linking) return
     const storyId = members[index].story_id
     if (linkAnchor == null) { setLinkAnchor(storyId); return }
     if (linkAnchor !== storyId && !links.some((link) =>
@@ -126,6 +123,20 @@ function ConstellationEditor() {
     return reached.size === members.length
   }
   const member = selected == null ? undefined : members[selected]
+  const memoryReader = member && <Box as="aside" className="constellation-memory-reader" aria-label="Selected memory" aria-live="polite">
+    <Text className="sky-story-count">SELECTED MEMORY</Text>
+    <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>{member.title}</Heading>
+    <Box mt={4}><NarrationControl path={`memories/${member.story_id}`} /></Box>
+    {member.image_url && <Image src={member.image_url} alt="" maxH="170px" w="full" objectFit="cover" borderRadius="lg" mt={5} />}
+    <Text className="sky-story-text" whiteSpace="pre-wrap" lineHeight="1.8" mt={5}>{member.summary_text}</Text>
+    <Box className="sky-story-actions">
+      <HStack flexWrap="wrap" spacing={2}>
+        <Button size="sm" variant="secondary" onClick={() => { setLinking(true); setLinkAnchor(member.story_id) }} isDisabled={linking}>Connect this star</Button>
+        {dirty && <Button size="sm" variant="accent" onClick={() => save.mutate()} isLoading={save.isPending}>Save draft</Button>}
+      </HStack>
+      <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(member.story_id) }} variant="outline" leftIcon={<FiEdit3 />} w="full" mt={3}>Open memory</Button>
+    </Box>
+  </Box>
   const changeMember = (index: number, changes: Partial<Member>) => {
     setMembers((current) => current.map((item, i) => i === index ? { ...item, ...changes } : item))
     setDirty(true)
@@ -188,14 +199,13 @@ function ConstellationEditor() {
       <Text color="ui.muted" fontSize="sm">{linking ? "Tap the second star to add a connection." : "Tap a star to explore it. Drag the sky to look around."}</Text>
       {linking && <Button size="sm" variant="outline" onClick={() => { setLinking(false); setLinkAnchor(null) }}>Cancel connection</Button>}
     </Flex>
-    <SkyScene stars={members} links={links.map((link) => ({ a: members.findIndex((item) => item.story_id === link.story_a_id), b: members.findIndex((item) => item.story_id === link.story_b_id) }))}
-      selected={selected} onSelect={(index) => choose(index, true)} label="Your private constellation" />
-    {member && <Flex bg="#FFFDF7" border="1px solid #DFE9DA" borderRadius="22px" mt={3} p={{ base: 4, md: 5 }} align={{ base: "start", md: "center" }} justify="space-between" gap={4} direction={{ base: "column", md: "row" }}>
-      <Box><Text color="#4F8679" fontSize="xs" fontWeight="800" letterSpacing=".1em">SELECTED STAR</Text>
-        <Heading size="sm" mt={1}>{member.title}</Heading><Box mt={3}><NarrationControl path={`memories/${member.story_id}`} /></Box><Text fontSize="sm" color="ui.muted" noOfLines={2} mt={3}>{member.summary_text}</Text></Box>
-      <HStack flexShrink={0} flexWrap="wrap"><Button size="sm" variant="secondary" onClick={() => { setLinking(true); setLinkAnchor(member.story_id) }} isDisabled={linking}>Connect this star</Button>
-        {dirty && <Button size="sm" variant="accent" onClick={() => save.mutate()} isLoading={save.isPending}>Save draft</Button>}</HStack>
-    </Flex>}
+    <Flex direction={wideReader ? "row" : "column"} gap={0} align="stretch">
+      <Box className="constellation-sky-map" flex="1" minW={0}>
+        <SkyScene stars={members} links={links.map((link) => ({ a: members.findIndex((item) => item.story_id === link.story_a_id), b: members.findIndex((item) => item.story_id === link.story_b_id) }))}
+          selected={selected} onSelect={choose} label="Your private constellation" />
+      </Box>
+      {memoryReader}
+    </Flex>
     <Flex gap={2} flexWrap="wrap" mt={3}>
       {links.map((link, index) => <Button key={`${link.story_a_id}-${link.story_b_id}`} size="xs" variant="outline" isDisabled={!canRemoveLink(index)}
         onClick={() => { setLinks((current) => current.filter((_, i) => i !== index)); setDirty(true) }}>
@@ -265,19 +275,6 @@ function ConstellationEditor() {
       {unpublish.isError && <Text color="red.600" role="alert" mt={3}>{String(unpublish.error)}</Text>}
     </Box>}
     <Button colorScheme="red" variant="ghost" mt={8} onClick={() => { if (window.confirm("Delete this private constellation? Its memories will stay in your night sky.")) remove.mutate() }} isLoading={remove.isPending}>Delete constellation</Button>
-    <Modal isOpen={storyOpen && !!member} onClose={() => setStoryOpen(false)} size="lg" isCentered scrollBehavior="inside">
-      <ModalOverlay bg="rgba(6, 29, 38, .72)" /><ModalContent mx={4} borderRadius="16px" bg="#FFFDF7" color="#17353B">
-        <ModalHeader fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize="2xl" pr={12}>{member?.title}</ModalHeader><ModalCloseButton aria-label="Close memory" minW="44px" minH="44px" />
-        <ModalBody>
-          {member && <Box mb={5}><NarrationControl path={`memories/${member.story_id}`} /></Box>}
-          {member?.image_url && <Image src={member.image_url} alt="" maxH="260px" w="full" objectFit="contain" mb={5} />}
-          <Text whiteSpace="pre-wrap" lineHeight="1.8" fontSize={{ base: "md", md: "lg" }}>{member?.summary_text}</Text>
-        </ModalBody>
-        <ModalFooter justifyContent="flex-start">
-          {member && <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(member.story_id) }} onClick={() => setStoryOpen(false)} variant="accent" leftIcon={<FiEdit3 />}>Open memory</Button>}
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
     <Modal isOpen={!!preview} onClose={() => setPreview(null)} size="xl" isCentered scrollBehavior="inside">
       <ModalOverlay /><ModalContent borderRadius="24px"><ModalHeader>Exactly what readers will see</ModalHeader><ModalCloseButton />
         <ModalBody>{preview && <Stack spacing={4}>

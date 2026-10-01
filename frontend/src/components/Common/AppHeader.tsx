@@ -25,7 +25,6 @@ import {
 
 import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import useAuth from "../../hooks/useAuth"
-import SoundToggle from "../Progress/SoundToggle"
 import UserMenu from "./UserMenu"
 import { PUBLIC_SKY_ENABLED } from "../../config"
 
@@ -121,7 +120,6 @@ function AppHeader() {
           gap={{ base: 1, md: 3 }}
           ml={{ base: "auto", md: 0 }}
         >
-          <SoundToggle />
           <UserMenu />
           <IconButton
             aria-label="Open navigation menu"

@@ -1,30 +1,32 @@
+import logging
 from datetime import datetime
-from typing import Any, Optional
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Depends
-from sqlmodel import func, select, Session
+from typing import Any
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from sqlmodel import Session, func, select
+
 from app.api.deps import get_current_user, get_db
 from app.models import (
+    Message,
     User,
     UserStoryPrompt,
     UserStoryPromptCreate,
-    UserStoryPromptUpdate,
     UserStoryPromptPublic,
     UserStoryPromptsPublic,
-    Message,
-    Image
+    UserStoryPromptUpdate,
 )
 from app.utils import upload_image_to_s3
-import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
 
 @router.get("/", response_model=UserStoryPromptsPublic)
 def read_user_story_prompts(
     skip: int = 0,
     limit: int = 100,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Retrieve user story prompts.
@@ -51,11 +53,12 @@ def read_user_story_prompts(
 
     return UserStoryPromptsPublic(data=prompts, count=count)
 
+
 @router.get("/{id}", response_model=UserStoryPromptPublic)
 def read_user_story_prompt(
     id: int,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Get user story prompt by ID.
@@ -67,14 +70,15 @@ def read_user_story_prompt(
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return prompt
 
+
 @router.post("/", response_model=UserStoryPromptPublic)
 def create_user_story_prompt(
     *,
     session: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     prompt: str = Form(...),
-    category_id: Optional[int] = Form(None),
-    image: Optional[UploadFile] = File(None)
+    category_id: int | None = Form(None),
+    image: UploadFile | None = File(None),
 ) -> Any:
     """
     Create new user story prompt.
@@ -88,7 +92,7 @@ def create_user_story_prompt(
         category_id=category_id,
         image_url=image_url,
         created_at=datetime.utcnow(),
-        modified_at=datetime.utcnow()
+        modified_at=datetime.utcnow(),
     )
     prompt = UserStoryPrompt(**prompt_data.dict(), user_id=current_user.id)
     session.add(prompt)
@@ -103,9 +107,9 @@ def update_user_story_prompt(
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    prompt: Optional[str] = Form(None),
-    category_id: Optional[int] = Form(None),
-    image: Optional[UploadFile] = File(None)
+    prompt: str | None = Form(None),
+    category_id: int | None = Form(None),
+    image: UploadFile | None = File(None),
 ) -> Any:
     """
     Update a user story prompt.
@@ -115,16 +119,18 @@ def update_user_story_prompt(
         if not prompt_instance:
             logger.error(f"User story prompt with id {id} not found.")
             raise HTTPException(status_code=404, detail="User story prompt not found")
-        if not current_user.is_superuser and (prompt_instance.user_id != current_user.id):
-            logger.error(f"User {current_user.id} does not have permission to update prompt {id}.")
+        if not current_user.is_superuser and (
+            prompt_instance.user_id != current_user.id
+        ):
+            logger.error(
+                f"User {current_user.id} does not have permission to update prompt {id}."
+            )
             raise HTTPException(status_code=400, detail="Not enough permissions")
 
         if image:
             image_url = upload_image_to_s3(image)
             update_data = UserStoryPromptUpdate(
-                prompt=prompt,
-                category_id=category_id,
-                image_url=image_url
+                prompt=prompt, category_id=category_id, image_url=image_url
             )
         else:
             update_data = UserStoryPromptUpdate(
@@ -149,7 +155,7 @@ def update_user_story_prompt(
 def delete_user_story_prompt(
     id: int,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Message:
     """
     Delete a user story prompt.

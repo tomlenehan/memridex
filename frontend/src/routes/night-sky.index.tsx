@@ -19,6 +19,7 @@ import { useEffect, useState } from "react"
 import { FiArrowRight, FiList, FiMoon, FiStar } from "react-icons/fi"
 import memriPlaceMark from "../assets/images/MemriPlaceLighterLogo.png"
 import ConstellationStar from "../components/Common/ConstellationStar"
+import AppHeader from "../components/Common/AppHeader"
 import { type SkyCluster, nightSkyApi } from "../lib/nightSkyApi"
 import "./public-night-sky.css"
 
@@ -39,7 +40,7 @@ function PublicSky() {
   const hasSharedStories = query.isSuccess && (query.data?.count ?? 0) > 0
   return (
     <Box minH="100vh" bg="#FFFDF5" color="#17353B">
-      <Flex
+      {signedIn ? <AppHeader /> : <Flex
         as="header"
         align="center"
         justify="space-between"
@@ -76,7 +77,7 @@ function PublicSky() {
             {signedIn ? "My night sky" : "Log in"}
           </Button>
         </HStack>
-      </Flex>
+      </Flex>}
       <Box className="public-night-sky" color="#FFF9E8" pb={16}>
         <Flex
           maxW="7xl"

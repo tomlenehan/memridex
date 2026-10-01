@@ -9,7 +9,8 @@ from sqlmodel import Session, select
 from app.api.deps import get_current_user, get_db
 from app.core.config import settings
 from app.llm.realtime import build_realtime_session_config, create_safety_identifier
-from app.llm.story_nodes import MAX_NODE_USER_TURNS, get_conversation_prompt
+from app.llm.story_nodes import get_conversation_prompt
+from app.llm.utils import MAX_NODE_USER_TURNS
 from app.models import (
     ChatMessage,
     Conversation,
@@ -53,7 +54,10 @@ async def create_realtime_session(
     ).all()
     story_prompt = get_conversation_prompt(conversation)
     session_config = build_realtime_session_config(
-        story_prompt, chat_messages, conversation.user_turn_count, conversation.ready_to_save
+        story_prompt,
+        chat_messages,
+        conversation.user_turn_count,
+        conversation.ready_to_save,
     )
 
     files = {

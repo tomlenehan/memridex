@@ -103,7 +103,7 @@ export default function LegalPage({ kind }: { kind: LegalPageKind }) {
                   night sky are private unless you choose to share them.{" "}
                   {PUBLIC_SKY_ENABLED
                     ? "You may explicitly publish a reviewed constellation to the Global Night Sky; only the story details and images you select are included."
-                    : "MemriPlace does not currently publish your stories to a public night sky."}
+                    : "MemriPlace does not currently publish your stories to the Global Night Sky."}
                 </Text>
               </Box>
               <Box>
