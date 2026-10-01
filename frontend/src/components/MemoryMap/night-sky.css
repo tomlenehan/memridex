@@ -504,12 +504,15 @@
 }
 
 .sky-node.crafting:not(.picked) .sky-node-button::after {
-  animation: sky-selectable-glow 2s ease-in-out infinite;
+  opacity: 0;
+  box-shadow: none;
+  animation: none;
 }
 
 .sky-node.crafting.picked .sky-node-button::after {
   opacity: 1;
   box-shadow: 0 0 0 5px #ffe4a4, 0 0 35px 12px rgba(248, 216, 129, .85);
+  animation: sky-selected-pulse 1.8s ease-in-out infinite;
 }
 
 /* Keep the selected memory itself vivid while the animated mascot is disabled. */
@@ -526,11 +529,6 @@
 @keyframes sky-selected-pulse {
   0%, 100% { opacity: .68; transform: scale(.96); }
   50% { opacity: 1; transform: scale(1.035); }
-}
-
-@keyframes sky-selectable-glow {
-  0%, 100% { opacity: .3; transform: scale(.94); }
-  50% { opacity: 1; transform: scale(1.04); }
 }
 
 .sky-node-hit:hover .sky-node-button,
@@ -723,7 +721,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sky-mode-button, .sky-node-button, .personal-sky-viewport .react-flow__edge path { transition: none; }
-  .sky-node.crafting:not(.picked) .sky-node-button::after { animation: none; opacity: .7; }
+  .sky-node.crafting:not(.picked) .sky-node-button::after { animation: none; opacity: 0; }
+  .sky-node.crafting.picked .sky-node-button::after { animation: none; opacity: 1; }
   .sky-node.active .sky-node-button::after { animation: none; opacity: .85; }
   .sky-node-companion { animation: none; }
 }
