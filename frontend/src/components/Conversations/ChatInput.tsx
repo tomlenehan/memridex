@@ -43,6 +43,7 @@ interface ChatInputProps {
   conversationId: number
   storyFinished: boolean
   readyToSave: boolean
+  memoryAlreadySaved: boolean
   userTurnCount: number
 }
 
@@ -54,7 +55,9 @@ const statusLabels = {
   thinking: "MemriPlace is gathering its next question…",
 } as const
 
-const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }: ChatInputProps) => {
+const MIN_STORY_TURNS_BEFORE_SAVE = 6
+
+const ChatInput = ({ conversationId, storyFinished, readyToSave, memoryAlreadySaved, userTurnCount }: ChatInputProps) => {
   const {
     register,
     handleSubmit,
@@ -75,10 +78,8 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [startMode, setStartMode] = useState<"choose" | "voice" | "type">("choose")
   const [isSavingMemory, setIsSavingMemory] = useState(false)
-  const [isWrapping, setIsWrapping] = useState(false)
   const [voiceWrapRequested, setVoiceWrapRequested] = useState(false)
   const savingMemory = useRef(false)
-  const wrapping = useRef(false)
   const sendingMessage = useRef(false)
   const streamingMessageId = useRef<number | null>(null)
   const assistantVoiceMessageId = useRef<number | null>(null)
@@ -260,18 +261,30 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
     onAssistantComplete: handleVoiceAssistantComplete,
     onAssistantCancelled: handleVoiceAssistantCancelled,
     onConversationChanged: refreshConversation,
-    canWrapUp: userTurnCount > 0,
+    canWrapUp: userTurnCount >= MIN_STORY_TURNS_BEFORE_SAVE,
     onWrapRequested: () => setVoiceWrapRequested(true),
     onError: handleVoiceError,
   })
-  const showWelcomeChoice = isFirstTurn && startMode === "choose" && !isVoiceActive
+  const showWelcomeChoice = !isStoryFinished && !memoryAlreadySaved && startMode === "choose" && !isVoiceActive
 
-  const handleSaveMemory = async () => {
-    if (savingMemory.current || sendingMessage.current || !readyToSave || (isVoiceActive && voiceStatus !== "connected")) return
+  const handleSaveMemory = async (endConversation = false) => {
+    if (
+      savingMemory.current ||
+      sendingMessage.current ||
+      memoryAlreadySaved ||
+      (!readyToSave && !endConversation) ||
+      userTurnCount < MIN_STORY_TURNS_BEFORE_SAVE ||
+      (isVoiceActive && voiceStatus !== "connected")
+    ) return
     savingMemory.current = true
     setIsSavingMemory(true)
     try {
       if (isVoiceActive) stop()
+      if (endConversation && !isStoryFinished) {
+        await ConversationsService.wrapUpStoryNode({ id: conversationId })
+        await dispatch(fetchMessages(conversationId))
+        refreshConversation(false)
+      }
       const summary = await SummariesService.createStorySummary({
         requestBody: { conversation_id: conversationId, tone: 50 },
       })
@@ -281,7 +294,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
         queryClient.invalidateQueries({ queryKey: ["conversationConstellation"] }),
       ])
       celebrateMemory()
-      showToast("A new star in your sky", "Your memory is saved. Keep exploring whenever you’re ready.", "success")
+      showToast("Memory saved", "Review and shape your memory on the next page.", "success")
       await navigate({
         to: "/summary/$summaryId",
         params: { summaryId: String(summary.id) },
@@ -298,23 +311,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
     }
   }
 
-  const handleWrapUp = async () => {
-    if (wrapping.current || sendingMessage.current || userTurnCount < 1 || (isVoiceActive && voiceStatus !== "connected")) return
-    wrapping.current = true
-    setIsWrapping(true)
-    try {
-      if (isVoiceActive) stop()
-      await ConversationsService.wrapUpStoryNode({ id: conversationId })
-      await dispatch(fetchMessages(conversationId))
-      refreshConversation(false)
-      showToast("Your story is ready", "Save this memory now, or revisit your map.", "success")
-    } catch (error) {
-      showToast("Could not wrap up", error instanceof Error ? error.message : "Please try again.", "error")
-    } finally {
-      wrapping.current = false
-      setIsWrapping(false)
-    }
-  }
+  const handleWrapUp = () => handleSaveMemory(true)
 
   useEffect(() => {
     if (!voiceWrapRequested) return
@@ -325,8 +322,16 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
   const onSubmit: SubmitHandler<ChatMessageCreate> = async (data) => {
     const content = data.content.trim()
     if (!content || sendingMessage.current) return
-    if (userTurnCount > 0 && /^(let['’]s\s+)?wrap\s+this\s+up[.!?]?$/i.test(content)) {
+    if (/^(let['’]s\s+)?(wrap\s+this\s+up|end(\s+the)?\s+conversation|save(\s+this)?\s+memory)[.!?]?$/i.test(content)) {
       reset()
+      if (userTurnCount < MIN_STORY_TURNS_BEFORE_SAVE) {
+        showToast(
+          "Let’s keep the story going",
+          `Answer ${MIN_STORY_TURNS_BEFORE_SAVE - userTurnCount} more ${MIN_STORY_TURNS_BEFORE_SAVE - userTurnCount === 1 ? "question" : "questions"} before saving this memory.`,
+          "info",
+        )
+        return
+      }
       await handleWrapUp()
       return
     }
@@ -398,7 +403,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
 
   const contentField = register("content", { required: true })
 
-  const voiceStatusLabel = readyToSave && voiceStatus === "connected"
+  const voiceStatusLabel = readyToSave && userTurnCount >= MIN_STORY_TURNS_BEFORE_SAVE && voiceStatus === "connected"
     ? "Your conversation is ready to save."
     : voiceStatus in statusLabels
       ? statusLabels[voiceStatus as keyof typeof statusLabels]
@@ -415,7 +420,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
       width="100%"
     >
       <VStack align="stretch" spacing={3}>
-        {readyToSave && !showWelcomeChoice && (
+        {readyToSave && userTurnCount >= MIN_STORY_TURNS_BEFORE_SAVE && !memoryAlreadySaved && !showWelcomeChoice && (
           <Flex
             align={{ base: "stretch", sm: "center" }}
             justify="space-between"
@@ -431,16 +436,16 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
               <Box>
                 <Text fontWeight="800" color="#244D4C">This memory is ready to save</Text>
                 <Text fontSize="sm" color="#58746C">
-                  {isStoryFinished ? "Give it a place in your constellation." : "Save it now, or keep talking while the details are fresh."}
+                  Save it now and review it on the next page.
                 </Text>
               </Box>
             </HStack>
             <Button
               type="button"
               variant="accent"
-              onClick={handleSaveMemory}
+              onClick={() => void handleSaveMemory(true)}
               isLoading={isSavingMemory}
-              isDisabled={isWrapping || isSubmitting || (isVoiceActive && voiceStatus !== "connected")}
+              isDisabled={isSubmitting || (isVoiceActive && voiceStatus !== "connected")}
               rightIcon={<GiSecretBook />}
               minH="48px"
               flexShrink={0}
@@ -449,7 +454,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
             </Button>
           </Flex>
         )}
-        {!showWelcomeChoice && (!isStoryFinished || isVoiceActive) && (
+        {!showWelcomeChoice && startMode === "voice" && (!isStoryFinished || isVoiceActive) && (
         <Flex
           align={{ base: "stretch", sm: "center" }}
           justify="space-between"
@@ -483,7 +488,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
             </Box>
           </HStack>
           <HStack flexShrink={0}>
-            {isFirstTurn && startMode !== "choose" && (
+            {startMode === "voice" && (
               <Button
                 type="button"
                 variant="ghost"
@@ -491,26 +496,26 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
                 leftIcon={<FiArrowLeft />}
                 onClick={handleBackToEntryChoice}
               >
-                Back
+                Change response mode
               </Button>
             )}
             <Button
               type="button"
               flexShrink={0}
-              variant={isVoiceActive ? "danger" : "primary"}
+              variant={isVoiceActive ? "outline" : "primary"}
               leftIcon={isVoiceActive ? <FiMicOff /> : <FiMic />}
               isLoading={voiceStatus === "connecting"}
               isDisabled={!isVoiceActive && !canStartVoice}
               onClick={handleVoiceToggle}
-              aria-label={isVoiceActive ? "End voice conversation" : "Start voice conversation"}
+              aria-label={isVoiceActive ? "Pause voice conversation" : "Start voice conversation"}
             >
-              {isVoiceActive ? "End voice chat" : voiceStatus === "error" ? "Try voice again" : "Start voice chat"}
+              {isVoiceActive ? "Pause voice chat" : voiceStatus === "error" ? "Try voice again" : "Start voice chat"}
             </Button>
           </HStack>
         </Flex>
         )}
 
-        {!showWelcomeChoice && !isStoryFinished && (
+        {!showWelcomeChoice && startMode === "type" && !isVoiceActive && !isStoryFinished && (
           <Flex
             gap={2}
             align="center"
@@ -527,11 +532,9 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
               aria-label="Story message"
               placeholder={chatStatus !== "succeeded"
                 ? "Loading your story..."
-                : isVoiceActive
-                  ? "Type a memory while you talk..."
-                  : isFirstTurn
-                    ? "Start typing your memory..."
-                    : "Or type a memory or question..."}
+                : isFirstTurn
+                  ? "Write a memory..."
+                  : "Write a detail or ask a question..."}
               bg={bgColor}
                   color={textColor}
                   flex="1"
@@ -554,18 +557,17 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
             </>
           </Flex>
         )}
-        {!isStoryFinished && userTurnCount > 0 && !showWelcomeChoice && (
+        {!showWelcomeChoice && startMode === "type" && !isStoryFinished && (
           <Flex justify="flex-end">
             <Button
               type="button"
               size="sm"
               variant="ghost"
               color="#477B70"
-              onClick={handleWrapUp}
-              isLoading={isWrapping}
-              isDisabled={isSavingMemory || isSubmitting || (isVoiceActive && voiceStatus !== "connected")}
+              leftIcon={<FiArrowLeft />}
+              onClick={handleBackToEntryChoice}
             >
-              Wrap this up
+              Change response mode
             </Button>
           </Flex>
         )}
@@ -594,12 +596,12 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
               Back to my night sky
             </Button>
             <Text as="h2" fontSize="inherit" fontWeight="inherit" lineHeight="inherit">
-              How would you like to tell your story?
+              {isFirstTurn ? "How would you like to tell your story?" : "How would you like to continue this memory?"}
             </Text>
           </ModalHeader>
           <ModalBody pb={6}>
             <Text color="#66807E" lineHeight="1.6" mb={5}>
-              Choose voice to talk naturally, or type at your own pace.
+              Choose one way to continue. Only that input method appears in your story.
             </Text>
             <VStack spacing={3}>
               <Button
@@ -631,7 +633,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, userTurnCount }
         </ModalContent>
       </Modal>
 
-      {voiceStatusLabel && (
+      {startMode === "voice" && !showWelcomeChoice && voiceStatusLabel && (
         <HStack
           mt={3}
           spacing={2}

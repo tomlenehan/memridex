@@ -19,6 +19,7 @@ import {
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import {
+  FiArrowDown,
   FiArrowRight,
   FiBookOpen,
   FiCheck,
@@ -31,7 +32,6 @@ import {
 } from "react-icons/fi"
 
 import memriPlaceLogo from "../assets/images/MemriPlaceLighterLogo.png"
-import memriPlaceTextLogo from "../assets/images/MemriPlaceTextLogoFlat.png"
 import background from "../assets/images/homepage_parallax_flat/background.png"
 import foreground from "../assets/images/homepage_parallax_flat/foreground3.png"
 import midground from "../assets/images/homepage_parallax_flat/midground.png"
@@ -63,22 +63,22 @@ const storySteps = [
   {
     icon: FiBookOpen,
     index: "01",
-    text: "Share a moment that's on your mind.",
+    text: "Choose a prompt or begin with whatever comes to mind.",
     title: "Start with a memory",
     color: "#FFF0BF",
   },
   {
     icon: FiMic,
     index: "02",
-    text: "Chat with your AI companion. She will ask gentle questions to help the details come back.",
-    title: "Tell the whole story",
+    text: "Talk or type. Gentle follow-up questions help bring the details back.",
+    title: "Tell the story",
     color: "#DDEDE1",
   },
   {
     icon: FiStar,
     index: "03",
-    text: "Save your story as a star, then revisit it or connect it with other memories.",
-    title: "Fill your night sky",
+    text: "Save it as a private star, then connect it with other memories when you’re ready.",
+    title: "See it in your night sky",
     color: "#E9DFF1",
   },
 ]
@@ -148,7 +148,6 @@ export function LandingPage({
         `${-sceneHeight * 0.085 * depth}px`,
       )
       copy?.style.setProperty("--copy-opacity", `${1 - progress * 0.1}`)
-      copy?.style.setProperty("--logo-scale", `${1 - 0.04 * depth}`)
     }
 
     const animate = (time: number) => {
@@ -248,8 +247,8 @@ export function LandingPage({
         <Box
           ref={parallaxTrackRef}
           as="section"
-          h={{ base: "160svh", md: "175svh" }}
-          minH={{ base: "calc(600px + 60svh)", md: "calc(600px + 75svh)" }}
+          h={{ base: "112svh", md: "118svh" }}
+          minH={{ base: "calc(600px + 12svh)", md: "calc(600px + 18svh)" }}
           position="relative"
           sx={{
             "@media (prefers-reduced-motion: reduce)": {
@@ -412,7 +411,7 @@ export function LandingPage({
                   to="/signup"
                   variant="accent"
                 >
-                  Begin your story
+                  Start with a memory
                 </Button>
               </HStack>
             </Flex>
@@ -421,8 +420,8 @@ export function LandingPage({
               align={{ base: "flex-start", md: "center" }}
               h="calc(100% - 84px)"
               mx="auto"
-              pb={{ base: 16, md: 20 }}
-              pt={{ base: 10, md: 10 }}
+              pb={{ base: 8, md: 20 }}
+              pt={{ base: 6, md: 10 }}
               px={{ base: 5, md: 8 }}
               position="relative"
               w="full"
@@ -440,36 +439,27 @@ export function LandingPage({
                 }}
               >
                 <Text color="#F4D98D" fontSize="sm" fontWeight="bold">
-                  A little memory. A whole constellation.
+                  MEMRIPLACE · YOUR PRIVATE AI MEMORY JOURNAL
                 </Text>
-                <Heading as="h1" lineHeight={0} maxW="100%">
-                  <Image
-                    alt="MemriPlace"
-                    display="block"
-                    maxW="100%"
-                    objectFit="contain"
-                    src={memriPlaceTextLogo}
-                    transform="scale(var(--logo-scale, 1))"
-                    transformOrigin="left center"
-                    w={{ base: "320px", sm: "430px", md: "650px" }}
-                  />
+                <Heading
+                  as="h1"
+                  color="#FFF8E8"
+                  fontSize={{ base: "40px", sm: "54px", md: "72px" }}
+                  lineHeight="1.04"
+                  maxW="760px"
+                  sx={storybookHeading}
+                >
+                  Turn a memory into a story worth keeping.
                 </Heading>
                 <Text
                   color="rgba(255, 248, 232, 0.92)"
-                  fontSize={{ base: "lg", md: "2xl" }}
-                  lineHeight="1.35"
-                  maxW="560px"
-                  sx={storybookHeading}
+                  fontSize={{ base: "md", md: "xl" }}
+                  lineHeight="1.65"
+                  maxW="590px"
                 >
-                  A lifetime of moments. Your story in the stars
-                </Text>
-                <Text
-                  color="rgba(255, 248, 232, 0.78)"
-                  lineHeight="1.7"
-                  maxW="460px"
-                >
-                  Capture the memories that matter, connect the ones that belong
-                  together, and build a night sky that’s uniquely yours.
+                  Talk or type about a person, place, or moment. Gentle AI
+                  follow-up questions help bring the details back, then your
+                  story finds a place in your personal night sky.
                 </Text>
                 <HStack flexWrap="wrap" pt={2} spacing={3}>
                   <Button
@@ -479,16 +469,26 @@ export function LandingPage({
                     to="/signup"
                     variant="accent"
                   >
-                    Light your first star
+                    Start with a memory
+                  </Button>
+                  <Button
+                    as="a"
+                    href="#how-it-works"
+                    leftIcon={<FiArrowDown />}
+                    size="lg"
+                    variant="outline"
+                    color="#FFF8E8"
+                    borderColor="rgba(255, 248, 232, 0.65)"
+                    bg="rgba(9, 39, 50, 0.42)"
+                    _hover={{ bg: "rgba(255, 248, 232, 0.14)", borderColor: "#FFF8E8" }}
+                  >
+                    See how it works
                   </Button>
                 </HStack>
-                {/*<HStack color="rgba(255,248,232,.85)" spacing={2} fontSize="sm">*/}
-                {/*  <Icon as={FiLock} flexShrink={0} />*/}
-                {/*  <Text>*/}
-                {/*    Your constellation stays private. Share one story at a time,*/}
-                {/*    only when you choose.*/}
-                {/*  </Text>*/}
-                {/*</HStack>*/}
+                <HStack color="rgba(255,248,232,.86)" spacing={2} fontSize="sm">
+                  <Icon as={FiLock} flexShrink={0} />
+                  <Text>Private by default. Share only when you choose.</Text>
+                </HStack>
               </Stack>
             </Flex>
 
@@ -519,10 +519,12 @@ export function LandingPage({
         </Box>
 
         <Box
+          id="how-it-works"
           bg="#FAFBF2"
           pb={{ base: 16, md: 24 }}
           pt={{ base: 10, md: 12 }}
           position="relative"
+          scrollMarginTop="24px"
         >
           <Stack
             maxW="7xl"
@@ -538,7 +540,7 @@ export function LandingPage({
             >
               <Stack flex="1" maxW="660px" minW={0} spacing={3} w="full">
                 <Text color="#2E7A78" fontSize="sm" fontWeight="bold">
-                  BIG STORIES START SMALL
+                  NO PERFECT WORDS REQUIRED
                 </Text>
                 <Heading
                   as="h2"
@@ -546,15 +548,16 @@ export function LandingPage({
                   lineHeight="1"
                   sx={storybookHeading}
                 >
-                  A familiar voice to help you find a spark.
+                  A gentle question can bring a memory back.
                 </Heading>
                 <Text
                   color="#526A70"
                   fontSize={{ base: "md", md: "lg" }}
                   lineHeight="1.7"
                 >
-                  You don’t need to know where to begin. A friendly companion, a
-                  gentle question, and a little curiosity are all it takes.
+                  Start with whatever you remember. MemriPlace asks thoughtful
+                  follow-up questions, and you can answer by voice or text at
+                  your own pace.
                 </Text>
               </Stack>
               <HomepageVoiceSample />
@@ -661,18 +664,18 @@ export function LandingPage({
                 lineHeight="1.08"
                 sx={storybookHeading}
               >
-                Keep leveling up.
+                Every story adds to your sky.
               </Heading>
               <Text color="#617569" fontSize="lg" lineHeight="1.8">
-                Every new story earns you Experience Points (XP). As you level
-                up, your constellations shine brighter in the Global Night Sky.
+                Each saved story helps your personal night sky grow. Earn small
+                milestones as you go, and connect the moments that belong
+                together.
               </Text>
               <HStack spacing={3} align="start">
                 <Icon as={FiSun} color="#A87930" mt={1} boxSize={5} />
                 <Text color="#617569" lineHeight="1.8">
-                  Save a story on consecutive days to build a streak. Or take
-                  your time. Your memories will be waiting whenever you’re
-                  ready.
+                  Streaks can be a fun bonus, but your sky will be here whenever
+                  you return.
                 </Text>
               </HStack>
             </Stack>
@@ -871,14 +874,11 @@ export function LandingPage({
               lineHeight="1.05"
               sx={storybookHeading}
             >
-              Start filling your
-              <br />
-              Night Sky with stories
-              <br />
-              that illuminate
+              Start with one memory.
             </Heading>
             <Text color="#D6E2D4" fontSize="lg" lineHeight="1.7">
-              Let’s find the first one.
+              A few details are enough to begin. MemriPlace can help with the
+              next question.
             </Text>
             <Button
               as={Link}
@@ -888,7 +888,7 @@ export function LandingPage({
               variant="accent"
               mt={2}
             >
-              Begin your story
+              Tell your first memory
             </Button>
             <HStack color="#D6E2D4" spacing={2} fontSize="sm">
               <Icon as={FiLock} />
