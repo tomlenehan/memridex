@@ -180,8 +180,11 @@
 .sky-group-memory svg { flex: 0 0 auto; }
 .sky-group-edit { flex: 0 0 auto; min-height: 44px !important; margin-top: 24px !important; border-radius: 8px !important; }
 
-@media (max-width: 1179px) {
-  .sky-group-panel { width: 100%; height: auto; max-height: 440px; border-top: 1px solid #dce9db; border-left: 0; }
+@media (max-width: 899px) {
+  .personal-sky-body { flex-direction: column; }
+  .sky-story-panel { width: 100%; height: auto; max-height: 500px; border-top: 1px solid #dce9db; border-left: 0; }
+  .public-sky-map .scene-sky { border-radius: 26px 26px 0 0; }
+  .public-sky-memory-reader { flex-basis: auto; width: 100%; height: auto; max-height: 500px; border-top: 0; border-left: 1px solid #dce9db; border-radius: 0 0 26px 26px; }
 }
 
 .personal-sky-viewport::before,

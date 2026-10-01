@@ -1,17 +1,24 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import func, select, Session
+from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
-from app.models import Image, ImagePublic, ImagesPublic, ImageCreate, ImageUpdate, Message
+from app.models import (
+    Image,
+    ImageCreate,
+    ImagePublic,
+    ImagesPublic,
+    ImageUpdate,
+    Message,
+)
 
 router = APIRouter(dependencies=[Depends(get_current_active_superuser)])
 
 
 @router.get("/", response_model=ImagesPublic)
 def read_images(
-        session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+    session: SessionDep, _current_user: CurrentUser, skip: int = 0, limit: int = 100
 ) -> Any:
     """
     Retrieve images.
@@ -24,7 +31,7 @@ def read_images(
 
 
 @router.get("/{id}", response_model=ImagePublic)
-def read_image(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
+def read_image(session: SessionDep, _current_user: CurrentUser, id: int) -> Any:
     """
     Get image by ID.
     """
@@ -36,7 +43,7 @@ def read_image(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
 
 @router.post("/", response_model=ImagePublic)
 def create_image(
-        *, session: SessionDep, current_user: CurrentUser, image_in: ImageCreate
+    *, session: SessionDep, _current_user: CurrentUser, image_in: ImageCreate
 ) -> Any:
     """
     Create new image.
@@ -50,7 +57,7 @@ def create_image(
 
 @router.put("/{id}", response_model=ImagePublic)
 def update_image(
-        *, session: SessionDep, current_user: CurrentUser, id: int, image_in: ImageUpdate
+    *, session: SessionDep, _current_user: CurrentUser, id: int, image_in: ImageUpdate
 ) -> Any:
     """
     Update an image.
@@ -68,7 +75,7 @@ def update_image(
 
 
 @router.delete("/{id}")
-def delete_image(session: SessionDep, current_user: CurrentUser, id: int) -> Message:
+def delete_image(session: SessionDep, _current_user: CurrentUser, id: int) -> Message:
     """
     Delete an image.
     """

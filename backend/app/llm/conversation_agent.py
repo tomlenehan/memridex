@@ -1,10 +1,12 @@
-from typing import AsyncIterable
-from langchain_openai import ChatOpenAI
+import logging
+from collections.abc import AsyncIterable
+
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
+
 from app.llm.tracing import llm_trace_config
 from app.llm.utils import MODEL_NAME
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,8 +15,10 @@ logger = logging.getLogger(__name__)
 class Message(BaseModel):
     content: str
 
-async def send_message(content: str, system_prompt: str, chat_history: list) -> AsyncIterable[str]:
 
+async def send_message(
+    content: str, system_prompt: str, chat_history: list
+) -> AsyncIterable[str]:
     model = ChatOpenAI(
         model=MODEL_NAME,
         streaming=True,
@@ -22,9 +26,10 @@ async def send_message(content: str, system_prompt: str, chat_history: list) -> 
     )
 
     prompt = ChatPromptTemplate.from_messages(
-        [   ("system", "{system}"),
+        [
+            ("system", "{system}"),
             MessagesPlaceholder("history"),
-            ("human", "{question}")
+            ("human", "{question}"),
         ]
     )
 

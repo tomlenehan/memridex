@@ -9,8 +9,8 @@ from sqlmodel import Session, select
 
 from app.core.config import settings
 from app.core.db import engine
-from app.llm.tracing import llm_trace_config
 from app.llm.story_nodes import get_conversation_prompt
+from app.llm.tracing import llm_trace_config
 from app.llm.utils import MIN_READY_USER_TURNS
 from app.models import ChatMessage, ChatMessageSender, Conversation, ConversationStatus
 
@@ -91,4 +91,6 @@ async def assess_story_readiness_after_reply(
                 session.add(conversation)
                 session.commit()
     except Exception:
-        logger.exception("Unable to assess readiness for story node %s", conversation_id)
+        logger.exception(
+            "Unable to assess readiness for story node %s", conversation_id
+        )

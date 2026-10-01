@@ -3,7 +3,7 @@ import hmac
 from collections.abc import Sequence
 
 from app.core.config import settings
-from app.llm.story_nodes import MAX_NODE_USER_TURNS
+from app.llm.utils import MAX_NODE_USER_TURNS
 from app.models import ChatMessage
 
 MAX_HISTORY_CHARS = 6_000
@@ -30,18 +30,17 @@ def build_story_instructions(
     for message in reversed(chat_messages):
         speaker = "Storyteller" if message.sender_type == "user" else "MemriPlace"
         line = f"{speaker}: {message.content.strip()}"
-        if not message.content.strip() or history_length + len(line) > MAX_HISTORY_CHARS:
+        if (
+            not message.content.strip()
+            or history_length + len(line) > MAX_HISTORY_CHARS
+        ):
             continue
         history_lines.append(line)
         history_length += len(line)
 
     history = "\n".join(reversed(history_lines)) or "No previous turns yet."
     latest_message = chat_messages[-1] if chat_messages else None
-    if (
-        user_turn_count == 0
-        and latest_message
-        and latest_message.sender_type == "ai"
-    ):
+    if user_turn_count == 0 and latest_message and latest_message.sender_type == "ai":
         session_opening = (
             "For your first voice response, read aloud the latest MemriPlace message below "
             "exactly as written, with a warm natural delivery, then pause and listen. "
@@ -53,7 +52,9 @@ def build_story_instructions(
             "opening question. Ask it once, then pause and listen. Do not answer it yourself."
         )
     elif user_turn_count >= MAX_NODE_USER_TURNS:
-        session_opening = "Follow the closing instructions below without asking a new question."
+        session_opening = (
+            "Follow the closing instructions below without asking a new question."
+        )
     elif latest_message and latest_message.sender_type == "user":
         session_opening = (
             "The latest transcript entry is a storyteller answer without an AI reply. "
@@ -67,9 +68,7 @@ def build_story_instructions(
             "Do not add another question yet."
         )
     else:
-        session_opening = (
-            "For your first voice response, ask one thoughtful open-ended follow-up, then pause."
-        )
+        session_opening = "For your first voice response, ask one thoughtful open-ended follow-up, then pause."
     return f"""You are MemriPlace, a warm and curious oral-history interviewer.
 Help the storyteller preserve a meaningful memory in their own words.
 

@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
 from app.core.config import settings
-from app.core.security import verify_password
+from app.core.security import get_password_hash, verify_password
 from app.models import User
 from app.utils import generate_password_reset_token
 
@@ -86,6 +86,9 @@ def test_reset_password(
     user = db.exec(user_query).first()
     assert user
     assert verify_password(data["new_password"], user.hashed_password)
+    user.hashed_password = get_password_hash(settings.FIRST_SUPERUSER_PASSWORD)
+    db.add(user)
+    db.commit()
 
 
 def test_reset_password_invalid_token(

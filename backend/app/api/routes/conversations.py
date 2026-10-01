@@ -1,33 +1,36 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from typing import List
-from sqlmodel import func, Session, select
-from typing import Any
 import logging
+from typing import Any
 
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from sqlmodel import Session, func, select
+
+from app.api.deps import get_current_user, get_db
+from app.llm.conversation_lifecycle import run_post_reply_workflow
+from app.llm.story_nodes import create_story_branches
+from app.llm.utils import MAX_NODE_USER_TURNS
 from app.models import (
-    Conversation,
-    ConversationCreate,
-    ConversationStart,
-    ConversationPublic,
-    ConversationsPublic,
-    ConversationStatus,
     ChatMessage,
     ChatMessageSender,
-    UserStoryPrompt,
+    Conversation,
+    ConversationCreate,
+    ConversationPublic,
+    ConversationsPublic,
+    ConversationStart,
+    ConversationStatus,
+    Message,
     StoryStarterTopic,
-    Message
+    User,
+    UserStoryPrompt,
 )
-from app.api.deps import get_current_user, get_db
-from app.models import User
-from app.llm.conversation_lifecycle import run_post_reply_workflow
-from app.llm.story_nodes import MAX_NODE_USER_TURNS, create_story_branches
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 ROOT_NODE_TITLE = "Childhood beginnings"
-ROOT_NODE_PROMPT = "Tell me about your childhood. What's one early moment you still remember?"
+ROOT_NODE_PROMPT = (
+    "Tell me about your childhood. What's one early moment you still remember?"
+)
 STORY_STARTERS = {
     StoryStarterTopic.CHILDHOOD: (
         "A memory from growing up",
@@ -55,7 +58,10 @@ def create_conversation(
     conversation_in: ConversationStart,
     current_user: User = Depends(get_current_user),
 ) -> Any:
-    if conversation_in.user_story_prompt_id is not None and conversation_in.starter_topic is not None:
+    if (
+        conversation_in.user_story_prompt_id is not None
+        and conversation_in.starter_topic is not None
+    ):
         raise HTTPException(status_code=400, detail="Choose one story starter")
     user_story_prompt = None
     if conversation_in.user_story_prompt_id is not None:
@@ -64,7 +70,10 @@ def create_conversation(
         )
         if not user_story_prompt:
             raise HTTPException(status_code=404, detail="User story prompt not found")
-        if user_story_prompt.user_id != current_user.id and not current_user.is_superuser:
+        if (
+            user_story_prompt.user_id != current_user.id
+            and not current_user.is_superuser
+        ):
             raise HTTPException(status_code=403, detail="Not enough permissions")
 
     if user_story_prompt:
@@ -97,12 +106,13 @@ def create_conversation(
 
     return conversation
 
+
 @router.get("/", response_model=ConversationsPublic)
 def read_conversations(
-        sessions: Session = Depends(get_db),
-        skip: int = 0,
-        limit: int = 100,
-        current_user: User = Depends(get_current_user),
+    sessions: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user),
 ) -> ConversationsPublic:
     conversations = sessions.exec(
         select(Conversation)
@@ -119,11 +129,12 @@ def read_conversations(
     count = sessions.exec(count_statement).one()
     return ConversationsPublic(data=conversations, count=count)
 
+
 @router.get("/{id}", response_model=ConversationPublic)
 def read_conversation(
-        id: int,
-        sessions: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user),
+    id: int,
+    sessions: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> Conversation:
     conversation = sessions.get(Conversation, id)
     if not conversation:
@@ -132,13 +143,14 @@ def read_conversation(
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return conversation
 
+
 @router.put("/{id}", response_model=ConversationPublic)
 def update_conversation(
-        *,
-        id: int,
-        conversation_in: ConversationCreate,
-        sessions: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user),
+    *,
+    id: int,
+    conversation_in: ConversationCreate,
+    sessions: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> Conversation:
     conversation = sessions.get(Conversation, id)
     if not conversation:
@@ -161,11 +173,12 @@ def update_conversation(
     sessions.refresh(conversation)
     return conversation
 
+
 @router.delete("/{id}")
 def delete_conversation(
-        id: int,
-        sessions: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+    id: int,
+    sessions: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> Message:
     conversation = sessions.get(Conversation, id)
     if not conversation:
@@ -194,18 +207,29 @@ def activate_story_node(
 
     if conversation.parent_conversation_id is None:
         if conversation.node_depth > 0:
-            raise HTTPException(status_code=409, detail="This story path is not unlocked yet")
+            raise HTTPException(
+                status_code=409, detail="This story path is not unlocked yet"
+            )
     else:
         parent = session.get(Conversation, conversation.parent_conversation_id)
         if not parent or parent.user_id != current_user.id:
-            raise HTTPException(status_code=409, detail="This story path is not unlocked yet")
-        parent_finished = parent.status in {
-            ConversationStatus.READY_FOR_SUMMARY,
-            ConversationStatus.COMPLETE,
-        } or parent.user_turn_count >= MAX_NODE_USER_TURNS
+            raise HTTPException(
+                status_code=409, detail="This story path is not unlocked yet"
+            )
+        parent_finished = (
+            parent.status
+            in {
+                ConversationStatus.READY_FOR_SUMMARY,
+                ConversationStatus.COMPLETE,
+            }
+            or parent.user_turn_count >= MAX_NODE_USER_TURNS
+        )
         if not parent_finished:
             raise HTTPException(status_code=409, detail="Finish the parent story first")
-        if parent.user_turn_count >= MAX_NODE_USER_TURNS and parent.status == ConversationStatus.ACTIVE:
+        if (
+            parent.user_turn_count >= MAX_NODE_USER_TURNS
+            and parent.status == ConversationStatus.ACTIVE
+        ):
             parent.status = ConversationStatus.READY_FOR_SUMMARY
             session.add(parent)
 
@@ -228,20 +252,22 @@ def activate_story_node(
     return conversation
 
 
-@router.post("/{id}/branches", response_model=List[ConversationPublic])
+@router.post("/{id}/branches", response_model=list[ConversationPublic])
 async def retry_story_branches(
     *,
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> List[Conversation]:
+) -> list[Conversation]:
     conversation = session.get(Conversation, id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Story node not found")
     if conversation.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     if conversation.user_turn_count < 1:
-        raise HTTPException(status_code=409, detail="Share a memory before opening new paths")
+        raise HTTPException(
+            status_code=409, detail="Share a memory before opening new paths"
+        )
     if conversation.status not in {
         ConversationStatus.READY_FOR_SUMMARY,
         ConversationStatus.COMPLETE,
@@ -275,7 +301,9 @@ def wrap_up_story_node(
     if conversation.status == ConversationStatus.READY_FOR_SUMMARY:
         return conversation
     if conversation.status != ConversationStatus.ACTIVE:
-        raise HTTPException(status_code=409, detail="This story path cannot be wrapped up")
+        raise HTTPException(
+            status_code=409, detail="This story path cannot be wrapped up"
+        )
     if conversation.user_turn_count < 1:
         raise HTTPException(status_code=409, detail="Share a memory before wrapping up")
 

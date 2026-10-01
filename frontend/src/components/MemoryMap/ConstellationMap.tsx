@@ -75,11 +75,11 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
   const [name, setName] = useState("")
   const [compact, setCompact] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 600px)").matches)
   const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 350px)").matches)
-  const [wideReader, setWideReader] = useState(() => typeof window !== "undefined" && window.matchMedia("(min-width: 1180px)").matches)
+  const [wideReader, setWideReader] = useState(() => typeof window !== "undefined" && window.matchMedia("(min-width: 900px)").matches)
   useEffect(() => {
     const media = window.matchMedia("(max-width: 600px)")
     const narrowMedia = window.matchMedia("(max-width: 350px)")
-    const readerMedia = window.matchMedia("(min-width: 1180px)")
+    const readerMedia = window.matchMedia("(min-width: 900px)")
     const update = () => { setCompact(media.matches); setNarrow(narrowMedia.matches); setWideReader(readerMedia.matches) }
     media.addEventListener("change", update)
     narrowMedia.addEventListener("change", update)
@@ -209,6 +209,24 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
     <Button as={Link} to="/constellation/$constellationId" params={{ constellationId: String(focusedGroup.id) }}
       className="sky-group-edit" variant="outline" leftIcon={<FiEdit3 />} mt="auto">Edit or share</Button>
   </Box>
+  const memoryPanel = selected && !crafting && <Box as="aside" className="sky-story-panel" aria-label="Selected memory" aria-live="polite">
+    <Flex align="center" justify="space-between" gap={2}>
+      <Text className="sky-story-count">Memory {selectedIndex + 1} of {visibleStories.length}</Text>
+      <IconButton aria-label="Close memory" icon={<FiX />} variant="ghost" onClick={() => setSelectedId(null)} />
+    </Flex>
+    <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>{selected.title || "A remembered moment"}</Heading>
+    <Box mt={4}><NarrationControl path={`memories/${selected.id}`} /></Box>
+    {selected.image_url && <Image src={selected.image_url} alt="" maxH="180px" w="full" objectFit="contain" mt={5} />}
+    <Text className="sky-story-text" whiteSpace="pre-wrap" lineHeight="1.8" mt={5}>{selected.summary_text}</Text>
+    <Box className="sky-story-actions">
+      <HStack justify="space-between" mb={4}>
+        <IconButton aria-label="Previous memory" icon={<FiChevronLeft />} variant="outline" onClick={() => stepSelection(-1)} isDisabled={visibleStories.length < 2} />
+        <Text fontSize="sm" color="#61777A">{selectedIndex + 1} / {visibleStories.length}</Text>
+        <IconButton aria-label="Next memory" icon={<FiChevronRight />} variant="outline" onClick={() => stepSelection(1)} isDisabled={visibleStories.length < 2} />
+      </HStack>
+      <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(selected.id) }} variant="accent" leftIcon={<FiEdit3 />} w="full">Open memory</Button>
+    </Box>
+  </Box>
 
   return <Stack spacing={6}>
     <Box className="personal-sky">
@@ -248,7 +266,6 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
           </Button>)}
         </Flex>
       </Box>}
-      {!wideReader && groupPanel}
       <Flex className="personal-sky-body">
         <Box className="personal-sky-viewport" aria-label="Your personal night sky. Select a star to read its memory. Drag to move and use the zoom controls to explore."
           style={compact ? { height: Math.max(600, 180 + Math.ceil(visibleStories.length / (narrow ? 1 : 2)) * (narrow ? 175 : 135)) } : undefined}>
@@ -261,49 +278,14 @@ export default function ConstellationMap({ stories, relationships, groups = [], 
             preventScrolling={false} proOptions={{ hideAttribution: true }}>
             <Controls position={compact ? "top-left" : "bottom-right"} showInteractive={false} />
           </ReactFlow>
-          <Text className="sky-hint">{crafting ? "Select stars to choose them" : selected && wideReader ? "Choose another star to read more" : "Select a star to read its memory"}</Text>
+          <Text className="sky-hint">{crafting ? "Select stars to choose them" : selected ? "Choose another star to read more" : "Select a star to read its memory"}</Text>
         </Box>
-        {wideReader && selected && !crafting && <Box as="aside" className="sky-story-panel" aria-label="Selected memory" aria-live="polite">
-          <Flex align="center" justify="space-between" gap={2}>
-            <Text className="sky-story-count">Memory {selectedIndex + 1} of {visibleStories.length}</Text>
-            <IconButton aria-label="Close memory" icon={<FiX />} variant="ghost" onClick={() => setSelectedId(null)} />
-          </Flex>
-          <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>{selected.title || "A remembered moment"}</Heading>
-          <Box mt={4}><NarrationControl path={`memories/${selected.id}`} /></Box>
-          {selected.image_url && <Image src={selected.image_url} alt="" maxH="180px" w="full" objectFit="contain" mt={5} />}
-          <Text className="sky-story-text" whiteSpace="pre-wrap" lineHeight="1.8" mt={5}>{selected.summary_text}</Text>
-          <Box className="sky-story-actions">
-            <HStack justify="space-between" mb={4}>
-              <IconButton aria-label="Previous memory" icon={<FiChevronLeft />} variant="outline" onClick={() => stepSelection(-1)} isDisabled={visibleStories.length < 2} />
-              <Text fontSize="sm" color="#61777A">{selectedIndex + 1} / {visibleStories.length}</Text>
-              <IconButton aria-label="Next memory" icon={<FiChevronRight />} variant="outline" onClick={() => stepSelection(1)} isDisabled={visibleStories.length < 2} />
-            </HStack>
-            <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(selected.id) }} variant="accent" leftIcon={<FiEdit3 />} w="full">Open memory</Button>
-          </Box>
-        </Box>}
+        {wideReader && memoryPanel}
         {wideReader && groupPanel}
       </Flex>
+      {!wideReader && (memoryPanel || groupPanel)}
       </>}
     </Box>
-
-    <Modal isOpen={!!selected && !crafting && !wideReader} onClose={() => setSelectedId(null)} isCentered size="lg" scrollBehavior="inside">
-      <ModalOverlay bg="rgba(6, 29, 38, .72)" />
-      <ModalContent mx={4} borderRadius="16px" bg="#FFFDF7" color="#17353B">
-        <ModalHeader fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize="2xl" pr={12}>{selected?.title || "A remembered moment"}</ModalHeader>
-        <ModalCloseButton aria-label="Close memory" minW="44px" minH="44px" />
-        <ModalBody>
-          {selected && <Box mb={5}><NarrationControl path={`memories/${selected.id}`} /></Box>}
-          {selected?.image_url && <Image src={selected.image_url} alt="" maxH="260px" w="full" objectFit="contain" mb={5} />}
-          <Text whiteSpace="pre-wrap" lineHeight="1.8" fontSize={{ base: "md", md: "lg" }}>{selected?.summary_text}</Text>
-        </ModalBody>
-        <ModalFooter justifyContent="flex-start">
-          {selected && <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(selected.id) }}
-            onClick={() => setSelectedId(null)} variant="accent" leftIcon={<FiEdit3 />}>
-            Open memory
-          </Button>}
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
 
     <Modal isOpen={naming} onClose={() => setNaming(false)} isCentered><ModalOverlay /><ModalContent borderRadius="26px" mx={4}>
       <ModalHeader>Name your constellation</ModalHeader><ModalCloseButton /><ModalBody>

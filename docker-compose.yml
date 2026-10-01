@@ -28,6 +28,7 @@ services:
       PROJECT_NAME: ${PROJECT_NAME:-MemriPlace}
       DOMAIN: ${DOMAIN:-localhost}
       ENVIRONMENT: ${ENVIRONMENT:-local}
+      RUNNING_TESTS: ${RUNNING_TESTS:-false}
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000}
       SECRET_KEY: ${SECRET_KEY:-local-secret-key-change-me}
       FIRST_SUPERUSER: ${FIRST_SUPERUSER:-admin@example.com}

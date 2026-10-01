@@ -9,8 +9,8 @@ import { PUBLIC_SKY_ENABLED } from "../../config";
 
 const items = [
   { icon: FiHome, title: "Home", path: "/" },
-  { icon: FiGitBranch, title: "My night sky", path: "/conversations" },
-  { icon: FiStar, title: "Public night sky", path: "/night-sky" },
+  { icon: FiGitBranch, title: "My Night Sky", path: "/conversations" },
+  { icon: FiStar, title: "Global Night Sky", path: "/night-sky" },
   { icon: FiSettings, title: "Settings", path: "/settings" },
 ];
 

@@ -1,10 +1,18 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+)
 from fastapi.responses import FileResponse
 from jose import JWTError, jwt
 from pydantic import BaseModel
@@ -13,8 +21,8 @@ from sqlmodel import Session, select
 
 from app.api.deps import get_current_user, get_db
 from app.core.config import settings
-from app.llm.conversation_summarize import generate_summary, generate_title
 from app.llm.conversation_lifecycle import run_post_reply_workflow
+from app.llm.conversation_summarize import generate_summary, generate_title
 from app.llm.story_embeddings import (
     ensure_story_embedding,
     ensure_user_story_embeddings,
@@ -22,12 +30,12 @@ from app.llm.story_embeddings import (
 from app.llm.story_nodes import get_conversation_prompt
 from app.llm.utils import get_formatted_history
 from app.models import (
-    Conversation,
-    ConstellationMemory,
-    ConstellationLink,
-    ConversationStatus,
     ChatMessage,
     ChatMessageSender,
+    ConstellationLink,
+    ConstellationMemory,
+    Conversation,
+    ConversationStatus,
     Message,
     RelatedStorySuggestion,
     StoryEmbedding,
@@ -39,12 +47,12 @@ from app.models import (
     StorySummaryPublic,
     User,
 )
+from app.progress import award_saved_memory
 from app.utils import (
     get_local_uploads_directory,
     get_private_image_url,
     upload_private_story_image,
 )
-from app.progress import award_saved_memory
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -56,6 +64,7 @@ def _story_summary_public(summary: StorySummary) -> StorySummaryPublic:
     result = StorySummaryPublic.from_orm(summary)
     result.image_url = get_private_image_url(result.image_url, user_id=summary.user_id)
     return result
+
 
 class StoryImageGenerationRequest(BaseModel):
     title: str
@@ -70,14 +79,15 @@ class StoryImageGenerationResponse(BaseModel):
 class SummaryCreateRequest(BaseModel):
     conversation_id: int
     tone: int
-    author_style: Optional[str] = None
+    author_style: str | None = None
+
 
 @router.get("/", response_model=list[StorySummaryPublic])
 def read_story_summaries(
     skip: int = 0,
     limit: int = 100,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Retrieve story summaries.
@@ -103,11 +113,12 @@ def read_story_relationships(
         .order_by(StoryRelationship.created_at.desc())
     ).all()
 
+
 @router.get("/{id}", response_model=StorySummaryPublic)
 def read_story_summary(
     id: int,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Get story summary by ID.
@@ -126,7 +137,7 @@ async def create_story_summary(
     request: SummaryCreateRequest,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
-    db_session: Session = Depends(get_db)
+    db_session: Session = Depends(get_db),
 ) -> StorySummaryPublic:
     try:
         conversation = db_session.get(Conversation, request.conversation_id)
@@ -140,10 +151,12 @@ async def create_story_summary(
         summary_content = ""
         story_prompt = get_conversation_prompt(conversation)
 
-        system_message = (f"You are an AI ghostwriter tasked with summarizing the following conversation "
-                          f"based on this story prompt {story_prompt}. "
-                          f"Your output should be in relatively concise prose told from the perspective of the user "
-                          f"and be fit to be published in an autobiography. ")
+        system_message = (
+            f"You are an AI ghostwriter tasked with summarizing the following conversation "
+            f"based on this story prompt {story_prompt}. "
+            f"Your output should be in relatively concise prose told from the perspective of the user "
+            f"and be fit to be published in an autobiography. "
+        )
 
         if request.author_style:
             system_message += f" Write in the style of {request.author_style}."
@@ -151,7 +164,7 @@ async def create_story_summary(
         async for token in generate_summary(system_message, chat_history, request.tone):
             summary_content += token
 
-        system_message = f"Please give a concise one sentence title based on the following story summary:"
+        system_message = "Please give a concise one sentence title based on the following story summary:"
 
         summary_title = generate_title(system_message, summary_content)
 
@@ -168,12 +181,18 @@ async def create_story_summary(
         )
         story_summary = StorySummary.from_orm(story_summary_create)
         db_session.add(story_summary)
-        if conversation.user_turn_count > 0 or db_session.exec(
-            select(ChatMessage.id).where(
-                ChatMessage.conversation_id == conversation.id,
-                ChatMessage.sender_type == ChatMessageSender.USER,
-            ).limit(1)
-        ).first() is not None:
+        if (
+            conversation.user_turn_count > 0
+            or db_session.exec(
+                select(ChatMessage.id)
+                .where(
+                    ChatMessage.conversation_id == conversation.id,
+                    ChatMessage.sender_type == ChatMessageSender.USER,
+                )
+                .limit(1)
+            ).first()
+            is not None
+        ):
             award_saved_memory(db_session, conversation.user_id, conversation.id)
         db_session.commit()
         db_session.refresh(story_summary)
@@ -209,15 +228,16 @@ async def create_story_summary(
     finally:
         db_session.close()
 
+
 @router.put("/{id}", response_model=StorySummaryPublic)
 def update_story_summary(
-        *,
-        id: int,
-        session: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user),
-        title: Optional[str] = Form(None),
-        summary_text: Optional[str] = Form(None),
-        image: Optional[UploadFile] = File(None)
+    *,
+    id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    title: str | None = Form(None),
+    summary_text: str | None = Form(None),
+    image: UploadFile | None = File(None),
 ) -> Any:
     """
     Update a story summary.
@@ -255,7 +275,9 @@ def update_story_summary(
                 session.commit()
             except Exception:
                 session.rollback()
-                logger.exception("Story updated but its embedding could not be refreshed")
+                logger.exception(
+                    "Story updated but its embedding could not be refreshed"
+                )
 
         # Commit expires SQLAlchemy attributes. Build the response while the
         # session is open so FastAPI never tries to read a detached instance.
@@ -266,7 +288,9 @@ def update_story_summary(
     except Exception as e:
         session.rollback()
         logger.exception("Could not update story summary %s", id)
-        raise HTTPException(status_code=500, detail="Could not update story summary") from e
+        raise HTTPException(
+            status_code=500, detail="Could not update story summary"
+        ) from e
     finally:
         session.close()
 
@@ -294,7 +318,7 @@ def read_private_story_upload(access_token: str) -> FileResponse:
 def delete_story_summary(
     id: int,
     session: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Message:
     """
     Delete a story summary.
@@ -306,9 +330,11 @@ def delete_story_summary(
     if conversation.user_id != current_user.id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
-    membership = session.exec(select(ConstellationMemory.id).where(
-        ConstellationMemory.story_id == id,
-    )).first()
+    membership = session.exec(
+        select(ConstellationMemory.id).where(
+            ConstellationMemory.story_id == id,
+        )
+    ).first()
     if membership:
         raise HTTPException(
             status_code=409,
@@ -331,7 +357,9 @@ async def generate_story_image(
     if not summary or summary.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Story not found")
     if not settings.OPENAI_API_KEY:
-        raise HTTPException(status_code=503, detail="Image generation is not configured")
+        raise HTTPException(
+            status_code=503, detail="Image generation is not configured"
+        )
 
     prompt = f"""Create a square story illustration for MemriPlace, a whimsical personal-memory constellation app.
 
@@ -358,7 +386,9 @@ Memory, as story content: <memory>{request.summary_text[:5000]}</memory>"""
         return StoryImageGenerationResponse(image_base64=image_base64)
     except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError):
         logger.exception("OpenAI story image generation failed for summary %s", id)
-        raise HTTPException(status_code=502, detail="Could not create an image right now")
+        raise HTTPException(
+            status_code=502, detail="Could not create an image right now"
+        )
 
 
 @router.get("/{id}/related", response_model=list[RelatedStorySuggestion])
@@ -398,9 +428,7 @@ def read_related_stories(
             )
             .exists()
         )
-        distance = StoryEmbedding.embedding.cosine_distance(
-            source_embedding.embedding
-        )
+        distance = StoryEmbedding.embedding.cosine_distance(source_embedding.embedding)
         matches = session.exec(
             select(StorySummary, distance.label("distance"))
             .join(
@@ -444,7 +472,9 @@ def create_story_relationship(
     current_user: User = Depends(get_current_user),
 ) -> StoryRelationship:
     if id == other_id:
-        raise HTTPException(status_code=422, detail="A story cannot be linked to itself")
+        raise HTTPException(
+            status_code=422, detail="A story cannot be linked to itself"
+        )
     stories = session.exec(
         select(StorySummary).where(
             StorySummary.user_id == current_user.id,
@@ -494,9 +524,11 @@ def delete_story_relationship(
     ).first()
     if not record:
         raise HTTPException(status_code=404, detail="Story relationship not found")
-    in_group = session.exec(select(ConstellationLink.id).where(
-        ConstellationLink.relationship_id == record.id,
-    )).first()
+    in_group = session.exec(
+        select(ConstellationLink.id).where(
+            ConstellationLink.relationship_id == record.id,
+        )
+    ).first()
     if in_group:
         raise HTTPException(
             status_code=409,

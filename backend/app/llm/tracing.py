@@ -17,7 +17,9 @@ def configure_langsmith_tracing() -> None:
 
     api_key = settings.langsmith_api_key
     if not api_key:
-        logger.warning("LangSmith tracing is enabled but no LangSmith API key is configured")
+        logger.warning(
+            "LangSmith tracing is enabled but no LangSmith API key is configured"
+        )
         return
 
     project = settings.langsmith_project

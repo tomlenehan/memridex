@@ -1,5 +1,5 @@
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import delete, func, select, update
@@ -9,22 +9,24 @@ from app.api.deps import (
     CurrentUser,
     SessionDep,
     get_current_active_superuser,
+    get_current_user,
 )
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import (
-    Item,
     ChatMessage,
     Constellation,
     ConstellationReport,
     ConstellationVote,
     Contact,
     Conversation,
+    Item,
     MemoryDay,
     MemoryXP,
     Message,
     PublishedConstellation,
     PublishedMemory,
+    StockStoryPrompt,
     StoryEmbedding,
     StoryRelationship,
     StorySummary,
@@ -34,41 +36,66 @@ from app.models import (
     UserPublic,
     UserRegister,
     UsersPublic,
+    UserStoryPrompt,
     UserUpdate,
     UserUpdateMe,
-    UserStoryPrompt,
-    StockStoryPrompt,
 )
-from app.utils import generate_new_account_email, get_local_uploads_directory, send_email
-from app.api.deps import get_current_user
+from app.utils import (
+    generate_new_account_email,
+    get_local_uploads_directory,
+    send_email,
+)
 
 router = APIRouter()
 
 
 def _delete_account_data(session: SessionDep, user_id: int) -> None:
     """Remove both private records and public copies in one database transaction."""
-    public_files = session.exec(select(PublishedMemory.image_filename)
-        .join(PublishedConstellation, PublishedMemory.publication_id == PublishedConstellation.id)
-        .where(PublishedConstellation.owner_id == user_id,
-               PublishedMemory.image_filename.is_not(None))).all()
-    private_files = session.exec(select(StorySummary.image_url).where(
-        StorySummary.user_id == user_id,
-        StorySummary.image_url.startswith("disk-private://"),
-    )).all()
+    public_files = session.exec(
+        select(PublishedMemory.image_filename)
+        .join(
+            PublishedConstellation,
+            PublishedMemory.publication_id == PublishedConstellation.id,
+        )
+        .where(
+            PublishedConstellation.owner_id == user_id,
+            PublishedMemory.image_filename.is_not(None),
+        )
+    ).all()
+    private_files = session.exec(
+        select(StorySummary.image_url).where(
+            StorySummary.user_id == user_id,
+            StorySummary.image_url.startswith("disk-private://"),
+        )
+    ).all()
     try:
-        session.exec(delete(ConstellationVote).where(ConstellationVote.user_id == user_id))
-        session.exec(delete(ConstellationReport).where(ConstellationReport.user_id == user_id))
-        session.exec(delete(PublishedConstellation).where(PublishedConstellation.owner_id == user_id))
+        session.exec(
+            delete(ConstellationVote).where(ConstellationVote.user_id == user_id)
+        )
+        session.exec(
+            delete(ConstellationReport).where(ConstellationReport.user_id == user_id)
+        )
+        session.exec(
+            delete(PublishedConstellation).where(
+                PublishedConstellation.owner_id == user_id
+            )
+        )
         session.exec(delete(Constellation).where(Constellation.owner_id == user_id))
         session.exec(delete(StoryEmbedding).where(StoryEmbedding.user_id == user_id))
-        session.exec(delete(StoryRelationship).where(StoryRelationship.user_id == user_id))
+        session.exec(
+            delete(StoryRelationship).where(StoryRelationship.user_id == user_id)
+        )
         session.exec(delete(MemoryDay).where(MemoryDay.user_id == user_id))
         session.exec(delete(MemoryXP).where(MemoryXP.user_id == user_id))
         session.exec(delete(Contact).where(Contact.user_id == user_id))
         session.exec(delete(Item).where(Item.owner_id == user_id))
         session.exec(delete(StorySummary).where(StorySummary.user_id == user_id))
         session.exec(delete(ChatMessage).where(ChatMessage.sender_id == user_id))
-        session.exec(update(Conversation).where(Conversation.user_id == user_id).values(parent_conversation_id=None))
+        session.exec(
+            update(Conversation)
+            .where(Conversation.user_id == user_id)
+            .values(parent_conversation_id=None)
+        )
         session.exec(delete(Conversation).where(Conversation.user_id == user_id))
         session.exec(delete(UserStoryPrompt).where(UserStoryPrompt.user_id == user_id))
         session.exec(delete(User).where(User.id == user_id))
@@ -110,7 +137,7 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     "/",
     dependencies=[Depends(get_current_active_superuser)],
     response_model=UserPublic,
-    operation_id="create_user"
+    operation_id="create_user",
 )
 def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
     """
@@ -132,7 +159,7 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
             prompt=stock_prompt.prompt,
             user_id=user.id,
             category_id=stock_prompt.category_id,
-            image_url=stock_prompt.image_url
+            image_url=stock_prompt.image_url,
         )
         session.add(user_prompt)
 
@@ -152,7 +179,7 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
 
 @router.patch("/me", response_model=UserPublic)
 def update_user_me(
-        *, session: SessionDep, user_in: UserUpdateMe, current_user: CurrentUser
+    *, session: SessionDep, user_in: UserUpdateMe, current_user: CurrentUser
 ) -> Any:
     """
     Update own user.
@@ -174,7 +201,7 @@ def update_user_me(
 
 @router.patch("/me/password", response_model=Message)
 def update_password_me(
-        *, session: SessionDep, body: UpdatePassword, current_user: CurrentUser
+    *, session: SessionDep, body: UpdatePassword, current_user: CurrentUser
 ) -> Any:
     """
     Update own password.
@@ -233,7 +260,7 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
 
 @router.get("/{user_id}", response_model=UserPublic)
 def read_user_by_id(
-        user_id: int, session: SessionDep, current_user: CurrentUser
+    user_id: int, session: SessionDep, current_user: CurrentUser
 ) -> Any:
     """
     Get a specific user by id.
@@ -255,10 +282,10 @@ def read_user_by_id(
     response_model=UserPublic,
 )
 def update_user(
-        *,
-        session: SessionDep,
-        user_id: int,
-        user_in: UserUpdate,
+    *,
+    session: SessionDep,
+    user_id: int,
+    user_in: UserUpdate,
 ) -> Any:
     """
     Update a user.
@@ -283,7 +310,7 @@ def update_user(
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_user(
-        session: SessionDep, current_user: CurrentUser, user_id: int
+    session: SessionDep, current_user: CurrentUser, user_id: int
 ) -> Message:
     """
     Delete a user.

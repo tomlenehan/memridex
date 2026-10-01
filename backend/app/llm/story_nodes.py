@@ -1,12 +1,13 @@
+import logging
+
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 from sqlmodel import Session, select
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
-import logging
 
 from app.core.db import engine
 from app.llm.tracing import llm_trace_config
-from app.llm.utils import MAX_NODE_USER_TURNS, MODEL_NAME
+from app.llm.utils import MODEL_NAME
 from app.models import ChatMessage, ChatMessageSender, Conversation, ConversationStatus
 
 MAX_NODE_DEPTH = 4
@@ -26,7 +27,11 @@ class StoryBranchPlan(BaseModel):
 def get_conversation_prompt(conversation: Conversation) -> str:
     return (
         conversation.node_prompt
-        or (conversation.user_story_prompt.prompt if conversation.user_story_prompt else None)
+        or (
+            conversation.user_story_prompt.prompt
+            if conversation.user_story_prompt
+            else None
+        )
         or "Tell me about your childhood. What's one early moment you still remember?"
     )
 
@@ -34,7 +39,11 @@ def get_conversation_prompt(conversation: Conversation) -> str:
 def get_conversation_title(conversation: Conversation) -> str:
     return (
         conversation.node_title
-        or (conversation.user_story_prompt.prompt if conversation.user_story_prompt else None)
+        or (
+            conversation.user_story_prompt.prompt
+            if conversation.user_story_prompt
+            else None
+        )
         or "A remembered moment"
     )
 
@@ -140,4 +149,6 @@ async def generate_story_branches_after_reply(conversation_id: int) -> None:
             await create_story_branches(conversation, session)
         except Exception:
             session.rollback()
-            logger.exception("Unable to generate story branches for node %s", conversation_id)
+            logger.exception(
+                "Unable to generate story branches for node %s", conversation_id
+            )
