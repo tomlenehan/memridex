@@ -1,3 +1,5 @@
+:root { --night-sky-canvas-height: clamp(400px, 48vw, 560px); }
+
 .personal-sky {
   overflow: hidden;
   border: 1px solid #355b64;
@@ -7,11 +9,12 @@
 }
 
 .scene-sky { overflow: hidden; border: 1px solid #355b64; border-radius: 26px; background: #0c2635; }
-.scene-viewport { height: 390px; }
+.scene-viewport { height: var(--night-sky-canvas-height); }
 
 .public-sky-memory-reader {
   flex: 0 0 340px;
-  height: 390px;
+  box-sizing: border-box;
+  height: var(--night-sky-canvas-height);
   overflow-y: auto;
   padding: 22px;
   border: 1px solid #dce9db;
@@ -21,11 +24,12 @@
   color: #17353b;
 }
 
-.public-sky-map .scene-sky { border-radius: 26px 0 0 26px; }
+.public-sky-map--with-reader .scene-sky { border-radius: 26px 0 0 26px; }
 
 .constellation-memory-reader {
   flex: 0 0 340px;
-  height: 390px;
+  box-sizing: border-box;
+  height: var(--night-sky-canvas-height);
   overflow-y: auto;
   padding: 22px;
   border: 1px solid #dce9db;
@@ -37,17 +41,21 @@
 
 .constellation-sky-map .scene-sky { border-radius: 26px 0 0 26px; }
 
-.sky-mode-switch { padding: 4px; border: 1px solid #cadfd5; border-radius: 9px; background: #edf4ed; }
-.sky-mode-button { min-height: 44px !important; padding: 0 16px !important; border-radius: 6px !important; background: transparent !important; color: #375f59 !important; font-weight: 750 !important; }
-.sky-mode-button[aria-pressed="true"] { background: #fffdf7 !important; color: #17353b !important; box-shadow: 0 1px 5px rgba(16, 54, 51, .16); }
+.sky-mode-switch { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.sky-mode-button { min-height: 52px !important; padding: 0 20px !important; border: 1px solid #DDE5D9 !important; border-radius: 6px !important; background: #4B7976 !important; color: #FFF9E9 !important; font-size: 18px !important; font-weight: 750 !important; box-shadow: inset 0 1px rgba(255, 255, 255, .24), 0 4px 0 #275653, 0 6px 9px rgba(1, 19, 25, .24); transform: translateY(-2px); transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+.sky-mode-button[aria-pressed="true"] { background: #DDE5D9 !important; border-color: #DDE5D9 !important; color: #17353B !important; box-shadow: inset 0 4px 9px rgba(23, 53, 59, .2), 0 1px 0 rgba(255, 255, 255, .7); transform: translateY(2px); }
+.sky-mode-button:not([aria-pressed="true"]):hover { background: #5A8985 !important; transform: translateY(-3px); }
+.sky-mode-button:not([aria-pressed="true"]):active { transform: translateY(1px); box-shadow: inset 0 3px 7px rgba(1, 19, 25, .32); }
 .sky-mode-button:focus-visible { outline: 3px solid #d88b4a; outline-offset: 2px; }
 
 .sky-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  min-height: 54px;
-  margin-bottom: 17px;
+  min-height: 72px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(206, 231, 222, .16);
 }
 
 .sky-toolbar > .sky-mode-switch {
@@ -55,34 +63,65 @@
   justify-self: center;
 }
 
-.sky-primary-action {
-  grid-column: 3;
-  justify-self: start;
-  margin-left: 24px;
-  min-width: 196px !important;
+.sky-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
 }
 
-.sky-list-toggle { color: #fff9e9 !important; min-height: 48px !important; }
-.sky-toolbar > .sky-list-toggle {
-  grid-column: 3;
-  justify-self: end;
+.sky-primary-action {
+  flex: 0 0 auto;
+  min-width: 248px !important;
+  min-height: 54px !important;
+  border-radius: 10px !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
 }
+.sky-primary-action-add { min-width: 188px !important; }
+
+.sky-list-toggle { flex: 0 0 auto; color: #fff9e9 !important; min-height: 48px !important; white-space: nowrap !important; }
 .sky-list-toggle:hover { background: rgba(221, 239, 227, .12) !important; }
 .sky-list-toggle:focus-visible { outline: 3px solid #f8d881; outline-offset: 2px; }
-.sky-header-copy { padding-top: 16px; border-top: 1px solid rgba(206, 231, 222, .16); }
-.sky-memory-list { min-height: 400px; padding: 24px; background: #f4f7ef; }
+.sky-header-copy { min-height: 96px; }
+.sky-list-content { min-height: 400px; padding: 24px; background: #f4f7ef; }
+.sky-constellation-list-row {
+  width: 100%;
+  min-height: 92px;
+  padding: 16px 18px;
+  border: 1px solid #dce7dc;
+  border-left: 7px solid var(--constellation-accent);
+  border-radius: 10px;
+  background: #fffdf7;
+  color: #17353b;
+  box-shadow: 0 3px 0 #dce5d8;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.sky-constellation-list-row:hover {
+  transform: translateY(-2px);
+  border-color: var(--constellation-accent);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--constellation-accent) 42%, #dce5d8), 0 10px 20px rgba(23, 53, 59, .08);
+}
+.sky-constellation-list-row:active { transform: translateY(1px); box-shadow: 0 1px 0 #dce5d8; }
+.sky-constellation-list-row:focus-visible { outline: 3px solid #d88b4a; outline-offset: 3px; }
+.sky-constellation-list-symbol {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border: 1px solid color-mix(in srgb, var(--constellation-accent) 72%, #fff);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--constellation-accent) 34%, #fffdf7);
+  color: #285a55;
+}
 
-@media (min-width: 601px) and (max-width: 1480px) {
-  .sky-toolbar-has-list {
-    min-height: 108px;
-    align-items: start;
-  }
-  .sky-toolbar-has-list > .sky-mode-switch,
-  .sky-toolbar-has-list > .sky-primary-action { margin-top: 4px; }
-  .sky-toolbar-has-list > .sky-list-toggle {
-    grid-row: 2;
-    margin-top: 6px;
-  }
+@media (max-width: 1050px) {
+  .sky-mode-button { padding: 0 14px !important; font-size: 16px !important; }
+  .sky-header-actions { gap: 6px; }
+  .sky-primary-action { min-width: 216px !important; padding: 0 12px !important; font-size: 16px !important; }
+  .sky-primary-action-add { min-width: 168px !important; }
+  .sky-list-toggle { padding-inline: 12px !important; }
 }
 
 .personal-sky-header {
@@ -107,6 +146,7 @@
 .sky-constellation-options {
   overflow-x: auto;
   padding-bottom: 3px;
+  padding-top: 8px;
   scrollbar-width: thin;
 }
 
@@ -153,16 +193,17 @@
 
 .sky-overline {
   color: #f7d581;
-  font-size: .78rem;
+  font-size: .95rem;
   font-weight: 900;
-  letter-spacing: .1em;
+  line-height: 1.35;
+  letter-spacing: .07em;
 }
 
 .personal-sky-viewport {
   position: relative;
   flex: 1;
   min-width: 0;
-  height: clamp(400px, 48vw, 560px);
+  height: var(--night-sky-canvas-height);
   background:
     radial-gradient(ellipse at 22% 25%, rgba(80, 142, 137, .31), transparent 36%),
     radial-gradient(ellipse at 82% 70%, rgba(96, 92, 151, .25), transparent 42%),
@@ -173,7 +214,8 @@
   display: flex;
   flex: 0 0 340px;
   flex-direction: column;
-  height: clamp(400px, 48vw, 560px);
+  box-sizing: border-box;
+  height: var(--night-sky-canvas-height);
   overflow-y: auto;
   padding: 22px;
   border-left: 1px solid #dce9db;
@@ -185,6 +227,10 @@
 .sky-story-title { line-height: 1.25; }
 .sky-story-text { font-size: 17px; }
 .sky-story-actions { margin-top: auto; padding-top: 24px; }
+.sky-unfinished-panel { background: linear-gradient(160deg, #f4f8f1, #fffdf7 66%); }
+.sky-unfinished-panel-icon { display: grid; width: 52px; height: 52px; margin-top: 18px; place-items: center; border: 2px dashed #5f8b80; border-radius: 50%; background: #dce9df; color: #285a55; font-size: 24px; }
+.sky-unfinished-panel-copy { color: #4d6766; font-size: 16px; line-height: 1.65; }
+.sky-unfinished-panel-action { flex: 0 0 auto; min-height: 46px !important; margin-top: 28px !important; }
 
 .sky-group-panel-symbol { display: grid; place-items: center; width: 48px; height: 48px; margin-top: 16px; border: 2px solid var(--group-color); border-radius: 12px; background: color-mix(in srgb, var(--group-color) 36%, white); color: #17353b; font-size: 26px; }
 .sky-group-panel-overview { color: #4d6766; font-size: 16px; line-height: 1.65; }
@@ -196,8 +242,9 @@
 
 @media (max-width: 899px) {
   .personal-sky-body { flex-direction: column; }
+  .personal-sky-viewport { flex: 0 0 auto; width: 100%; }
   .sky-story-panel { width: 100%; height: auto; max-height: 500px; border-top: 1px solid #dce9db; border-left: 0; }
-  .public-sky-map .scene-sky { border-radius: 26px 26px 0 0; }
+  .public-sky-map--with-reader .scene-sky { border-radius: 26px 26px 0 0; }
   .public-sky-memory-reader { flex-basis: auto; width: 100%; height: auto; max-height: 500px; border-top: 0; border-left: 1px solid #dce9db; border-radius: 0 0 26px 26px; }
   .constellation-sky-map .scene-sky { border-radius: 26px 26px 0 0; }
   .constellation-memory-reader { flex-basis: auto; width: 100%; height: auto; max-height: 500px; border-top: 0; border-left: 1px solid #dce9db; border-radius: 0 0 26px 26px; }
@@ -318,6 +365,29 @@
   overflow: visible;
 }
 
+.sky-node.crafting .sky-node-button::after {
+  content: "";
+  position: absolute;
+  inset: -11px;
+  border-radius: 36px;
+  pointer-events: none;
+  box-shadow: 0 0 0 3px #f8d881, 0 0 27px 9px rgba(248, 216, 129, .8);
+}
+
+.sky-node.crafting:not(.picked) .sky-node-button::after {
+  animation: sky-selectable-glow 2s ease-in-out infinite;
+}
+
+.sky-node.crafting.picked .sky-node-button::after {
+  opacity: 1;
+  box-shadow: 0 0 0 5px #ffe4a4, 0 0 35px 12px rgba(248, 216, 129, .85);
+}
+
+@keyframes sky-selectable-glow {
+  0%, 100% { opacity: .3; transform: scale(.94); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
 .sky-node-hit:hover .sky-node-button,
 .sky-node-hit:focus-visible .sky-node-button,
 .sky-node.active .sky-node-button,
@@ -366,6 +436,69 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
+
+.sky-unfinished-node .sky-node-button {
+  width: 68px;
+  height: 68px;
+  border: 2px dashed rgba(205, 222, 214, .76);
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #d5dfd7, #82958f 58%, #4d6664);
+  box-shadow: 0 3px 0 rgba(5, 24, 30, .32), 0 0 0 7px rgba(190, 206, 198, .06), 0 0 20px rgba(184, 205, 193, .2);
+  color: #365150;
+  opacity: .84;
+  transform: rotate(8deg);
+}
+
+.sky-unfinished-node .sky-node-button > svg {
+  width: 32px;
+  height: 32px;
+  fill: rgba(244, 247, 238, .7);
+}
+
+.sky-unfinished-node .sky-node-title {
+  min-height: 45px;
+  border-style: dashed;
+  border-color: rgba(202, 221, 211, .32);
+  background: rgba(12, 42, 51, .72);
+  color: #e4eee7;
+  font-size: 14px;
+}
+
+.sky-unfinished-node-kicker {
+  display: block;
+  margin-bottom: 2px;
+  color: #b9d0c2;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .09em;
+}
+
+.sky-unfinished-node-icon {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 2px solid #dce8df;
+  border-radius: 50%;
+  background: #264b4d;
+  color: #f7d581;
+  box-shadow: 0 2px 6px rgba(5, 24, 30, .4);
+}
+
+.sky-unfinished-node-icon svg { width: 12px; height: 12px; }
+
+.sky-unfinished-node.active .sky-node-button,
+.sky-unfinished-node .sky-node-hit:hover .sky-node-button,
+.sky-unfinished-node .sky-node-hit:focus-visible .sky-node-button {
+  border-color: #dce8df;
+  box-shadow: 0 4px 0 rgba(5, 24, 30, .32), 0 0 0 5px rgba(173, 211, 193, .5), 0 0 28px rgba(183, 218, 200, .48);
+  opacity: 1;
+  transform: rotate(0deg) translateY(-3px) scale(1.04);
+}
+
 .sky-flow-node-selected { z-index: 10 !important; }
 
 .sky-hint {
@@ -396,11 +529,16 @@
 @media (max-width: 600px) {
   .personal-sky { border-radius: 25px; }
   .personal-sky-header { padding: 20px; }
-  .sky-toolbar { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+  .sky-toolbar { display: flex; flex-direction: column; gap: 12px; align-items: stretch; min-height: 0; margin-top: 18px; padding-top: 18px; }
   .sky-toolbar > .sky-mode-switch { justify-content: center; }
+  .sky-mode-button { flex: 1; padding: 0 8px !important; font-size: 16px !important; }
+  .sky-header-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+  .sky-header-copy { min-height: 0; }
+  .sky-overline { font-size: .84rem; }
   .sky-primary-action { min-width: 0 !important; }
-  .sky-toolbar > .sky-list-toggle { align-self: flex-end; }
-  .sky-memory-list { padding: 16px; }
+  .sky-list-content { padding: 16px; }
+  .sky-constellation-list-row { min-height: 84px; padding: 14px; }
+  .sky-constellation-list-symbol { flex-basis: 46px; width: 46px; height: 46px; }
   .sky-constellation-bar { padding: 15px 20px; }
   .personal-sky-viewport { height: 600px; }
   .scene-viewport { height: 390px; }
@@ -409,5 +547,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sky-node-button, .personal-sky-viewport .react-flow__edge path { transition: none; }
+  .sky-mode-button, .sky-node-button, .personal-sky-viewport .react-flow__edge path { transition: none; }
+  .sky-node.crafting:not(.picked) .sky-node-button::after { animation: none; opacity: .7; }
 }

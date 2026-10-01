@@ -29,8 +29,8 @@ import UserMenu from "./UserMenu"
 import { PUBLIC_SKY_ENABLED } from "../../config"
 
 const links = [
-  { label: "My night sky", to: "/conversations", icon: FiGitBranch },
-  { label: "Public night sky", to: "/night-sky", icon: FiStar },
+  { label: "My Night Sky", to: "/conversations", icon: FiStar },
+  { label: "Global Night Sky", to: "/night-sky", icon: FiGitBranch },
 ] as const
 
 function AppHeader() {
@@ -80,6 +80,7 @@ function AppHeader() {
               key={item.label}
               as={Link}
               to={item.to}
+              search={item.to === "/conversations" ? {} : undefined}
               variant="ghost"
               leftIcon={<Icon as={item.icon} />}
               borderRadius="full"
@@ -120,6 +121,22 @@ function AppHeader() {
           gap={{ base: 1, md: 3 }}
           ml={{ base: "auto", md: 0 }}
         >
+          <Button
+            aria-label="Log out"
+            onClick={logout}
+            variant="ghost"
+            color="ui.main"
+            fontWeight="700"
+            minH="44px"
+            minW={{ base: "44px", md: "auto" }}
+            px={{ base: 0, md: 3 }}
+            _hover={{ bg: "#EAF3F1", color: "ui.mainDark" }}
+          >
+            <Icon as={FiLogOut} mr={{ base: 0, md: 2 }} />
+            <Box as="span" display={{ base: "none", md: "inline" }}>
+              Log out
+            </Box>
+          </Button>
           <UserMenu />
           <IconButton
             aria-label="Open navigation menu"
@@ -145,6 +162,7 @@ function AppHeader() {
                   key={item.label}
                   as={Link}
                   to={item.to}
+                  search={item.to === "/conversations" ? {} : undefined}
                   onClick={onClose}
                   justifyContent="flex-start"
                   leftIcon={<Icon as={item.icon} />}
@@ -199,9 +217,10 @@ function AppHeader() {
                 justifyContent="flex-start"
                 leftIcon={<FiLogOut />}
                 variant="ghost"
-                color="ui.danger"
+                color="ui.main"
                 minH="54px"
                 fontSize="lg"
+                _hover={{ bg: "#EAF3F1", color: "ui.mainDark" }}
               >
                 Log out
               </Button>

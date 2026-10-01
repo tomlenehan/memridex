@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlmodel import delete, func, select, update
 
 from app import crud
@@ -48,9 +50,40 @@ from app.utils import (
 
 router = APIRouter()
 
+PROFILE_IMAGE_MAX_BYTES = 5 * 1024 * 1024
+PROFILE_IMAGE_DIRECTORY = "profile_images"
+PROFILE_IMAGE_ROUTE = f"{settings.API_V1_STR}/users/profile-images/"
+
+
+def _profile_image_type(data: bytes) -> tuple[str, str] | None:
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png", "image/png"
+    if data.startswith(b"\xff\xd8\xff"):
+        return ".jpg", "image/jpeg"
+    if len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return ".webp", "image/webp"
+    return None
+
+
+def _local_profile_image_filename(image_url: str | None) -> str | None:
+    if not image_url or not image_url.startswith(PROFILE_IMAGE_ROUTE):
+        return None
+    filename = image_url.removeprefix(PROFILE_IMAGE_ROUTE)
+    return filename if Path(filename).name == filename else None
+
+
+def _delete_local_profile_image(image_url: str | None) -> None:
+    filename = _local_profile_image_filename(image_url)
+    if filename:
+        (get_local_uploads_directory() / PROFILE_IMAGE_DIRECTORY / filename).unlink(
+            missing_ok=True
+        )
+
 
 def _delete_account_data(session: SessionDep, user_id: int) -> None:
     """Remove both private records and public copies in one database transaction."""
+    user = session.get(User, user_id)
+    profile_image_url = user.profile_image_url if user else None
     public_files = session.exec(
         select(PublishedMemory.image_filename)
         .join(
@@ -112,6 +145,7 @@ def _delete_account_data(session: SessionDep, user_id: int) -> None:
             filename = image_url.removeprefix("disk-private://")
             if Path(filename).name == filename:
                 (directory / filename).unlink(missing_ok=True)
+    _delete_local_profile_image(profile_image_url)
 
 
 @router.get(
@@ -222,6 +256,74 @@ def update_password_me(
 @router.get("/me", response_model=UserPublic)
 def read_user_me(current_user: User = Depends(get_current_user)) -> UserPublic:
     return UserPublic.from_orm(current_user)
+
+
+@router.post("/me/profile-image", response_model=UserPublic)
+async def upload_profile_image(
+    session: SessionDep,
+    current_user: CurrentUser,
+    image: UploadFile = File(...),
+) -> Any:
+    data = await image.read(PROFILE_IMAGE_MAX_BYTES + 1)
+    if len(data) > PROFILE_IMAGE_MAX_BYTES:
+        raise HTTPException(
+            status_code=413, detail="Profile image must be 5 MB or smaller"
+        )
+    detected = _profile_image_type(data)
+    if not detected:
+        raise HTTPException(
+            status_code=400,
+            detail="Choose a PNG, JPEG, or WebP image",
+        )
+
+    suffix, _ = detected
+    directory = get_local_uploads_directory() / PROFILE_IMAGE_DIRECTORY
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+        filename = f"{uuid4()}{suffix}"
+        (directory / filename).write_bytes(data)
+    except OSError as error:
+        raise HTTPException(
+            status_code=500, detail="Could not store the profile image"
+        ) from error
+
+    previous_image_url = current_user.profile_image_url
+    current_user.profile_image_url = f"{PROFILE_IMAGE_ROUTE}{filename}"
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+    _delete_local_profile_image(previous_image_url)
+    return current_user
+
+
+@router.delete("/me/profile-image", response_model=UserPublic)
+def delete_profile_image(session: SessionDep, current_user: CurrentUser) -> Any:
+    previous_image_url = current_user.profile_image_url
+    current_user.profile_image_url = None
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+    _delete_local_profile_image(previous_image_url)
+    return current_user
+
+
+@router.get("/profile-images/{filename}", include_in_schema=False)
+def read_profile_image(filename: str) -> FileResponse:
+    if Path(filename).name != filename:
+        raise HTTPException(status_code=404, detail="Profile image not found")
+    detected_type = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".webp": "image/webp",
+    }.get(Path(filename).suffix.lower())
+    image_path = get_local_uploads_directory() / PROFILE_IMAGE_DIRECTORY / filename
+    if not detected_type or not image_path.is_file():
+        raise HTTPException(status_code=404, detail="Profile image not found")
+    return FileResponse(
+        image_path,
+        media_type=detected_type,
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
 
 
 @router.delete("/me", response_model=Message)

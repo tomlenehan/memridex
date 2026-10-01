@@ -33,32 +33,35 @@ that publishes `db` port `5432` to an unused host port.
 
 FastAPI docs are proxied through the frontend at http://localhost:5173/docs.
 
-## Demo Account
+## Demo Accounts
 
-To populate a fictional example account and the Global Night Sky locally, after
+To populate two fictional example accounts and the Global Night Sky locally, after
 the stack is running:
 
 ```sh
 docker compose exec -T backend python -m app.demo_data seed
 ```
 
-The login is saved in `backend/.demo-credentials.local.json` with owner-only
-permissions. It is ignored by Git. Sign in at http://localhost:5173/login with
-those credentials. The example has eight memories (including the original
-questions and answers), two published constellations, and one private
-constellation. Public examples show `[Demo]` next to the author's name.
+Evelyn's login is saved in `backend/.demo-credentials.local.json`, and Daniel's
+in `backend/.demo-credentials-daniel.local.json`. Both files have owner-only
+permissions and are ignored by Git. Sign in at http://localhost:5173/login with
+either account. Each has eight memories (including the original questions and
+answers), two published constellations, and one private constellation. Public
+examples show `[Demo]` next to the author's name.
 
-The seed command is idempotent: running it again leaves the account and any
-edits to it unchanged. Check or remove only the demo account with:
+The seed command is idempotent: running it again leaves existing accounts and
+their edits unchanged. Use `seed --email daniel.demo@memriplace.test` to add only
+Daniel. Check both accounts or remove one with:
 
 ```sh
 docker compose exec -T backend python -m app.demo_data status
 docker compose exec -T backend python -m app.demo_data clear --confirm-email evelyn.demo@memriplace.test
 ```
 
-Clearing removes the login, its private memories/transcripts, and its public
-constellation snapshots; it does not reset the database or delete customers.
-The local credentials file is removed too. Run `seed` again to recreate the demo.
+Clearing removes only the specified login, its private memories/transcripts,
+and its public constellation snapshots; it does not reset the database or delete
+other users. That account's local credentials file is removed too. Run `seed`
+again to recreate it.
 
 On Render, deploy the code (the Blueprint enables the Global Night Sky), set a
 strong `DEMO_PASSWORD` environment variable on the API service, then run this
@@ -70,6 +73,7 @@ python -m app.demo_data seed --no-credentials-file
 
 Keep the Render password in your password manager; the local credentials file
 does not contain the Render password unless you deliberately use the same value.
+Both demo accounts use `DEMO_PASSWORD` when seeded with `--no-credentials-file`.
 Use the same `status` and `clear --confirm-email ...` commands in the Render
 Shell when the public demo is no longer needed. Do not put a demo password in Git.
 
@@ -112,8 +116,8 @@ Google under **Your account > My profile** before using Google to sign in.
 
 The frontend is configured as the public app. It serves static files and proxies
 `/api`, `/docs`, and `/redoc` to the API service's Render-managed public hostname.
-The frontend remains on Render's free web-service plan. The API uses
-`0.5c-512mb`, so it stays available instead of sleeping after inactivity. The
+The frontend and API both use Render's `0.5c-512mb` plan, so they stay
+available instead of sleeping after inactivity. The
 database uses `0.1c-256mb` with 1 GB of storage so it does not expire under the
 free database limit. The backend runs migrations and seeds initial data from
 `backend/prestart.sh` before starting.

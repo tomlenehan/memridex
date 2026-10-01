@@ -1004,6 +1004,14 @@ export const $UserPublic = {
 	type: 'number',
 	isRequired: true,
 },
+		profile_image_url: {
+	type: 'any-of',
+	contains: [{
+	type: 'string',
+}, {
+	type: 'null',
+}],
+},
 		user_story_prompts: {
 	type: 'array',
 	contains: {

@@ -93,7 +93,7 @@ export const nightSkyApi = {
   preview: (id: number, author_name: string) => request<PublicConstellation>(`/night-sky/preview/${id}`, { method: "POST", body: JSON.stringify({ author_name }) }),
   publish: (id: number, author_name: string, preview_token: string) => request<PublicConstellation>(`/night-sky/publish/${id}`, { method: "POST", body: JSON.stringify({ author_name, preview_token }) }),
   unpublish: (id: number) => request<void>(`/night-sky/publish/${id}`, { method: "DELETE" }),
-  browse: (sort: "recent" | "appreciated" = "recent", skip = 0) => request<SkyPage>(`/night-sky/?sort=${sort}&skip=${skip}`, {}, false),
+  browse: (sort: "recent" | "celebrated" = "recent", skip = 0) => request<SkyPage>(`/night-sky/?sort=${sort}&skip=${skip}`, {}, false),
   publicDetail: (id: number) => request<PublicConstellation>(`/night-sky/${id}`, {}, false),
   voteStatus: (id: number) => request<{ votes: number; voted: boolean }>(`/night-sky/${id}/vote`),
   vote: (id: number) => request<{ votes: number; voted: boolean }>(`/night-sky/${id}/vote`, { method: "POST" }),

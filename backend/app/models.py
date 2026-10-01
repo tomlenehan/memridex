@@ -44,6 +44,7 @@ class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str
     google_sub: str | None = Field(default=None, unique=True, index=True)
+    profile_image_url: str | None = None
     items: list["Item"] = Relationship(back_populates="owner")
     user_story_prompts: list["UserStoryPrompt"] = Relationship(back_populates="user")
     conversations: list["Conversation"] = Relationship(back_populates="user")
@@ -54,6 +55,7 @@ class User(UserBase, table=True):
 
 class UserPublic(UserBase):
     id: int
+    profile_image_url: str | None = None
     user_story_prompts: list["UserStoryPrompt"]
     conversations: list["Conversation"]
     chat_messages: list["ChatMessage"]

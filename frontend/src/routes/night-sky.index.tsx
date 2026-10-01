@@ -1,6 +1,7 @@
 import {
   Alert,
   AlertIcon,
+  Avatar,
   Box,
   Button,
   Flex,
@@ -8,6 +9,7 @@ import {
   Heading,
   Icon,
   Image,
+  Select,
   Spinner,
   Text,
 } from "@chakra-ui/react"
@@ -16,9 +18,8 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { Controls, type Node, type NodeProps, ReactFlow } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { useEffect, useState } from "react"
-import { FiArrowRight, FiList, FiMoon, FiStar } from "react-icons/fi"
+import { FiArrowRight, FiList, FiStar } from "react-icons/fi"
 import memriPlaceMark from "../assets/images/MemriPlaceLighterLogo.png"
-import ConstellationStar from "../components/Common/ConstellationStar"
 import AppHeader from "../components/Common/AppHeader"
 import { type SkyCluster, nightSkyApi } from "../lib/nightSkyApi"
 import "./public-night-sky.css"
@@ -26,7 +27,7 @@ import "./public-night-sky.css"
 export const Route = createFileRoute("/night-sky/")({ component: PublicSky })
 
 function PublicSky() {
-  const [sort, setSort] = useState<"recent" | "appreciated">("recent")
+  const [sort, setSort] = useState<"recent" | "celebrated">("recent")
   const [view, setView] = useState<"sky" | "list">("sky")
   const [page, setPage] = useState(0)
   const signedIn =
@@ -78,100 +79,43 @@ function PublicSky() {
           </Button>
         </HStack>
       </Flex>}
-      <Box className="public-night-sky" color="#FFF9E8" pb={16}>
-        <Flex
-          maxW="7xl"
-          mx="auto"
-          px={{ base: 5, md: 10 }}
-          pt={{ base: 10, md: 16 }}
-          pb={8}
-          align="center"
-          justify="space-between"
-          gap={5}
-        >
-          <Box>
-            <HStack
-              color="#F5D785"
-              fontSize="xs"
-              fontWeight="800"
-              letterSpacing=".13em"
-            >
-              <Icon as={FiMoon} /> STORIES SHARED BY CHOICE
-            </HStack>
-            <Heading
-              fontFamily={'"Iowan Old Style", Georgia, serif'}
-              fontSize={{ base: "4xl", md: "6xl" }}
-              mt={3}
-            >
-              The Global Night Sky
-            </Heading>
-            <Text
-              color="#D4E7DF"
-              maxW="640px"
-              fontSize={{ base: "md", md: "lg" }}
-              mt={4}
-              lineHeight="1.7"
-            >
-              {query.isSuccess && !hasSharedStories
-                ? "Shared constellations will appear here. Your own memories stay private unless you choose to share."
-                : "Each glow is a constellation someone chose to share. Select one to read its story."}
-            </Text>
-          </Box>
-          <ConstellationStar
-            boxSize="130px"
-            display={{ base: "none", md: "block" }}
-          />
-        </Flex>
-        {hasSharedStories && (
-          <Flex
-            maxW="7xl"
-            mx="auto"
-            px={{ base: 5, md: 10 }}
-            justify="space-between"
-            align="center"
-            flexWrap="wrap"
-            gap={3}
-            mb={6}
-          >
-            <HStack>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setSort("recent")
-                  setPage(0)
-                }}
-                variant={sort === "recent" ? "solid" : "outline"}
-                colorScheme="yellow"
-              >
-                Recently shared
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setSort("appreciated")
-                  setPage(0)
-                }}
-                variant={sort === "appreciated" ? "solid" : "outline"}
-                colorScheme="yellow"
-              >
-                Appreciated
-              </Button>
-            </HStack>
-            <Button
-              size="sm"
-              onClick={() => setView(view === "sky" ? "list" : "sky")}
-              leftIcon={<FiList />}
-              variant="outline"
-              color="#FFF9E8"
-              bg="transparent"
-              borderColor="#A7CAC1"
-              _hover={{ bg: "#315B65" }}
-            >
-              {view === "sky" ? "List view" : "Sky view"}
-            </Button>
-          </Flex>
-        )}
-        <Box maxW="7xl" mx="auto" px={{ base: 5, md: 10 }}>
+      <Box as="main" w="full" px={{ base: 4, sm: 6, md: 8 }} py={{ base: 6, md: 8 }}>
+        <Box maxW="1280px" mx="auto" pb={{ base: 12, md: 20 }}>
+          <Box className="public-night-sky" color="#FFF9E8">
+            <Box className="public-night-sky-header">
+              <Flex className="public-sky-header-copy" justify="space-between" align={{ base: "start", md: "center" }} direction={{ base: "column", md: "row" }} gap={4}>
+                <Box>
+                  <Text className="public-sky-overline">✦ &nbsp;THE SHARED NIGHT SKY</Text>
+                  <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" color="#FFF9EA" mt={1}>
+                    Stories shared in starlight
+                  </Heading>
+                  <Text color="#D0E2D9" fontSize="md" mt={2}>
+                    {query.isSuccess && !hasSharedStories
+                      ? "Shared constellations will appear here."
+                      : "Select a constellation to explore its memories."}
+                  </Text>
+                </Box>
+                <HStack className="public-sky-header-actions" spacing={2}>
+                  <Select
+                    className="public-sky-sort-select"
+                    aria-label="Sort constellations"
+                    value={sort}
+                    onChange={(event) => {
+                      setSort(event.target.value as "recent" | "celebrated")
+                      setPage(0)
+                    }}
+                  >
+                    <option value="recent">Recently shared</option>
+                    <option value="celebrated">Most celebrated</option>
+                  </Select>
+                  <Button className="public-sky-list-toggle" size="md" variant="ghost" leftIcon={<FiList />}
+                    isDisabled={!hasSharedStories} onClick={() => setView(view === "sky" ? "list" : "sky")}>
+                    {view === "sky" ? "View as list" : "Back to sky"}
+                  </Button>
+                </HStack>
+              </Flex>
+            </Box>
+            <Box className="public-sky-content">
           {query.isLoading && (
             <Flex minH="300px" align="center" justify="center">
               <Spinner size="xl" color="#F5D785" />
@@ -215,7 +159,7 @@ function PublicSky() {
             (view === "sky" ? (
               <PublicSkyCanvas data={data} />
             ) : (
-              <Box bg="#153845" borderRadius="24px" p={{ base: 4, md: 7 }}>
+              <Box className="public-sky-list" p={{ base: 4, md: 7 }}>
                 {data.map((item) => (
                   <Flex
                     key={item.id}
@@ -235,7 +179,7 @@ function PublicSky() {
                       <Text fontWeight="800">{item.title}</Text>
                       <Text fontSize="sm" color="#BED8CF">
                         {item.author_name} · Level {item.author_level} ·{" "}
-                        {item.star_count} stars · {item.votes} appreciations
+                        {item.star_count} stars · {item.votes} celebrations
                       </Text>
                     </Box>
                     <FiArrowRight />
@@ -244,7 +188,7 @@ function PublicSky() {
               </Box>
             ))}
           {query.isSuccess && query.data && query.data.count > 24 && (
-            <HStack justify="center" mt={7}>
+            <HStack className="public-sky-pagination" justify="center">
               <Button
                 size="sm"
                 onClick={() => setPage(Math.max(0, page - 1))}
@@ -264,6 +208,8 @@ function PublicSky() {
               </Button>
             </HStack>
           )}
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Box>
@@ -345,6 +291,7 @@ function PublicSkyCanvas({ data }: { data: SkyCluster[] }) {
 }
 
 function Cluster({ item }: { item: SkyCluster }) {
+  const authorName = item.author_name.replace(/\s*\[Demo\]\s*$/, "")
   const glow = Math.min(28, 5 + Math.log2(item.votes + 1) * 5)
   const points = (item.preview_stars ?? []).map((point) => ({
     x: 25 + Math.max(0, Math.min(1, point.x)) * 210,
@@ -367,6 +314,10 @@ function Cluster({ item }: { item: SkyCluster }) {
       direction="column"
       style={{ boxShadow: `0 0 ${glow}px rgba(247, 217, 135, .28)` }}
     >
+      <HStack className="public-cluster-author" spacing={2}>
+        <Avatar name={authorName} size="sm" bg="#DDE5D9" color="#17353B" />
+        <Text noOfLines={1}>{authorName}</Text>
+      </HStack>
       <Box className="public-cluster-art" aria-hidden="true">
         <svg
           aria-hidden="true"
@@ -413,9 +364,6 @@ function Cluster({ item }: { item: SkyCluster }) {
       >
         {item.title}
       </Heading>
-      <Text fontSize="sm" color="#D1E7DA" mt={1}>
-        by {item.author_name}
-      </Text>
       <Flex
         align="center"
         justify="space-between"
@@ -425,7 +373,7 @@ function Cluster({ item }: { item: SkyCluster }) {
         fontSize="sm"
         gap={2}
       >
-        <Text whiteSpace="nowrap">{item.votes} appreciations</Text>
+        <Text whiteSpace="nowrap">{item.votes} celebrations</Text>
         <HStack spacing={1} whiteSpace="nowrap">
           <Text>Open</Text>
           <FiArrowRight />

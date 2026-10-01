@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import secrets
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -36,6 +37,11 @@ from app.models import (
 DEMO_EMAIL = "evelyn.demo@memriplace.test"
 DEMO_NAME = "Evelyn Carter [Demo]"
 CREDENTIALS_PATH = Path(__file__).resolve().parents[1] / ".demo-credentials.local.json"
+SECOND_DEMO_EMAIL = "daniel.demo@memriplace.test"
+SECOND_DEMO_NAME = "Daniel Mercer [Demo]"
+SECOND_CREDENTIALS_PATH = (
+    Path(__file__).resolve().parents[1] / ".demo-credentials-daniel.local.json"
+)
 
 
 # Fictional stories with the same summary / transcript split as real memories.
@@ -183,48 +189,211 @@ GROUPS = [
     },
 ]
 
+SECOND_MEMORIES = [
+    (
+        "Saturday mornings in Dad's garage",
+        prose(
+            "Dad's garage had a narrow path between the bicycles, the lawn mower, and shelves of jars filled with screws. On Saturday mornings he opened the side door before breakfast and let the sunlight fall across his workbench. I followed him out carrying two mugs of tea. He never asked me to stay, but he always moved a stool within reach. The radio played quietly enough that we could hear somebody calling from the house.",
+            "The summer I turned twelve, he helped me repair a bicycle I had bought from a neighbor. I wanted to replace every rusty part at once. Dad asked me to start with the chain, then the brakes, then the wheel that rubbed against the frame. He let me make a few mistakes and showed me how to undo them. By late afternoon my hands were black with grease and we had used only a fraction of the parts I thought we needed.",
+            "I rode the bicycle down our street while Dad watched from the driveway. What I remember now is less the finished bike than those hours beside him. He was a man who found conversation difficult across a dinner table, but next to an open toolbox he could tell me about his first job, his own father, and the things he still hoped to learn. I kept returning to the garage because work gave us a way to be together.",
+        ),
+        "Where did you spend time with someone who mattered to you?",
+        "In my dad's garage. It was crowded with bicycles and coffee tins full of screws, but he always made space for a stool beside his workbench. On Saturdays I brought him tea and stayed while he repaired whatever had broken during the week.",
+        "Can you remember a day there particularly clearly?",
+        "We repaired a secondhand bicycle when I was twelve. I wanted to replace everything, but Dad taught me to solve one problem at a time. By the time I rode it down the street, my hands were greasy and we had talked more than we usually did over dinner.",
+    ),
+    (
+        "The rain-soaked little league game",
+        prose(
+            "My younger brother Leo and I played on the same little league team for one season, though he was much better than I was. One Saturday the sky darkened in the middle innings and parents began folding their chairs. I was in the outfield, hoping the ball would go anywhere else. Leo was at second base, shouting encouragement as if he were announcing a game on the radio.",
+            "A fly ball came toward me just as the rain started. I lost it against the low gray clouds, took two steps the wrong way, and caught it against my chest almost by accident. The field erupted in laughter and applause. Leo ran out through the mud and slapped my glove so hard it stung. We lost the game anyway. Afterward we sat in Dad's car with towels over our knees and argued about whether my catch counted as skill.",
+            "For years Leo introduced the story by saying that I caught the ball with my eyes closed. He was probably right. When I remember that day, I think about how freely he celebrated something small that happened to me, even while he was the one everybody expected to play well. We have lived in different cities for a long time, but he still sends me a message whenever the first spring rain interrupts a baseball game.",
+        ),
+        "Tell me about a moment you shared with a sibling.",
+        "My brother Leo and I played little league together one rainy season. He was the confident one. I spent most games hoping nothing would come my way in the outfield, but one afternoon a fly ball did.",
+        "What happened after you caught it?",
+        "I caught it against my chest as the rain began, mostly by luck. Leo ran through the mud to congratulate me. We lost, then sat in Dad's car with towels over our knees while he claimed I had caught it with my eyes closed. He still reminds me of it when spring games get rained out.",
+    ),
+    (
+        "The bridge we built over the creek",
+        prose(
+            "Behind our neighborhood ran a shallow creek with banks that turned slippery after rain. Leo and I spent a whole summer crossing it on stepping stones to reach a patch of woods we called our fort. When one stone disappeared beneath the current, we asked Dad whether he could build us a bridge. He said we could build one together if we first figured out where the ground was firm enough to hold it.",
+            "We drew a plan on the back of a grocery receipt. Dad found two leftover boards, and Leo insisted on painting the rails blue. The first version wobbled, so we took it apart and set the supports farther back. For weeks we carried tools down the path after supper. Our neighbors stopped to watch, offer advice, and sometimes help. The finished bridge was short enough to cross in three steps, but to us it made the woods feel much farther away.",
+            "A storm eventually washed part of it downstream. I expected Dad to be annoyed about the work we had lost. Instead he asked what the creek had taught us about where to place the supports. We rebuilt it the following weekend. I think of that bridge whenever a project has to be started again. The part I value is not that we got it right; it is that we learned to look carefully and try once more.",
+        ),
+        "Did you build or make something memorable as a child?",
+        "My brother Leo and I built a tiny bridge over the creek behind our street with Dad. It was meant to get us to the woods we called our fort. We drew the first plan on a grocery receipt and carried boards down the path after supper.",
+        "What do you remember about making it together?",
+        "It wobbled at first, so we moved the supports and tried again. Leo painted the rails blue. A storm later washed some of it away, and Dad asked what we had learned before we rebuilt it. I still think about the patience he showed us.",
+    ),
+    (
+        "A voicemail from my grandfather",
+        prose(
+            "Granddad called every Sunday evening during my first year away from home. He would ask whether I had eaten properly, then tell me one small piece of news from the neighborhood. Often it was about somebody's dog or a repair he was planning. He left messages when I missed the call, beginning with a long pause while he decided what to say. I saved one in which he simply asked whether I had found a good place to walk near my apartment.",
+            "At the time I was trying hard to sound capable. I told him my classes were going well and the city was easy to navigate, even on weeks when I felt lost. He never pushed for a more dramatic confession. Instead he described the route he used to take to work and suggested that a familiar walk might help me feel at home. The next morning I tried the park behind the library and kept going back.",
+            "After he died, that saved voicemail became difficult to play for a while. Eventually I listened again and heard the pauses, the background tick of his kitchen clock, and the easy expectation that we would speak the following week. I still take a walk when a new place feels strange. His advice was modest, but it gave me a way to begin belonging somewhere.",
+        ),
+        "Is there a voice you can still hear clearly?",
+        "My grandfather's. He called every Sunday during my first year away from home and left a voicemail if I missed him. I saved one where he asked whether I had found a good walking route near my apartment.",
+        "Why did you keep that message?",
+        "I was lonely but trying to sound as if everything was fine. He suggested that a familiar walk might help. I found a park behind the library the next day. After he died, I played the message again and could hear his kitchen clock in the background.",
+    ),
+    (
+        "The first apartment above the bakery",
+        prose(
+            "My first apartment after college was above a bakery on a street that woke up before I did. The floor tilted toward the front windows, and the kitchen was barely wide enough for one person to turn around. I had a mattress, a borrowed table, and a stack of books standing in for a bedside shelf. Every morning I could smell bread through the floorboards before my alarm sounded.",
+            "I had moved there for a new job and knew almost nobody. On Thursdays I went downstairs for a loaf at closing time. The baker, Mr. Kwan, asked how work was going and remembered when I mentioned a difficult week. Once, during a snowstorm, he and his daughter invited the people in the building to wait out a power cut downstairs. We sat around the darkened counter sharing soup and whatever bread was left. By the time the lights returned, I knew my neighbors' names.",
+            "I lived there for only two years. I remember the rent and the drafty windows, but I also remember how the place slowly stopped feeling temporary. I learned which steps creaked, found a route to the park Granddad had suggested, and began saying hello to people on my way home. The bakery did more than make the building smell good. It helped turn a strange street into one where I felt expected.",
+        ),
+        "What did your first place of your own feel like?",
+        "It was a small apartment above a bakery. The floor slanted, the kitchen barely fit one person, and the smell of bread came through the floorboards every morning. I had moved for work and hardly knew anyone.",
+        "When did that place begin to feel like home?",
+        "During a snowstorm the power went out, and the baker invited everyone downstairs to share soup and leftover bread. I learned my neighbors' names that evening. After that, the street felt less like a place I happened to live and more like somewhere I belonged.",
+    ),
+    (
+        "The blue toolbox",
+        prose(
+            "Dad gave me his blue metal toolbox when he decided the weight of it was getting too much to carry. The paint was chipped near the latch, and one drawer needed a firm pull before it would open. He had placed paper labels inside for drill bits, washers, and the small parts he always insisted were worth keeping. I recognized a bent screwdriver from the summer we repaired my bicycle together.",
+            "I brought the box to my apartment and left it closed for weeks. It felt strange to take something so closely associated with Dad's garage and make it part of my own place. Then a kitchen chair came loose. I found the right screw in one of his jars, tightened the leg, and called to tell him. He laughed because he remembered saving that exact screw. We talked about the old bicycle and the bridge over the creek, and I realized the box was still giving us reasons to speak.",
+            "Now I add my own labels beside his. Some tools have outlived the work he bought them for, and others are still waiting for a job. I want to keep the box useful rather than display it untouched. Each time I open a drawer, I remember Dad's habit of looking closely before replacing anything. I hear him asking what is actually broken and whether we might be able to mend it together.",
+        ),
+        "Is there an object you inherited or were given that matters to you?",
+        "Dad's blue metal toolbox. He gave it to me when it became too heavy for him to carry. The paint is chipped and the drawers have his handwritten labels. One bent screwdriver was there when we fixed my bicycle as a kid.",
+        "How do you use it now?",
+        "I use it for ordinary repairs. The first time I found a screw for a loose kitchen chair, I called Dad and he remembered saving it. The toolbox gives us another way to talk, and I have started adding my own labels next to his.",
+    ),
+    (
+        "Teaching Maya to ride",
+        prose(
+            "When my daughter Maya asked to learn to ride a bicycle, I took her to the school parking lot on a Sunday morning. I had brought the old advice Dad gave me in his garage: start with one problem at a time. Maya wanted me to let go immediately and also wanted me to promise she would not fall. I could not honestly promise both. We practiced pushing off, then balancing, then stopping where she chose.",
+            "For a while I ran beside her with one hand on the back of the seat. She kept looking over her shoulder to check whether I was still there, and each time the front wheel swerved. I told her to look toward the far fence. On the next try I let go without announcing it. She rode the length of the parking lot, braked hard, and turned around with a look of surprise that quickly became a grin. We called my dad from the curb while she was still wearing her helmet.",
+            "That evening Maya asked if we could go back the following weekend. She did fall a few times after that first ride, and we learned how to make room for that too. I often think about the garage when I watch her now. Dad gave me patience in the form of a repaired bicycle; I am trying to pass along that patience while allowing her to find her own balance.",
+        ),
+        "Tell me about something you taught someone else.",
+        "I taught my daughter Maya to ride a bicycle in the school parking lot. She wanted me to let go right away but also wanted to know she would never fall. We practiced starting, balancing, and stopping one piece at a time.",
+        "What part of that day stays with you?",
+        "She kept turning to see if I was holding the seat, so I asked her to look toward the fence. I let go and she rode all the way across the lot. We called my dad afterward. I remembered him helping me fix my own bike years earlier.",
+    ),
+    (
+        "Leo's midnight call",
+        prose(
+            "Leo called close to midnight the week he became a father. He had spent the day telling relatives that everyone was doing well, and now the house was quiet enough for him to admit he was frightened. He asked whether I remembered Dad ever being uncertain. I thought of the bridge over the creek, the wobbly first supports, and how Dad never pretended that the first version had worked.",
+            "We talked for nearly an hour. Leo described the sound of his son breathing in the next room and the fear of missing something important. I could not offer a rule that would make the fear disappear. I told him about teaching Maya to ride and how often I had to decide when to steady her and when to let her try. He laughed at the thought of me running across a parking lot. Before hanging up, he said he might take the baby out for a walk in the morning.",
+            "The next day he sent a photograph of a stroller beneath the trees in his neighborhood. We have shared plenty of jokes since then, including the old story of my rain-soaked baseball catch. That call remains different. It was a moment when we stopped performing the roles we had as boys and spoke plainly as two men trying to care well for our families.",
+        ),
+        "Do you remember a conversation that changed a relationship?",
+        "My brother Leo called late at night after his son was born. He had reassured everyone else all day, then finally admitted he was scared. He asked whether Dad had ever seemed uncertain when we were children.",
+        "What did you tell him?",
+        "I remembered how Dad rebuilt a bridge with us after the first one failed. I also told Leo about teaching Maya to ride, when I had to choose when to hold on and when to let go. We could speak honestly that night in a way we rarely had as boys.",
+    ),
+]
 
-def _credentials(password: str | None, write_file: bool) -> tuple[str, bool]:
+SECOND_GROUPS = [
+    {
+        "title": "What Dad taught with his hands",
+        "overview": prose(
+            "Some of my clearest memories of Dad begin beside a workbench. His garage was crowded and imperfect, but there was always a stool for me. When we repaired a secondhand bicycle together, I wanted every rusty piece replaced at once. He showed me how to find the problem in front of us: the chain, the brakes, then the wheel. The bike mattered, but the time beside him mattered more. Working gave us room to talk about things that were harder to say across a table.",
+            "That same patience shaped the little bridge Leo and I built across the creek. Our first supports wobbled, and a storm washed away part of the finished bridge. Dad treated both setbacks as information. He asked us to look at the bank again and decide where the ground would hold. Years later he handed me his blue toolbox, with its chipped paint and labeled drawers. It contained the bent screwdriver from my bicycle and the small screws he had saved for some future repair. Using it to fix my own kitchen chair reminded me that his way of approaching a problem had traveled with me.",
+            "When I taught Maya to ride, I found myself breaking the task into small parts just as Dad had done. I steadied her seat until she could balance, then let go so she could discover that she could ride. These memories belong together because Dad's lessons were never only about tools. They were about attention, patience, and trust: looking closely at what needs help, accepting another attempt, and knowing when somebody is ready to move forward on their own.",
+        ),
+        "stories": (0, 2, 5, 6),
+        "positions": ((0.16, 0.36), (0.43, 0.14), (0.78, 0.33), (0.51, 0.76)),
+        "links": ((0, 2), (0, 5), (5, 6), (2, 6)),
+        "public": True,
+    },
+    {
+        "title": "Learning where home is",
+        "overview": prose(
+            "Leaving home made me notice which familiar things I had taken for granted. During my first year away, Granddad called each Sunday evening. I saved a voicemail where he asked whether I had found a good place to walk near my apartment. He did not ask me to confess that I was lonely; he simply offered a small way to make the city feel less strange. I found a park behind the library and returned until the route became mine.",
+            "Later I moved into an apartment above a bakery for my first job. Its floors slanted, the kitchen was narrow, and I knew few people on the street. On a snowy night when the power went out, the baker invited everyone in the building downstairs for soup and leftover bread. I learned my neighbors' names by candlelight. The morning smell of baking had made the place pleasant, but being welcomed by people who expected to see me again made it feel like home.",
+            "Leo's midnight call after his son was born revealed another kind of belonging. We had grown up teasing each other about a lucky baseball catch in the rain. That night we spoke as adults about our fears of letting the people we love down. The old jokes still have their place, but the call gave our relationship more room. Together, these memories remind me that home is made through return: a weekly call, a familiar walk, a neighbor opening a door, or a brother who knows he can call at midnight.",
+        ),
+        "stories": (1, 3, 4, 7),
+        "positions": ((0.19, 0.23), (0.76, 0.70), (0.70, 0.18), (0.28, 0.75)),
+        "links": ((1, 7), (7, 3), (3, 4), (1, 4)),
+        "public": True,
+    },
+    {
+        "title": "Knowing when to let go",
+        "overview": prose(
+            "Dad never fixed my bicycle for me while I watched. He put the right tool in my hand, explained what to check, and stood close enough that I could ask for help. When our creek bridge failed, he showed Leo and me how to move the supports and begin again. Those afternoons taught me that helping someone is not always the same as taking over. The work became ours because he allowed us to make mistakes that we could understand and repair.",
+            "I felt the weight of that lesson with Maya in the school parking lot. She wanted to ride at once and wanted a promise that she would never fall. I ran beside her, holding the seat until she was balanced, then let go. The look on her face when she stopped at the far fence belonged entirely to her. She fell a few times later, and we went back the next weekend. The first ride was one moment in a much longer practice of encouraging her while leaving space for her own choices.",
+            "When Leo called after his son was born, I could hear how much he wanted to do everything correctly. I could not give him certainty. I could share what I had learned from Dad and Maya, and stay on the phone while he talked. These stories are connected by a simple, difficult question: when does love mean holding steady, and when does it mean trusting someone else to find their balance? I am still learning the answer. I think Dad was too.",
+        ),
+        "stories": (0, 2, 6, 7),
+        "positions": ((0.19, 0.50), (0.51, 0.19), (0.80, 0.56), (0.48, 0.82)),
+        "links": ((0, 6), (2, 6), (6, 7)),
+        "public": False,
+    },
+]
+
+
+@dataclass(frozen=True)
+class DemoProfile:
+    email: str
+    name: str
+    credentials_path: Path
+    memories: list
+    groups: list
+
+
+PROFILES = {
+    DEMO_EMAIL: DemoProfile(DEMO_EMAIL, DEMO_NAME, CREDENTIALS_PATH, MEMORIES, GROUPS),
+    SECOND_DEMO_EMAIL: DemoProfile(
+        SECOND_DEMO_EMAIL,
+        SECOND_DEMO_NAME,
+        SECOND_CREDENTIALS_PATH,
+        SECOND_MEMORIES,
+        SECOND_GROUPS,
+    ),
+}
+
+
+def _credentials(
+    profile: DemoProfile, password: str | None, write_file: bool
+) -> tuple[str, bool]:
     if not write_file:
         if not password:
             raise ValueError("Set DEMO_PASSWORD when using --no-credentials-file")
         return password, False
-    if CREDENTIALS_PATH.exists():
-        data = json.loads(CREDENTIALS_PATH.read_text())
-        if data.get("email") != DEMO_EMAIL or not isinstance(data.get("password"), str):
-            raise ValueError(f"Unexpected credential file: {CREDENTIALS_PATH}")
+    if profile.credentials_path.exists():
+        data = json.loads(profile.credentials_path.read_text())
+        if data.get("email") != profile.email or not isinstance(data.get("password"), str):
+            raise ValueError(f"Unexpected credential file: {profile.credentials_path}")
         if password and password != data["password"]:
             raise ValueError(
                 "DEMO_PASSWORD does not match the existing local credential file"
             )
         return data["password"], False
     password = password or secrets.token_urlsafe(24)
-    fd = os.open(CREDENTIALS_PATH, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    fd = os.open(
+        profile.credentials_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+    )
     with os.fdopen(fd, "w") as handle:
-        json.dump({"email": DEMO_EMAIL, "password": password}, handle, indent=2)
+        json.dump({"email": profile.email, "password": password}, handle, indent=2)
         handle.write("\n")
     return password, True
 
 
-def seed(write_file: bool = True) -> None:
+def seed(profile: DemoProfile, write_file: bool = True) -> None:
     with Session(engine) as session:
-        existing = session.exec(select(User).where(User.email == DEMO_EMAIL)).first()
+        existing = session.exec(select(User).where(User.email == profile.email)).first()
         if existing:
-            if existing.full_name != DEMO_NAME or existing.is_superuser:
+            if existing.full_name != profile.name or existing.is_superuser:
                 raise ValueError(
                     "Demo email belongs to a different account; refusing to change it"
                 )
-            print("Demo account already exists. No data or password was changed.")
+            print(f"{profile.email} already exists. No data or password was changed.")
             return
 
         password, created_file = _credentials(
-            os.environ.get("DEMO_PASSWORD"), write_file
+            profile, os.environ.get("DEMO_PASSWORD"), write_file
         )
         now = datetime.utcnow()
         try:
             user = User(
-                email=DEMO_EMAIL,
-                full_name=DEMO_NAME,
+                email=profile.email,
+                full_name=profile.name,
                 hashed_password=get_password_hash(password),
                 is_active=True,
                 is_superuser=False,
@@ -239,8 +408,8 @@ def seed(write_file: bool = True) -> None:
                 answer1,
                 question2,
                 answer2,
-            ) in enumerate(MEMORIES):
-                timestamp = now - timedelta(days=len(MEMORIES) - index - 1)
+            ) in enumerate(profile.memories):
+                timestamp = now - timedelta(days=len(profile.memories) - index - 1)
                 conversation = Conversation(
                     user_id=user.id,
                     node_title=title,
@@ -291,8 +460,8 @@ def seed(write_file: bool = True) -> None:
                 session.add(MemoryDay(user_id=user.id, activity_date=timestamp.date()))
 
             relationships = {}
-            for number, group in enumerate(GROUPS):
-                created_at = now - timedelta(days=2 - number)
+            for number, group in enumerate(profile.groups):
+                created_at = now - timedelta(days=len(profile.groups) - number - 1)
                 constellation = Constellation(
                     owner_id=user.id,
                     title=group["title"],
@@ -339,7 +508,7 @@ def seed(write_file: bool = True) -> None:
                         owner_id=user.id,
                         title=constellation.title,
                         overview=constellation.overview,
-                        author_name=DEMO_NAME,
+                        author_name=profile.name,
                         author_level=3,
                         published_at=created_at,
                     )
@@ -372,24 +541,28 @@ def seed(write_file: bool = True) -> None:
         except Exception:
             session.rollback()
             if created_file:
-                CREDENTIALS_PATH.unlink(missing_ok=True)
+                profile.credentials_path.unlink(missing_ok=True)
             raise
-    print("Seeded one fictional account, 8 memories, 3 constellations (2 public).")
+    print(
+        f"Seeded {profile.email}: {len(profile.memories)} memories, "
+        f"{len(profile.groups)} constellations "
+        f"({sum(group['public'] for group in profile.groups)} public)."
+    )
     if write_file:
-        print(f"Login credentials: {CREDENTIALS_PATH}")
+        print(f"Login credentials: {profile.credentials_path}")
     else:
         print("Login password is the DEMO_PASSWORD value supplied for this run.")
 
 
-def refresh() -> None:
-    """Replace only Evelyn's seeded story text, transcripts, and public snapshots.
+def refresh(profile: DemoProfile) -> None:
+    """Replace one demo account's story text, transcripts, and public snapshots.
 
     Existing IDs, relationships, publication state, and credentials stay intact.
     This is explicit because ``seed`` intentionally leaves an existing account alone.
     """
     with Session(engine) as session:
-        user = session.exec(select(User).where(User.email == DEMO_EMAIL)).first()
-        if not user or user.full_name != DEMO_NAME or user.is_superuser:
+        user = session.exec(select(User).where(User.email == profile.email)).first()
+        if not user or user.full_name != profile.name or user.is_superuser:
             raise ValueError("Seed the expected demo account before refreshing it")
 
         stories = session.exec(
@@ -397,7 +570,7 @@ def refresh() -> None:
         ).all()
         stories_by_title = {story.title: story for story in stories}
         if len(stories_by_title) != len(stories) or any(
-            title not in stories_by_title for title, *_ in MEMORIES
+            title not in stories_by_title for title, *_ in profile.memories
         ):
             raise ValueError(
                 "Demo memories no longer match the seed; refusing to overwrite them"
@@ -408,14 +581,14 @@ def refresh() -> None:
         ).all()
         groups_by_title = {group.title: group for group in constellations}
         if len(groups_by_title) != len(constellations) or any(
-            group["title"] not in groups_by_title for group in GROUPS
+            group["title"] not in groups_by_title for group in profile.groups
         ):
             raise ValueError(
                 "Demo constellations no longer match the seed; refusing to overwrite them"
             )
 
         now = datetime.utcnow()
-        for title, summary, question1, answer1, question2, answer2 in MEMORIES:
+        for title, summary, question1, answer1, question2, answer2 in profile.memories:
             story = stories_by_title[title]
             messages = session.exec(
                 select(ChatMessage)
@@ -439,7 +612,7 @@ def refresh() -> None:
             story.summary_text = summary
             story.modified_at = now
 
-        for group_data in GROUPS:
+        for group_data in profile.groups:
             constellation = groups_by_title[group_data["title"]]
             constellation.overview = group_data["overview"]
             constellation.modified_at = now
@@ -469,15 +642,16 @@ def refresh() -> None:
 
         session.commit()
     print(
-        "Refreshed Evelyn's 8 memory narratives, 3 constellation overviews, and existing public snapshots."
+        f"Refreshed {profile.email}'s {len(profile.memories)} memory narratives, "
+        f"{len(profile.groups)} constellation overviews, and existing public snapshots."
     )
 
 
-def status() -> None:
+def status(profile: DemoProfile) -> None:
     with Session(engine) as session:
-        user = session.exec(select(User).where(User.email == DEMO_EMAIL)).first()
+        user = session.exec(select(User).where(User.email == profile.email)).first()
         if not user:
-            print("Demo account not present.")
+            print(f"{profile.email}: not present")
             return
         stories = session.exec(
             select(func.count(StorySummary.id)).where(StorySummary.user_id == user.id)
@@ -493,52 +667,67 @@ def status() -> None:
             )
         ).one()
         print(
-            f"{DEMO_EMAIL}: {stories} memories, {groups} constellations, {public} public"
+            f"{profile.email}: {stories} memories, {groups} constellations, {public} public"
         )
 
 
 def clear(confirm_email: str) -> None:
-    if confirm_email != DEMO_EMAIL:
+    profile = PROFILES.get(confirm_email)
+    if profile is None:
         raise ValueError(
-            f"Pass --confirm-email {DEMO_EMAIL} to remove only the demo account"
+            "Pass --confirm-email with an exact supported demo email"
         )
     with Session(engine) as session:
-        user = session.exec(select(User).where(User.email == DEMO_EMAIL)).first()
+        user = session.exec(select(User).where(User.email == profile.email)).first()
         if user:
-            if user.full_name != DEMO_NAME or user.is_superuser:
+            if user.full_name != profile.name or user.is_superuser:
                 raise ValueError(
                     "Demo email belongs to a different account; refusing to delete it"
                 )
             _delete_account_data(session, user.id)
-    CREDENTIALS_PATH.unlink(missing_ok=True)
-    print("Demo account, its private data, and its public snapshots removed.")
+    profile.credentials_path.unlink(missing_ok=True)
+    print(f"{profile.email}, its private data, and its public snapshots removed.")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     subcommands = parser.add_subparsers(dest="command", required=True)
-    seed_parser = subcommands.add_parser("seed", help="Create the demo account once")
+    seed_parser = subcommands.add_parser("seed", help="Create both demo accounts once")
     seed_parser.add_argument(
         "--no-credentials-file",
         action="store_true",
         help="Use DEMO_PASSWORD from the environment; useful on Render",
     )
-    subcommands.add_parser(
+    seed_parser.add_argument(
+        "--email", choices=PROFILES, help="Seed only one demo account"
+    )
+    refresh_parser = subcommands.add_parser(
         "refresh",
         help="Update text on the existing demo account without changing IDs or login",
     )
-    subcommands.add_parser("status", help="Count only demo-owned records")
+    refresh_parser.add_argument(
+        "--email", choices=PROFILES, default=DEMO_EMAIL,
+        help="Demo account to refresh (defaults to Evelyn)",
+    )
+    status_parser = subcommands.add_parser("status", help="Count demo-owned records")
+    status_parser.add_argument(
+        "--email", choices=PROFILES, help="Show only one demo account"
+    )
     clear_parser = subcommands.add_parser(
         "clear", help="Delete only the demo account and its records"
     )
     clear_parser.add_argument("--confirm-email", required=True)
     args = parser.parse_args()
     if args.command == "seed":
-        seed(write_file=not args.no_credentials_file)
+        profiles = [PROFILES[args.email]] if args.email else PROFILES.values()
+        for profile in profiles:
+            seed(profile, write_file=not args.no_credentials_file)
     elif args.command == "refresh":
-        refresh()
+        refresh(PROFILES[args.email])
     elif args.command == "status":
-        status()
+        profiles = [PROFILES[args.email]] if args.email else PROFILES.values()
+        for profile in profiles:
+            status(profile)
     else:
         clear(args.confirm_email)
 

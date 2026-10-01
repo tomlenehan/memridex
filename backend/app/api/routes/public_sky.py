@@ -464,7 +464,7 @@ def browse_sky(
     session: SessionDep,
     skip: int = 0,
     limit: int = 24,
-    sort: Literal["recent", "appreciated"] = "recent",
+    sort: Literal["recent", "celebrated"] = "recent",
 ) -> SkyPage:
     _enabled()
     if skip < 0 or not 1 <= limit <= 50:
@@ -496,7 +496,7 @@ def browse_sky(
     statement = statement.outerjoin(
         star_count, star_count.c.publication_id == PublishedConstellation.id
     )
-    if sort == "appreciated":
+    if sort == "celebrated":
         statement = statement.order_by(
             func.coalesce(vote_count.c.votes, 0).desc(),
             PublishedConstellation.published_at.desc(),
