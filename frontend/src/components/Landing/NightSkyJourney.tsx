@@ -69,7 +69,7 @@ export default function NightSkyJourney({ publicSkyEnabled }: { publicSkyEnabled
     <div className="journey-layout">
       <div className="journey-copy">
         <p className="journey-eyebrow">IT STARTS WITH A MEMORY</p>
-        <h2>Memories are stars that fill your Night Sky.</h2>
+        <h2>Capture memories to fill the Night Sky.</h2>
         <p className="journey-intro">
           Connect memories to create a constellation that you can
           choose to share on the Global Night Sky. {publicSkyEnabled

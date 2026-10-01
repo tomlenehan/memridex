@@ -9,9 +9,9 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Spinner,
   Textarea,
   Image,
+  SimpleGrid,
   VStack,
 } from "@chakra-ui/react"
 import { createFileRoute, Link } from "@tanstack/react-router"
@@ -20,22 +20,19 @@ import { useEffect, useState } from "react"
 import { FaRegSave } from "react-icons/fa"
 import { CiShare2 } from "react-icons/ci"
 import { useForm, SubmitHandler } from "react-hook-form"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useDropzone } from "react-dropzone"
 import {
   SummariesService,
   ContactsService,
   ContactRead,
   Body_summaries_update_story_summary,
-  type StoryRelationshipPublic,
   type StorySummaryPublic,
 } from "../../../client"
-import { FiGitBranch, FiImage } from "react-icons/fi"
+import { FiCheck, FiGitBranch, FiImage } from "react-icons/fi"
 import ConstellationStar from "../../../components/Common/ConstellationStar"
-import ConnectionConstellation from "../../../components/MemoryMap/ConnectionConstellation"
 import NarrationControl from "../../../components/Common/NarrationControl"
 import useCustomToast from "../../../hooks/useCustomToast"
-import { celebrateConnection } from "../../../lib/celebration"
 import { API_BASE_URL } from "../../../config"
 
 export const Route = createFileRoute("/_layout/summary/$summaryId")({
@@ -48,6 +45,12 @@ interface SummaryFormInputs {
   title: string
   summary: string
   image_url?: string
+}
+
+interface GeneratedImageOption {
+  id: string
+  file: File
+  previewUrl: string
 }
 
 function SummaryPage() {
@@ -66,6 +69,8 @@ function SummaryPage() {
   const [imageLoadFailed, setImageLoadFailed] = useState(false)
   const [pendingImageUrl, setPendingImageUrl] = useState<string | undefined>()
   const [generatedImageFile, setGeneratedImageFile] = useState<File | undefined>()
+  const [generatedImageOptions, setGeneratedImageOptions] = useState<GeneratedImageOption[]>([])
+  const [selectedGeneratedImageId, setSelectedGeneratedImageId] = useState<string | undefined>()
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [conversationId, setConversationId] = useState<number | undefined>(undefined)
   const [currentStory, setCurrentStory] = useState<StorySummaryPublic | undefined>()
@@ -77,6 +82,8 @@ function SummaryPage() {
     onDrop: () => {
       setNewImageUploaded(true)
       setGeneratedImageFile(undefined)
+      setGeneratedImageOptions([])
+      setSelectedGeneratedImageId(undefined)
     },
   })
 
@@ -151,6 +158,8 @@ function SummaryPage() {
       setCurrentStory(response)
       setNewImageUploaded(false)
       setGeneratedImageFile(undefined)
+      setGeneratedImageOptions([])
+      setSelectedGeneratedImageId(undefined)
     } catch (error) {
       console.error(error)
       setIsSaving(false)
@@ -184,17 +193,39 @@ function SummaryPage() {
       const binary = atob(result.image_base64)
       const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0))
       const mimeType = result.mime_type || "image/png"
-      setGeneratedImageFile(new File([bytes], "memriplace-story.png", { type: mimeType }))
-      setPendingImageUrl(`data:${mimeType};base64,${result.image_base64}`)
+      const imageCount = generatedImageOptions.length + 1
+      const generatedImage: GeneratedImageOption = {
+        id: `generated-${imageCount}`,
+        file: new File([bytes], `memriplace-story-${imageCount}.png`, { type: mimeType }),
+        previewUrl: `data:${mimeType};base64,${result.image_base64}`,
+      }
+      setGeneratedImageOptions((current) => [...current, generatedImage])
+      setSelectedGeneratedImageId(generatedImage.id)
+      setGeneratedImageFile(generatedImage.file)
+      setPendingImageUrl(generatedImage.previewUrl)
       setNewImageUploaded(true)
       setImageLoadFailed(false)
-      showToast("Your story art is ready", "Save the summary to keep this illustration.", "success")
+      showToast(
+        imageCount === 1 ? "Your story art is ready" : "Two illustrations are ready",
+        imageCount === 1
+          ? "You can generate one alternative before choosing your favorite."
+          : "Choose the illustration you want to save with this memory.",
+        "success",
+      )
     } catch (error) {
       console.error(error)
       showToast("Image could not be created", `${error}`, "error")
     } finally {
       setIsGeneratingImage(false)
     }
+  }
+
+  const selectGeneratedImage = (image: GeneratedImageOption) => {
+    setSelectedGeneratedImageId(image.id)
+    setGeneratedImageFile(image.file)
+    setPendingImageUrl(image.previewUrl)
+    setNewImageUploaded(true)
+    setImageLoadFailed(false)
   }
 
   const fetchContacts = async (): Promise<ContactRead[]> => {
@@ -253,7 +284,6 @@ function SummaryPage() {
             <Text fontSize="sm" color="ui.muted" mt={3}>Save your changes to hear this version.</Text>}
         </Box>
       </Flex>
-      {status === "succeeded" && <RelatedMemories storyId={Number(summaryId)} currentStory={currentStory} />}
       <Flex flex="1" direction="column" mt={4} bg="white" borderRadius="24px" border="1px solid #E5E8DC">
         <Box flex="1" overflowY="auto" p={4}>
           {status === "loading" ? (
@@ -303,15 +333,68 @@ function SummaryPage() {
                     variant="outline"
                     onClick={handleGenerateImage}
                     isLoading={isGeneratingImage}
-                    isDisabled={!watch("summary")?.trim() || isSaving}
+                    isDisabled={
+                      !watch("summary")?.trim() ||
+                      isSaving ||
+                      generatedImageOptions.length >= 2
+                    }
                   >
-                    Create story illustration
+                    {generatedImageOptions.length === 0
+                      ? "Create story illustration"
+                      : generatedImageOptions.length === 1
+                        ? "Generate one alternative"
+                        : "Two illustrations ready"}
                   </Button>
                   <Text fontSize="xs" color="ui.muted" mt={1}>
-                    Optional · sends this summary to OpenAI · about $0.006 per image
+                    Optional · sends this summary to OpenAI · up to two images at about $0.006 each
                   </Text>
                   <VStack mt={3} align="stretch" maxW="400px">
-                    {displayedImageUrl && !imageLoadFailed ? (
+                    {generatedImageOptions.length === 2 ? (
+                      <>
+                        <Text fontSize="sm" color="ui.ink" fontWeight="700">
+                          Choose the illustration to save
+                        </Text>
+                        <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
+                          {generatedImageOptions.map((image, index) => {
+                            const isSelected = selectedGeneratedImageId === image.id
+                            return (
+                              <Box
+                                as="button"
+                                type="button"
+                                key={image.id}
+                                onClick={() => selectGeneratedImage(image)}
+                                textAlign="left"
+                                position="relative"
+                                overflow="hidden"
+                                borderRadius="18px"
+                                border="2px solid"
+                                borderColor={isSelected ? "ui.main" : "#DFE7D5"}
+                                boxShadow={isSelected ? "0 0 0 3px #EAF3F1" : "none"}
+                                _hover={{ borderColor: "ui.main" }}
+                                _focusVisible={{ outline: "3px solid", outlineColor: "#F6D986", outlineOffset: "3px" }}
+                              >
+                                <Image
+                                  src={image.previewUrl}
+                                  alt={`Generated story illustration ${index + 1}`}
+                                  w="full"
+                                  h="156px"
+                                  objectFit="cover"
+                                />
+                                <Flex align="center" justify="space-between" px={3} py={2} bg="#FFFEF9">
+                                  <Text fontSize="sm" fontWeight="700" color="ui.ink">
+                                    Illustration {index + 1}
+                                  </Text>
+                                  {isSelected && <Icon as={FiCheck} color="ui.main" boxSize={5} />}
+                                </Flex>
+                              </Box>
+                            )
+                          })}
+                        </SimpleGrid>
+                        <Text fontSize="xs" color="ui.muted">
+                          Your selected illustration will be saved with this memory.
+                        </Text>
+                      </>
+                    ) : displayedImageUrl && !imageLoadFailed ? (
                       <Image
                         src={displayedImageUrl}
                         alt={newImageUploaded ? "Selected image preview" : "Current memory"}
@@ -345,6 +428,11 @@ function SummaryPage() {
                           {file.name}
                         </Text>
                       ))}
+                    {generatedImageOptions.length === 1 && (
+                      <Text fontSize="xs" color="ui.muted">
+                        Like this illustration? Save it now, or generate one alternative to compare.
+                      </Text>
+                    )}
                   </VStack>
                 </FormControl>
                 <Button mt={4} rightIcon={<FaRegSave />} variant="primary" type="submit" isLoading={isSaving}>
@@ -363,126 +451,3 @@ function SummaryPage() {
 }
 
 export default SummaryPage
-
-function RelatedMemories({ storyId, currentStory }: { storyId: number; currentStory?: StorySummaryPublic }) {
-  const queryClient = useQueryClient()
-  const [dismissed, setDismissed] = useState<number[]>([])
-  const [recentlyConnectedId, setRecentlyConnectedId] = useState<number | null>(null)
-  const suggestionsQuery = useQuery({
-    queryKey: ["relatedStories", storyId],
-    queryFn: () => SummariesService.readRelatedStories({ id: storyId, limit: 5 }),
-    enabled: Number.isFinite(storyId) && storyId > 0,
-  })
-  const relationshipsQuery = useQuery({
-    queryKey: ["storyRelationships"],
-    queryFn: () => SummariesService.readStoryRelationships(),
-  })
-  const storiesQuery = useQuery({
-    queryKey: ["summaries"],
-    queryFn: () => SummariesService.readStorySummaries({ limit: 100 }),
-  })
-  const createLink = useMutation({
-    mutationFn: (otherId: number) => SummariesService.createStoryRelationship({ id: storyId, otherId }),
-    onSuccess: async (relationship, otherId) => {
-      queryClient.setQueryData<StoryRelationshipPublic[]>(["storyRelationships"], (current = []) =>
-        current.some((item) => item.id === relationship.id) ? current : [...current, relationship],
-      )
-      setRecentlyConnectedId(otherId)
-      celebrateConnection()
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["storyRelationships"] }),
-        queryClient.invalidateQueries({
-          queryKey: ["relatedStories", storyId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["relatedStories", otherId],
-        }),
-      ])
-    },
-  })
-  const removeLink = useMutation({
-    mutationFn: (otherId: number) => SummariesService.deleteStoryRelationship({ id: storyId, otherId }),
-    onSuccess: async (_result, otherId) => {
-      queryClient.setQueryData<StoryRelationshipPublic[]>(["storyRelationships"], (current = []) =>
-        current.filter((item) => !(
-          (item.story_a_id === storyId && item.story_b_id === otherId) ||
-          (item.story_b_id === storyId && item.story_a_id === otherId)
-        )),
-      )
-      setRecentlyConnectedId(null)
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["storyRelationships"] }),
-        queryClient.invalidateQueries({
-          queryKey: ["relatedStories", storyId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["relatedStories", otherId],
-        }),
-      ])
-    },
-  })
-
-  const relationships = relationshipsQuery.data ?? []
-  const storyById = new Map((storiesQuery.data ?? []).map((story) => [story.id, story]))
-  if (currentStory) storyById.set(currentStory.id, currentStory)
-  for (const suggestion of suggestionsQuery.data ?? []) storyById.set(suggestion.story.id, suggestion.story)
-  const connected = relationships
-    .flatMap((relationship) => {
-      if (relationship.story_a_id === storyId)
-        return [
-          {
-            id: relationship.story_b_id,
-            story: storyById.get(relationship.story_b_id),
-          },
-        ]
-      if (relationship.story_b_id === storyId)
-        return [
-          {
-            id: relationship.story_a_id,
-            story: storyById.get(relationship.story_a_id),
-          },
-        ]
-      return []
-    })
-    .filter((item): item is { id: number; story: StorySummaryPublic } => Boolean(item.story))
-  const connectedIds = new Set(connected.map((item) => item.id))
-  const suggestions = (suggestionsQuery.data ?? [])
-    .filter((item) => !connectedIds.has(item.story.id) && !dismissed.includes(item.story.id))
-    .slice(0, 2)
-  const displayedConnected = connected.slice(0, 4 - suggestions.length)
-
-  if (suggestionsQuery.isLoading || relationshipsQuery.isLoading || storiesQuery.isLoading) {
-    return (
-      <Flex justify="center" py={8}>
-        <Spinner color="#4B8D82" />
-      </Flex>
-    )
-  }
-
-  return (
-    <Box mt={5}>
-      <ConnectionConstellation
-        currentStory={storyById.get(storyId)}
-        connected={displayedConnected.map(({ story }) => story)}
-        suggestions={suggestions}
-        hiddenConnectionCount={Math.max(0, connected.length - displayedConnected.length)}
-        connectingId={createLink.isPending ? createLink.variables : undefined}
-        disconnectingId={removeLink.isPending ? removeLink.variables : undefined}
-        recentlyConnectedId={recentlyConnectedId}
-        onConnect={(id) => createLink.mutate(id)}
-        onDisconnect={(id) => removeLink.mutate(id)}
-        onDismiss={(id) => setDismissed((items) => [...items, id])}
-      />
-      {suggestionsQuery.isError && (
-        <Text color="ui.muted" fontSize="sm" mt={4}>
-          Possible connections are temporarily unavailable. Your saved links are still here.
-        </Text>
-      )}
-      {(createLink.isError || removeLink.isError) && (
-        <Text role="alert" color="red.600" fontSize="sm" mt={4}>
-          We couldn’t update this connection. Please try again.
-        </Text>
-      )}
-    </Box>
-  )
-}

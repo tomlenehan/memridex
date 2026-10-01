@@ -316,6 +316,7 @@ export type StoryRelationshipPublic = {
 export type RelatedStorySuggestion = {
 	story: StorySummaryPublic;
 	similarity: number;
+	reason: string;
 };
 
 

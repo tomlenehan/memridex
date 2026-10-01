@@ -210,10 +210,9 @@ function MemoryMap() {
       ) : (
         <ConstellationMap
           stories={stories}
-          unfinishedStories={[...paths.inProgress, ...paths.suggested]}
+          unfinishedStories={paths.inProgress}
           conversations={conversationsQuery.data?.data ?? []}
           onStartMemory={openTopics}
-          relationships={relationships}
           groups={groupsQuery.data ?? []}
           mode={mode}
           crafting={crafting}

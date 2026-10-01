@@ -6,13 +6,12 @@ from langgraph.graph import END, StateGraph
 from sqlmodel import Session
 
 from app.core.db import engine
-from app.llm.story_nodes import generate_story_branches_after_reply
 from app.llm.story_readiness import assess_story_readiness_after_reply
 from app.llm.tracing import llm_trace_config
 from app.llm.utils import MAX_NODE_USER_TURNS, MIN_READY_USER_TURNS
 from app.models import Conversation, ConversationStatus
 
-PostReplyAction = Literal["wait", "readiness", "branches"]
+PostReplyAction = Literal["wait", "readiness"]
 
 
 class ConversationLifecycleState(TypedDict, total=False):
@@ -32,9 +31,9 @@ def choose_post_reply_action(
     if user_turn_count != expected_turn_count:
         return "wait"
     if status in {ConversationStatus.READY_FOR_SUMMARY, ConversationStatus.COMPLETE}:
-        return "branches"
+        return "wait"
     if user_turn_count >= MAX_NODE_USER_TURNS:
-        return "branches"
+        return "wait"
     if status != ConversationStatus.ACTIVE or ready_to_save:
         return "wait"
     if user_turn_count >= MIN_READY_USER_TURNS:
@@ -68,13 +67,6 @@ async def assess_readiness(
     return {}
 
 
-async def generate_branches(
-    state: ConversationLifecycleState,
-) -> ConversationLifecycleState:
-    await generate_story_branches_after_reply(state["conversation_id"])
-    return {}
-
-
 def route_next_action(state: ConversationLifecycleState) -> PostReplyAction:
     return state["action"]
 
@@ -83,7 +75,6 @@ def build_post_reply_workflow():
     workflow = StateGraph(ConversationLifecycleState)
     workflow.add_node("decide_next_action", decide_next_action)
     workflow.add_node("assess_readiness", assess_readiness)
-    workflow.add_node("generate_branches", generate_branches)
     workflow.set_entry_point("decide_next_action")
     workflow.add_conditional_edges(
         "decide_next_action",
@@ -91,11 +82,9 @@ def build_post_reply_workflow():
         {
             "wait": END,
             "readiness": "assess_readiness",
-            "branches": "generate_branches",
         },
     )
     workflow.add_edge("assess_readiness", END)
-    workflow.add_edge("generate_branches", END)
     return workflow.compile()
 
 
