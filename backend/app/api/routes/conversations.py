@@ -19,7 +19,8 @@ from app.models import (
 )
 from app.api.deps import get_current_user, get_db
 from app.models import User
-from app.llm.story_nodes import MAX_NODE_USER_TURNS, create_story_branches, generate_story_branches_after_reply
+from app.llm.conversation_lifecycle import run_post_reply_workflow
+from app.llm.story_nodes import MAX_NODE_USER_TURNS, create_story_branches
 
 logger = logging.getLogger(__name__)
 
@@ -291,5 +292,9 @@ def wrap_up_story_node(
     )
     session.commit()
     session.refresh(conversation)
-    background_tasks.add_task(generate_story_branches_after_reply, id)
+    background_tasks.add_task(
+        run_post_reply_workflow,
+        id,
+        conversation.user_turn_count,
+    )
     return conversation

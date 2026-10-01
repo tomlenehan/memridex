@@ -23,7 +23,7 @@ function PublicConstellationPage() {
   const [reportOpen, setReportOpen] = useState(false)
   const [reason, setReason] = useState("")
   const signedIn = !!localStorage.getItem("access_token")
-  const [wideReader] = useMediaQuery("(min-width: 992px)")
+  const [wideReader] = useMediaQuery("(min-width: 1180px)")
   const query = useQuery({ queryKey: ["publicConstellation", id], queryFn: () => nightSkyApi.publicDetail(id), enabled: Number.isInteger(id) && id > 0 })
   const voteQuery = useQuery({ queryKey: ["publicVote", id], queryFn: () => nightSkyApi.voteStatus(id), enabled: signedIn && query.isSuccess })
   const vote = useMutation({
@@ -57,30 +57,32 @@ function PublicConstellationPage() {
           <Heading fontFamily={'"Iowan Old Style", Georgia, serif'} fontSize={{ base: "3xl", md: "5xl" }} mt={3}>{constellation.title}</Heading>
           <Text color="#61777A" mt={3}>{constellation.author_name} · Level {constellation.author_level} · {constellation.stars.length} stars</Text>
         </Box>
-        <SkyScene stars={constellation.stars} links={constellation.links} selected={selected} onSelect={selectStar} label={`Constellation: ${constellation.title}`} />
-        <Flex direction={{ base: "column", lg: "row" }} gap={6} mt={7} align="start">
-          <Box flex="1" bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={{ base: 5, md: 8 }}>
-            <Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">THE STORY</Text>
-            {constellation.overview && <Box mt={4}><NarrationControl path={`public/${id}`} publicStory /></Box>}
-            <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
+        <Flex direction={wideReader ? "row" : "column"} gap={0} mt={4} align="stretch">
+          <Box className={wideReader ? "public-sky-map" : undefined} flex="1" minW={0}>
+            <SkyScene stars={constellation.stars} links={constellation.links} selected={selected} onSelect={selectStar} label={`Constellation: ${constellation.title}`} />
           </Box>
-          <Box w={{ base: "full", lg: "340px" }} bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={6}>
-            <Heading size="sm">{star?.title || "Choose a memory"}</Heading>
+          {wideReader && <Box as="aside" className="public-sky-memory-reader" aria-label="Selected memory" aria-live="polite">
+            <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md">{star?.title || "Choose a memory"}</Heading>
             {star?.story_text && <Box mt={4}><NarrationControl path={`public/${id}/memories/${star.index}`} publicStory /></Box>}
-            {star?.story_text ? <Text mt={4} lineHeight="1.8" whiteSpace="pre-wrap">{star.story_text}</Text> :
+            {star?.story_text ? <Text className="sky-story-text" mt={5} lineHeight="1.8" whiteSpace="pre-wrap">{star.story_text}</Text> :
               <Text color="ui.muted" mt={3}>{star ? "This storyteller kept the memory itself private. Its star still belongs to the shared shape." : "Choose a star to read one memory that shapes this shared story."}</Text>}
             {star?.image_url && <Image src={star.image_url} alt={star.title} mt={4} borderRadius="lg" maxH="230px" objectFit="cover" />}
-            <Box mt={6} pt={5} borderTop="1px solid #E2E9DB">
-              <Button leftIcon={<FiHeart fill={voteQuery.data?.voted ? "currentColor" : "none"} />} variant="accent" onClick={() => vote.mutate()}
-                isLoading={vote.isPending} isDisabled={!signedIn || voteQuery.isLoading}>
-                {voteQuery.data?.voted ? "Appreciated" : "Appreciate"} · {voteQuery.data?.votes ?? constellation.votes}
-              </Button>
-              {!signedIn && <Text color="ui.muted" mt={2} fontSize="xs"><Link to="/landing">Sign in</Link> to appreciate a constellation.</Text>}
-              {vote.isError && <Text color="red.600" role="alert" mt={2}>{String(vote.error)}</Text>}
-              {signedIn && <Button size="sm" mt={3} variant="ghost" leftIcon={<FiFlag />} onClick={() => setReportOpen(true)}>Report a concern</Button>}
-            </Box>
-          </Box>
+          </Box>}
         </Flex>
+        <Box mt={6} bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={{ base: 5, md: 8 }}>
+          <Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">THE STORY</Text>
+          {constellation.overview && <Box mt={4}><NarrationControl path={`public/${id}`} publicStory /></Box>}
+          <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
+          <Box mt={6} pt={5} borderTop="1px solid #E2E9DB">
+            <Button leftIcon={<FiHeart fill={voteQuery.data?.voted ? "currentColor" : "none"} />} variant="accent" onClick={() => vote.mutate()}
+              isLoading={vote.isPending} isDisabled={!signedIn || voteQuery.isLoading}>
+              {voteQuery.data?.voted ? "Appreciated" : "Appreciate"} · {voteQuery.data?.votes ?? constellation.votes}
+            </Button>
+            {!signedIn && <Text color="ui.muted" mt={2} fontSize="xs"><Link to="/landing">Sign in</Link> to appreciate this constellation.</Text>}
+            {vote.isError && <Text color="red.600" role="alert" mt={2}>{String(vote.error)}</Text>}
+            {signedIn && <Button size="sm" mt={3} variant="ghost" leftIcon={<FiFlag />} onClick={() => setReportOpen(true)}>Report a concern</Button>}
+          </Box>
+        </Box>
       </>}
     </Container>
     <Modal isOpen={storyOpen && !!star} onClose={() => setStoryOpen(false)} isCentered size="lg" scrollBehavior="inside">

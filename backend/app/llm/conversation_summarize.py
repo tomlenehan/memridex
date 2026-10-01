@@ -3,6 +3,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_community.vectorstores import FAISS
+from app.llm.tracing import llm_trace_config
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -48,7 +49,10 @@ async def generate_summary(system_prompt: str, chat_history: List[str], tone: in
     chain = prompt | model
 
     try:
-        async for chunk in chain.astream({"system": system_prompt, "history": relevant_messages}):
+        async for chunk in chain.astream(
+            {"system": system_prompt, "history": relevant_messages},
+            config=llm_trace_config("memory.summary"),
+        ):
             yield chunk.content
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
@@ -72,7 +76,10 @@ def generate_title(system_prompt: str, summary: str) -> str:
     chain = prompt | model
 
     try:
-        result = chain.invoke({"system": system_prompt})
+        result = chain.invoke(
+            {"system": system_prompt},
+            config=llm_trace_config("memory.title"),
+        )
         return result.content
     except Exception as e:
         logger.error(f"Error generating summary: {e}")

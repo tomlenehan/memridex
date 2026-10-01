@@ -2,6 +2,7 @@ from typing import AsyncIterable
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from pydantic import BaseModel
+from app.llm.tracing import llm_trace_config
 from app.llm.utils import MODEL_NAME
 import logging
 
@@ -30,7 +31,10 @@ async def send_message(content: str, system_prompt: str, chat_history: list) -> 
     chain = prompt | model
 
     try:
-        async for chunk in chain.astream({"system": system_prompt, "history": chat_history, "question": content}):
+        async for chunk in chain.astream(
+            {"system": system_prompt, "history": chat_history, "question": content},
+            config=llm_trace_config("conversation.reply"),
+        ):
             yield chunk.content
     except Exception as e:
         logger.error(f"Caught exception: {e}")
