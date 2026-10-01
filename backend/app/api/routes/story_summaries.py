@@ -29,7 +29,7 @@ from app.llm.story_embeddings import (
     ensure_user_story_embeddings,
 )
 from app.llm.story_nodes import get_conversation_prompt
-from app.llm.utils import get_formatted_history
+from app.llm.utils import MIN_READY_USER_TURNS, get_formatted_history
 from app.models import (
     ChatMessage,
     ChatMessageSender,
@@ -158,6 +158,11 @@ async def create_story_summary(
             raise HTTPException(status_code=404, detail="Conversation not found")
         if conversation.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not enough permissions")
+        if conversation.user_turn_count < MIN_READY_USER_TURNS:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Answer at least {MIN_READY_USER_TURNS} questions before saving this memory.",
+            )
         saved_while_active = conversation.status == ConversationStatus.ACTIVE
 
         chat_history, _ = get_formatted_history(request.conversation_id, db_session)

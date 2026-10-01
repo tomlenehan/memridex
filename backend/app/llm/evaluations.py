@@ -24,11 +24,21 @@ LIFECYCLE_EVALUATION_CASES: list[LifecycleEvaluationCase] = [
     },
     {
         "inputs": {
-            "case": "specific-memory-after-two-turns",
+            "case": "still-unfolding-after-five-turns",
             "status": ConversationStatus.ACTIVE.value,
-            "user_turn_count": 2,
+            "user_turn_count": 5,
             "ready_to_save": False,
-            "expected_turn_count": 2,
+            "expected_turn_count": 5,
+        },
+        "outputs": {"expected_action": "wait"},
+    },
+    {
+        "inputs": {
+            "case": "specific-memory-after-six-turns",
+            "status": ConversationStatus.ACTIVE.value,
+            "user_turn_count": 6,
+            "ready_to_save": False,
+            "expected_turn_count": 6,
         },
         "outputs": {"expected_action": "readiness"},
     },
@@ -50,7 +60,7 @@ LIFECYCLE_EVALUATION_CASES: list[LifecycleEvaluationCase] = [
             "ready_to_save": True,
             "expected_turn_count": 3,
         },
-        "outputs": {"expected_action": "branches"},
+        "outputs": {"expected_action": "wait"},
     },
     {
         "inputs": {

@@ -22,6 +22,9 @@ import ConstellationStar from "../../../components/Common/ConstellationStar"
 import ChatInput from "../../../components/Conversations/ChatInput"
 import ChatMessages from "../../../components/Conversations/ChatMessages"
 
+const MAX_NODE_USER_TURNS = 8
+const MIN_NODE_USER_TURNS_BEFORE_SAVE = 6
+
 export const Route = createFileRoute("/_layout/conversation/$conversationId")({
   component: ConversationPage,
 })
@@ -32,12 +35,21 @@ function ConversationPage() {
   const readinessPollDeadline = useRef<{ id: number; turns: number; until: number } | null>(null)
   const conversationQuery = useQuery({
     queryKey: ["conversationNode", id],
-    queryFn: () => ConversationsService.readConversation({ id }),
+    queryFn: async () => {
+      const conversation = await ConversationsService.readConversation({ id })
+      if (
+        conversation.status === "ready_for_summary" &&
+        (conversation.user_turn_count ?? 0) < MAX_NODE_USER_TURNS
+      ) {
+        return ConversationsService.activateStoryNode({ id })
+      }
+      return conversation
+    },
     enabled: Number.isInteger(id) && id > 0,
     refetchInterval: (query) => {
       const conversation = query.state.data
       const turns = conversation?.user_turn_count ?? 0
-      if (!conversation || conversation.status !== "active" || conversation.ready_to_save || turns < 2) return false
+      if (!conversation || conversation.status !== "active" || conversation.ready_to_save || turns < MIN_NODE_USER_TURNS_BEFORE_SAVE) return false
       if (!readinessPollDeadline.current || readinessPollDeadline.current.id !== id || readinessPollDeadline.current.turns !== turns) {
         readinessPollDeadline.current = { id, turns, until: Date.now() + 30_000 }
       }
@@ -63,8 +75,10 @@ function ConversationPage() {
 
   const conversation = conversationQuery.data
   const turns = conversation.user_turn_count ?? 0
-  const isFinished = conversation.status === "ready_for_summary" || conversation.status === "complete" || turns >= 8
-  const isReadyToSave = conversation.ready_to_save || isFinished
+  const isFinished = conversation.status === "complete" || turns >= MAX_NODE_USER_TURNS
+  const isReadyToSave = turns >= MIN_NODE_USER_TURNS_BEFORE_SAVE && (
+    conversation.ready_to_save || conversation.status === "ready_for_summary" || isFinished
+  )
 
   return (
     <Flex direction="column" minH="640px" h={{ base: "calc(100svh - 120px)", md: "calc(100svh - 144px)" }} maxW="1050px" mx="auto" color="#17353B">
@@ -73,13 +87,16 @@ function ConversationPage() {
           as={Link}
           to="/conversations"
           leftIcon={<FiArrowLeft />}
-          variant="ghost"
+          variant="outline"
           color="#4B716F"
-          borderRadius="full"
-          size="sm"
-          _hover={{ bg: "#E9F1E9" }}
+          borderColor="#AFC8BA"
+          borderRadius="xl"
+          minH="48px"
+          px={5}
+          fontWeight="700"
+          _hover={{ bg: "#E9F1E9", borderColor: "#78A99A" }}
         >
-          Story map
+          My Night Sky
         </Button>
         <HStack spacing={2} color="#66807E">
           <Icon as={FiCompass} />
@@ -124,7 +141,7 @@ function ConversationPage() {
                   ? "This memory is complete. You can save it or revisit your night sky."
                   : isReadyToSave
                     ? "This memory is ready to save. You can keep talking if there’s more to tell."
-                  : "Take your time. There are no wrong details, and you can speak or type."}
+                    : "Take your time. There are no wrong details, and you can share as much or as little as you like."}
               </Text>
             </Box>
             <Center
@@ -183,6 +200,7 @@ function ConversationPage() {
           conversationId={id}
           storyFinished={isFinished}
           readyToSave={isReadyToSave}
+          memoryAlreadySaved={conversation.status === "complete"}
           userTurnCount={conversation.user_turn_count ?? 0}
         />
       </Box>

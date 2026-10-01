@@ -7,7 +7,7 @@ from sqlmodel import Session, func, select
 from app.api.deps import get_current_user, get_db
 from app.llm.conversation_lifecycle import run_post_reply_workflow
 from app.llm.story_nodes import create_story_branches
-from app.llm.utils import MAX_NODE_USER_TURNS
+from app.llm.utils import MAX_NODE_USER_TURNS, MIN_READY_USER_TURNS
 from app.models import (
     ChatMessage,
     ChatMessageSender,
@@ -18,6 +18,7 @@ from app.models import (
     ConversationStart,
     ConversationStatus,
     Message,
+    StorySummary,
     StoryStarterTopic,
     User,
     UserStoryPrompt,
@@ -202,6 +203,33 @@ def activate_story_node(
         raise HTTPException(status_code=404, detail="Story node not found")
     if conversation.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
+    if conversation.status == ConversationStatus.READY_FOR_SUMMARY:
+        saved_summary = session.exec(
+            select(StorySummary.id)
+            .where(StorySummary.conversation_id == conversation.id)
+            .limit(1)
+        ).first()
+        if saved_summary or conversation.user_turn_count >= MAX_NODE_USER_TURNS:
+            return conversation
+        # A ready-to-save path is still resumable until it reaches the turn cap
+        # or a memory has actually been saved.
+        conversation.status = ConversationStatus.ACTIVE
+        conversation.ready_to_save = False
+        session.add(conversation)
+        session.add(
+            ChatMessage(
+                conversation_id=conversation.id,
+                sender_id=current_user.id,
+                sender_type=ChatMessageSender.AI,
+                content=(
+                    "Let’s keep exploring this memory. What else do you remember "
+                    "about this moment, or is there a small detail you haven’t shared yet?"
+                ),
+            )
+        )
+        session.commit()
+        session.refresh(conversation)
+        return conversation
     if conversation.status != ConversationStatus.INACTIVE:
         return conversation
 
@@ -298,15 +326,17 @@ def wrap_up_story_node(
         raise HTTPException(status_code=404, detail="Story node not found")
     if conversation.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
+    if conversation.user_turn_count < MIN_READY_USER_TURNS:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Answer at least {MIN_READY_USER_TURNS} questions before saving this memory.",
+        )
     if conversation.status == ConversationStatus.READY_FOR_SUMMARY:
         return conversation
     if conversation.status != ConversationStatus.ACTIVE:
         raise HTTPException(
             status_code=409, detail="This story path cannot be wrapped up"
         )
-    if conversation.user_turn_count < 1:
-        raise HTTPException(status_code=409, detail="Share a memory before wrapping up")
-
     conversation.status = ConversationStatus.READY_FOR_SUMMARY
     conversation.ready_to_save = True
     session.add(conversation)

@@ -248,8 +248,8 @@ export function useRealtimeStory({
   }, [saveAssistantTranscript])
 
   const handleRealtimeEvent = useCallback(
-    async (event: RealtimeEvent) => {
-      if (!connectionRef.current) return
+    async (event: RealtimeEvent, eventConnection: RTCPeerConnection) => {
+      if (connectionRef.current !== eventConnection) return
       try {
         switch (event.type) {
           case "session.created":
@@ -282,7 +282,10 @@ export function useRealtimeStory({
               failVoiceSession("We couldn't transcribe that answer. Please say it again or type it.")
               return
             }
-            if (callbacksRef.current.canWrapUp && /^(let['’]s\s+)?wrap\s+this\s+up[.!?]?$/i.test(event.transcript.trim())) {
+            if (
+              callbacksRef.current.canWrapUp &&
+              /^(let['’]s\s+)?(wrap\s+this\s+up|end(\s+the)?\s+conversation|save(\s+this)?\s+memory)[.!?]?$/i.test(event.transcript.trim())
+            ) {
               callbacksRef.current.onUserTranscriptFailed(event.item_id)
               const assistantWasStreaming = assistantStreamingRef.current
               clearConnection()
@@ -357,6 +360,9 @@ export function useRealtimeStory({
             return
         }
       } catch (eventError) {
+        // A stop/restart can happen while an async event handler is running.
+        // Never let an old session's error tear down its replacement.
+        if (connectionRef.current !== eventConnection) return
         const message = getErrorMessage(eventError)
         failVoiceSession(message)
       }
@@ -436,7 +442,15 @@ export function useRealtimeStory({
         try {
           const event = JSON.parse(messageEvent.data) as RealtimeEvent
           realtimeEventQueueRef.current = realtimeEventQueueRef.current
-            .then(() => handleRealtimeEvent(event))
+            .then(() => {
+              // Events can already be queued when Pause closes this channel.
+              // Ignore them if a new voice session has since replaced it.
+              if (
+                connectionRef.current !== connection ||
+                dataChannelRef.current !== dataChannel
+              ) return
+              return handleRealtimeEvent(event, connection)
+            })
             .catch((eventError) => {
               failVoiceSession(getErrorMessage(eventError))
             })

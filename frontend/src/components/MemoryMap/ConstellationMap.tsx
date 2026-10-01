@@ -16,6 +16,7 @@ import "./night-sky.css"
 
 const starColors = ["#F8D881", "#B9DDCF", "#D9C5E6", "#F4C7AF", "#BDDCE9"]
 const groupColors = ["#F8D881", "#8ED8BC", "#D9B8F0", "#F5AC91", "#91C9EF", "#F39FB8"]
+const MAX_NODE_USER_TURNS = 8
 const groupColor = (id: number) => groupColors[(id - 1) % groupColors.length]
 // Constellation ids are database ids, so zero can safely represent the clear-all state.
 const NO_CONSTELLATION_SELECTION = 0
@@ -58,6 +59,12 @@ function Star({ data }: NodeProps<StarNode>) {
 
 function UnfinishedStory({ data }: NodeProps<UnfinishedStoryNode>) {
   const title = data.conversation.node_title || (data.suggested ? "A suggested story" : "A story in progress")
+  const turnCount = data.conversation.user_turn_count ?? 0
+  const statusLabel = data.suggested
+    ? "SUGGESTED"
+    : data.conversation.status === "ready_for_summary"
+      ? turnCount >= MAX_NODE_USER_TURNS ? "COMPLETE" : "READY TO SAVE"
+      : "IN PROGRESS"
   return <div className={`sky-node sky-unfinished-node sky-unfinished-node--${data.suggested ? "suggested" : "progress"} ${data.active ? "active" : ""}`}>
     {/* Keep the same restrained selection treatment for unfinished and suggested stars. */}
     <Handle type="target" position={Position.Left} className="sky-node-handle" />
@@ -68,7 +75,7 @@ function UnfinishedStory({ data }: NodeProps<UnfinishedStoryNode>) {
         <FiStar aria-hidden="true" />
         <span className="sky-unfinished-node-icon" aria-hidden="true">{data.suggested ? <FiStar /> : <FiBookOpen />}</span>
       </span>
-      <span className="sky-node-title"><span className="sky-unfinished-node-kicker">{data.suggested ? "SUGGESTED" : "IN PROGRESS"}</span>{title}</span>
+      <span className="sky-node-title"><span className="sky-unfinished-node-kicker">{statusLabel}</span>{title}</span>
     </button>
     <Handle type="source" position={Position.Right} className="sky-node-handle" />
   </div>
@@ -140,13 +147,14 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const selected = stories.find((story) => story.id === selectedId) ?? null
+  const selectedUnfinished = unfinishedStories.find((story) => story.id === selectedUnfinishedId) ?? null
+  const selectedUnfinishedTurnCount = selectedUnfinished?.user_turn_count ?? 0
   const suggestionSourceId = crafting ? picked[0] : undefined
   const suggestionsQuery = useQuery({
     queryKey: ["constellationSuggestions", suggestionSourceId],
     queryFn: () => SummariesService.readRelatedStories({ id: suggestionSourceId!, limit: 4 }),
     enabled: Boolean(suggestionSourceId),
   })
-  const selectedUnfinished = unfinishedStories.find((story) => story.id === selectedUnfinishedId) ?? null
   const memoryByConversationId = new Map(stories.map((story) => [story.conversation_id, story]))
   const conversationById = new Map(conversations.map((conversation) => [conversation.id, conversation]))
   const parentTitle = (conversation: ConversationPublic) => {
@@ -304,7 +312,9 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
   })
   const openUnfinished = () => {
     if (!selectedUnfinished) return
-    if (selectedUnfinished.status === "inactive") resumeUnfinished.mutate()
+    const resumableDraft = selectedUnfinished.status === "ready_for_summary"
+      && selectedUnfinishedTurnCount < MAX_NODE_USER_TURNS
+    if (selectedUnfinished.status === "inactive" || resumableDraft) resumeUnfinished.mutate()
     else void navigate({ to: "/conversation/$conversationId", params: { conversationId: String(selectedUnfinished.id) } })
   }
   const groupPanel = focusedGroup && !crafting && !selected && !selectedUnfinished && <Box as="aside" className="sky-story-panel sky-group-panel" aria-label={`${focusedGroup.title} constellation`}>
@@ -356,11 +366,21 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
   </Box>
   const unfinishedPanel = selectedUnfinished && !crafting && <Box as="aside" className="sky-story-panel sky-unfinished-panel" aria-label="Unfinished story" aria-live="polite">
     <Flex align="center" justify="space-between" gap={2}>
-      <Text className="sky-story-count">{selectedUnfinished.status === "inactive" ? "SUGGESTED NEXT STORY" : "IN PROGRESS"}</Text>
+      <Text className="sky-story-count">
+        {selectedUnfinished.status === "inactive" ? "SUGGESTED NEXT STORY" : selectedUnfinished.status === "ready_for_summary"
+          ? selectedUnfinishedTurnCount >= MAX_NODE_USER_TURNS ? "PATH COMPLETE" : "READY TO SAVE"
+          : "IN PROGRESS"}
+      </Text>
       <IconButton aria-label="Close unfinished story" icon={<FiX />} variant="ghost" onClick={() => setSelectedUnfinishedId(null)} />
     </Flex>
     <Flex className="sky-companion-note" align="center" gap={2} mt={3}>
-      <Text>{selectedUnfinished.status === "inactive" ? "Curious where this story could lead." : "Your story is still unfolding."}</Text>
+      <Text>{selectedUnfinished.status === "inactive"
+        ? "Curious where this story could lead."
+        : selectedUnfinished.status === "ready_for_summary"
+          ? selectedUnfinishedTurnCount >= MAX_NODE_USER_TURNS
+            ? "This story path is complete and ready to save."
+            : "Your memory is ready to save, and you can keep exploring."
+          : "Your story is still unfolding."}</Text>
     </Flex>
     <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>
       {selectedUnfinished.node_title || "A story in progress"}
@@ -369,11 +389,17 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
     <Text className="sky-unfinished-panel-copy" mt={4}>
       {selectedUnfinished.branch_context || (selectedUnfinished.status === "inactive"
         ? "This suggestion grew from a detail you shared. Begin whenever you are ready."
-        : "Pick up where you left off whenever you are ready.")}
+        : selectedUnfinished.status === "ready_for_summary" && selectedUnfinishedTurnCount >= MAX_NODE_USER_TURNS
+          ? "Save this memory to keep it, or return to your Night Sky."
+          : "Pick up where you left off whenever you are ready.")}
     </Text>
     <Button className="sky-unfinished-panel-action" variant="accent" leftIcon={<FiArrowRight />} w="full" mt="auto"
       isLoading={resumeUnfinished.isPending} onClick={openUnfinished}>
-      {selectedUnfinished.status === "inactive" ? "Begin suggested memory" : "Continue memory"}
+      {selectedUnfinished.status === "inactive"
+        ? "Begin suggested memory"
+        : selectedUnfinished.status === "ready_for_summary" && selectedUnfinishedTurnCount >= MAX_NODE_USER_TURNS
+          ? "Save memory"
+          : "Continue memory"}
     </Button>
     {resumeUnfinished.isError && <Text color="red.200" role="alert" fontSize="sm" mt={3}>We couldn’t open this story. Please try again.</Text>}
   </Box>;

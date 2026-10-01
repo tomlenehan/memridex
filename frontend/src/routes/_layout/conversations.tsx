@@ -20,7 +20,6 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import {
   FiArrowRight,
   FiList,
-  FiPlus,
   FiStar,
 } from "react-icons/fi"
 
@@ -48,6 +47,26 @@ const ink = "#17353B"
 const muted = "#61777A"
 const paper = "#FFFDF5"
 const accents = ["#D88B4A", "#4B8D82", "#9A78AA", "#CE7667", "#638CAA"]
+
+function StarPlusIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m9.5 2.8 2.2 4.4 4.9.7-3.5 3.4.8 4.9-4.4-2.3-4.4 2.3.8-4.9-3.5-3.4 4.9-.7 2.2-4.4Z" />
+      <path d="M18.5 14.5v7M15 18h7" />
+    </svg>
+  )
+}
+
+function ConnectedStarsIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m10.5 8.5-3.7 5.7m6.7-5.7 3.7 5.7m-8.4 2h6.4" />
+      <path d="m12 2.5 1.35 2.8 3.05.45-2.2 2.15.52 3.05L12 9.5l-2.72 1.45.52-3.05L7.6 5.75l3.05-.45L12 2.5Z" />
+      <path d="m5.5 13.2.95 1.95 2.15.32-1.55 1.51.36 2.14-1.91-1.01-1.91 1.01.36-2.14-1.55-1.51 2.15-.32.95-1.95Z" />
+      <path d="m18.5 13.2.95 1.95 2.15.32-1.55 1.51.36 2.14-1.91-1.01-1.91 1.01.36-2.14-1.55-1.51 2.15-.32.95-1.95Z" />
+    </svg>
+  )
+}
 
 function MemoryMap() {
   const [view, setView] = useState<"sky" | "list">("sky")
@@ -229,7 +248,7 @@ function MemoryMap() {
             </HStack>
           </Box>}
           headerActions={<Flex className="sky-header-actions">
-            {mode === "memories" ? <Button className="sky-primary-action sky-primary-action-add" variant="accent" size="md" leftIcon={<FiPlus />} onClick={openTopics}>Add memory</Button> : <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<FiStar />}
+            {mode === "memories" ? <Button className="sky-primary-action sky-primary-action-add" variant="accent" size="md" leftIcon={<StarPlusIcon />} onClick={openTopics}>Add memory</Button> : <Button className="sky-primary-action" variant="accent" size="md" leftIcon={<ConnectedStarsIcon />}
               isDisabled={crafting} onClick={() => setCrafting(true)}>Create constellation</Button>}
             <Button className="sky-list-toggle" size="md" variant="ghost" leftIcon={<FiList />}
               isDisabled={stories.length === 0} onClick={() => setView(view === "sky" ? "list" : "sky")}>
