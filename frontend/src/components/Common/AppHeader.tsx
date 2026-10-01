@@ -121,6 +121,21 @@ function AppHeader() {
           gap={{ base: 1, md: 3 }}
           ml={{ base: "auto", md: 0 }}
         >
+          <Button
+            aria-label="Log out"
+            onClick={logout}
+            variant="ghost"
+            color="ui.danger"
+            fontWeight="700"
+            minH="44px"
+            minW={{ base: "44px", md: "auto" }}
+            px={{ base: 0, md: 3 }}
+          >
+            <Icon as={FiLogOut} mr={{ base: 0, md: 2 }} />
+            <Box as="span" display={{ base: "none", md: "inline" }}>
+              Log out
+            </Box>
+          </Button>
           <UserMenu />
           <IconButton
             aria-label="Open navigation menu"

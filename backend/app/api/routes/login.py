@@ -37,6 +37,13 @@ class GoogleConnectionStatus(BaseModel):
     connected: bool
 
 
+def _google_picture(claims: dict[str, Any]) -> str | None:
+    picture = claims.get("picture")
+    if isinstance(picture, str) and picture.startswith("https://"):
+        return picture
+    return None
+
+
 def _google_claims(credential: str) -> dict[str, Any]:
     if not settings.GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=503, detail="Google sign-in is not configured")
@@ -123,6 +130,7 @@ def login_google(body: GoogleCredential, session: SessionDep) -> Token:
                 full_name=claims.get("name"),
                 hashed_password=get_password_hash(secrets.token_urlsafe(32)),
                 google_sub=google_sub,
+                profile_image_url=_google_picture(claims),
             )
         session.add(user)
         try:
@@ -140,6 +148,11 @@ def login_google(body: GoogleCredential, session: SessionDep) -> Token:
                 )
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Inactive user")
+    if not user.profile_image_url and (picture := _google_picture(claims)):
+        user.profile_image_url = picture
+        session.add(user)
+        session.commit()
+        session.refresh(user)
     return _access_token(user)
 
 
@@ -168,6 +181,8 @@ def link_google(
             status_code=409, detail="This Google account is already connected"
         )
     current_user.google_sub = claims["sub"]
+    if not current_user.profile_image_url:
+        current_user.profile_image_url = _google_picture(claims)
     session.add(current_user)
     session.commit()
     return Message(message="Google account connected")

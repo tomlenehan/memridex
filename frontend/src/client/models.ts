@@ -358,6 +358,7 @@ export type UserPublic = {
 	is_superuser?: boolean;
 	full_name?: string | null;
 	id: number;
+	profile_image_url?: string | null;
 	user_story_prompts: Array<UserStoryPrompt>;
 	conversations: Array<Conversation>;
 	chat_messages: Array<ChatMessage>;

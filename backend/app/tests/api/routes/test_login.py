@@ -42,6 +42,49 @@ def test_use_access_token(
     assert "email" in result
 
 
+def test_google_login_uses_picture_without_overwriting_custom_photo(
+    client: TestClient, db: Session
+) -> None:
+    user = User(
+        email="google-profile@example.com",
+        full_name="Google Profile",
+        hashed_password=get_password_hash("unused-test-password"),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    claims = {
+        "sub": "google-profile-test",
+        "email": user.email,
+        "email_verified": True,
+        "iss": "https://accounts.google.com",
+        "hd": "example.com",
+        "name": "Google Profile",
+        "picture": "https://example.com/google-profile.jpg",
+    }
+    with patch("app.api.routes.login._google_claims", return_value=claims):
+        response = client.post(
+            f"{settings.API_V1_STR}/login/google",
+            json={"credential": "verified-by-test"},
+        )
+    assert response.status_code == 200
+    db.refresh(user)
+    assert user.profile_image_url == claims["picture"]
+
+    user.profile_image_url = "https://example.com/custom-profile.jpg"
+    db.add(user)
+    db.commit()
+    with patch("app.api.routes.login._google_claims", return_value=claims):
+        response = client.post(
+            f"{settings.API_V1_STR}/login/google",
+            json={"credential": "verified-by-test"},
+        )
+    assert response.status_code == 200
+    db.refresh(user)
+    assert user.profile_image_url == "https://example.com/custom-profile.jpg"
+
+
 def test_recovery_password(
     client: TestClient, normal_user_token_headers: dict[str, str]
 ) -> None:

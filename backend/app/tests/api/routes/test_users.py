@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
 from app import crud
+from app.api.routes import users as users_route
 from app.core.config import settings
 from app.core.security import verify_password
 from app.models import User, UserCreate
@@ -188,6 +189,49 @@ def test_update_user_me(
     assert user_db
     assert user_db.email == email
     assert user_db.full_name == full_name
+
+
+def test_profile_image_upload_and_delete(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+    tmp_path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(users_route, "get_local_uploads_directory", lambda: tmp_path)
+    image_data = b"\x89PNG\r\n\x1a\nprofile-image"
+    response = client.post(
+        f"{settings.API_V1_STR}/users/me/profile-image",
+        headers=normal_user_token_headers,
+        files={"image": ("profile.png", image_data, "image/png")},
+    )
+    assert response.status_code == 200
+    image_url = response.json()["profile_image_url"]
+    assert image_url.startswith(f"{settings.API_V1_STR}/users/profile-images/")
+
+    image_response = client.get(image_url)
+    assert image_response.status_code == 200
+    assert image_response.content == image_data
+    assert image_response.headers["content-type"].startswith("image/png")
+
+    response = client.delete(
+        f"{settings.API_V1_STR}/users/me/profile-image",
+        headers=normal_user_token_headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["profile_image_url"] is None
+    assert client.get(image_url).status_code == 404
+
+
+def test_profile_image_rejects_non_image(
+    client: TestClient,
+    normal_user_token_headers: dict[str, str],
+) -> None:
+    response = client.post(
+        f"{settings.API_V1_STR}/users/me/profile-image",
+        headers=normal_user_token_headers,
+        files={"image": ("profile.png", b"not-an-image", "image/png")},
+    )
+    assert response.status_code == 400
 
 
 def test_update_password_me(
