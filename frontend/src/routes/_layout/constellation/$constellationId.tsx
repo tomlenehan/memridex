@@ -101,7 +101,7 @@ function ConstellationPage() {
     <Box className="public-constellation-story" bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={{ base: 5, md: 8 }}>
       <Flex align="center" justify="space-between" gap={3}>
         <Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">
-          {storyCollapsed ? "THE STORY · COLLAPSED" : "THE STORY"}
+          {storyCollapsed ? "STORY · COLLAPSED" : "STORY"}
         </Text>
         <HStack spacing={1}>
           {!editingStory && <Button size="sm" variant="ghost" leftIcon={<FiEdit3 />} onClick={() => { setEditingStory(true); saveStory.reset(); }}>
@@ -139,10 +139,10 @@ function ConstellationPage() {
           <Button variant="ghost" onClick={cancelStoryEdit} isDisabled={saveStory.isPending}>Cancel</Button>
         </HStack>
         {saveStory.isError && <Text color="red.600" role="alert" mt={3}>{String(saveStory.error)}</Text>}
-      </Box> : !storyCollapsed && <>
-        <Box mt={4}><NarrationControl path={`constellations/${id}`} /></Box>
+      </Box> : !storyCollapsed && <Box className="constellation-story-scroll" mt={4}>
+        <NarrationControl path={`constellations/${id}`} />
         <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
-      </>}
+      </Box>}
       {makePrivate.isError && <Text color="red.600" role="alert" mt={3}>{String(makePrivate.error)}</Text>}
       {makePublic.isError && <Text color="red.600" role="alert" mt={3}>{String(makePublic.error)}</Text>}
       {makePrivate.isSuccess && <Text color="#39725C" role="status" mt={3}>This constellation is now private and no longer appears in the Global Night Sky.</Text>}

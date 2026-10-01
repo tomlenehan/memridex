@@ -12,6 +12,8 @@ import {
   IconButton,
   Image,
   Stack,
+  Text,
+  Tooltip,
   useDisclosure,
 } from "@chakra-ui/react"
 import { Link } from "@tanstack/react-router"
@@ -56,16 +58,37 @@ function AppHeader() {
         px={{ base: 4, md: 8 }}
         gap={{ base: 2, md: 5 }}
       >
-        <Link to="/" aria-label="MemriPlace home">
-          <Image
-            alt="MemriPlace home"
-            display="block"
-            h={{ base: "44px", md: "52px" }}
-            objectFit="contain"
-            src={memriPlaceMark}
-            w={{ base: "48px", md: "54px" }}
-          />
-        </Link>
+        <Tooltip label="Go to MemriPlace home" hasArrow openDelay={450}>
+          <HStack
+            as={Link}
+            to="/"
+            aria-label="MemriPlace home"
+            spacing={{ base: 0, sm: 2.5 }}
+            flexShrink={0}
+            borderRadius="full"
+            color="#244C48"
+            _hover={{ color: "#1F6B65", textDecoration: "none", transform: "translateY(-1px)" }}
+            _focusVisible={{ outline: "3px solid", outlineColor: "ui.accent", outlineOffset: "3px" }}
+          >
+            <Image
+              alt=""
+              display="block"
+              h={{ base: "44px", md: "52px" }}
+              objectFit="contain"
+              src={memriPlaceMark}
+              w={{ base: "48px", md: "54px" }}
+            />
+            <Text
+              display={{ base: "none", sm: "block" }}
+              fontSize={{ sm: "md", md: "lg" }}
+              fontWeight="800"
+              letterSpacing="-.025em"
+              whiteSpace="nowrap"
+            >
+              MemriPlace
+            </Text>
+          </HStack>
+        </Tooltip>
 
         <HStack
           as="nav"

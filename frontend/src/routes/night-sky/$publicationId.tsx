@@ -6,7 +6,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
-import { FiArrowLeft, FiChevronDown, FiChevronUp, FiFlag, FiHeart, FiLink, FiLock, FiShare2, FiStar, FiX } from "react-icons/fi"
+import { FiArrowLeft, FiChevronDown, FiChevronUp, FiFlag, FiLink, FiLock, FiShare2, FiStar, FiX } from "react-icons/fi"
 import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import AppHeader from "../../components/Common/AppHeader"
 import SkyScene from "../../components/MemoryMap/SkyScene"
@@ -113,7 +113,7 @@ function PublicConstellationPage() {
         <Box className="public-constellation-story" bg="white" border="1px solid #E2E9DB" borderRadius="24px" p={{ base: 5, md: 8 }}>
           <Flex align="center" justify="space-between" gap={3}>
             <Text fontSize="xs" color="#63816C" fontWeight="800" letterSpacing=".1em">
-              {storyCollapsed ? "THE STORY · COLLAPSED" : "THE STORY"}
+              {storyCollapsed ? "STORY · COLLAPSED" : "STORY"}
             </Text>
             <IconButton
               aria-label={storyCollapsed ? "Expand story" : "Collapse story to enlarge the sky"}
@@ -123,26 +123,28 @@ function PublicConstellationPage() {
               onClick={() => setStoryCollapsed((collapsed) => !collapsed)}
             />
           </Flex>
-          {!storyCollapsed && <>
-            {constellation.overview && <Box mt={4}><NarrationControl path={`public/${id}`} publicStory /></Box>}
-          </>}
-          <Flex mt={4} gap={3} align="center" flexWrap="wrap">
-            <Tooltip label="Sign in to celebrate this constellation." hasArrow shouldWrapChildren isDisabled={signedIn}>
-              <Button leftIcon={<FiHeart fill={voteQuery.data?.voted ? "currentColor" : "none"} />} variant="accent" onClick={() => vote.mutate()}
-                isLoading={vote.isPending} isDisabled={!signedIn || voteQuery.isLoading}
-                _hover={{ bg: "#F2C96D", transform: "none", boxShadow: "0 3px 0 #C99B3F, 0 6px 12px rgba(132, 93, 27, 0.12)" }}>
-                {voteQuery.data?.voted ? "Celebrated" : "Celebrate"} · {voteQuery.data?.votes ?? constellation.votes}
-              </Button>
-            </Tooltip>
-            {signedIn && <Button size="sm" variant="ghost" leftIcon={<FiFlag />} onClick={() => setReportOpen(true)}>Report a concern</Button>}
-            <Button size="sm" variant="secondary" leftIcon={<FiShare2 />} onClick={shareConstellation}>Share constellation</Button>
-            <Button size="sm" variant="ghost" leftIcon={<FiLink />} onClick={copyConstellationLink}>Copy link</Button>
+          {!storyCollapsed && constellation.overview && <Box mt={4}><NarrationControl path={`public/${id}`} publicStory /></Box>}
+          <Flex mt={4} align={{ base: "stretch", sm: "center" }} justify="space-between" gap={4} direction={{ base: "column", sm: "row" }}>
+            <HStack spacing={{ base: 2, sm: 3 }} flexWrap="wrap">
+              <Tooltip label="Sign in to add a glow to this constellation." hasArrow shouldWrapChildren isDisabled={signedIn}>
+                <Button leftIcon={<FiStar fill={voteQuery.data?.voted ? "currentColor" : "none"} />} variant="accent" onClick={() => { if (signedIn) vote.mutate() }}
+                  isLoading={vote.isPending} isDisabled={!signedIn || voteQuery.isLoading}
+                  _hover={{ bg: "#F2C96D", transform: "none", boxShadow: "0 3px 0 #C99B3F, 0 6px 12px rgba(132, 93, 27, 0.12)" }}>
+                  {voteQuery.data?.voted ? "Glow added" : "Add a glow"} · {voteQuery.data?.votes ?? constellation.votes}
+                </Button>
+              </Tooltip>
+              {signedIn && <Button size="sm" variant="ghost" leftIcon={<FiFlag />} onClick={() => setReportOpen(true)}>Report a concern</Button>}
+            </HStack>
+            <HStack className="constellation-share-actions" spacing={1} flexWrap="wrap" p={1} border="1px solid #DDE8DE" borderRadius="14px" bg="#F7F9F3">
+              <Button size="sm" variant="secondary" leftIcon={<FiShare2 />} onClick={shareConstellation}>Share</Button>
+              <Button size="sm" variant="ghost" leftIcon={<FiLink />} onClick={copyConstellationLink}>Copy link</Button>
+            </HStack>
           </Flex>
           {vote.isError && <Text color="red.600" role="alert" mt={2}>{String(vote.error)}</Text>}
           {shareFeedback && <Text color="#39725C" fontSize="sm" role="status" mt={2}>{shareFeedback}</Text>}
-          {!storyCollapsed && <>
-            <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
-          </>}
+          {!storyCollapsed && <Box className="constellation-story-scroll" mt={4}>
+            <Text whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
+          </Box>}
           <HStack mt={4} align="start" color="#55716A" bg="#F3F7EF" borderRadius="xl" px={4} py={3}>
             <FiLock aria-hidden="true" style={{ flex: "0 0 auto", marginTop: 3 }} />
             <Text fontSize="sm">Shared by choice. The constellation story, star titles, and map are visible; memory stories and images appear only if selected for sharing.</Text>

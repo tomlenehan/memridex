@@ -30,6 +30,15 @@
 
 .public-sky-map--with-reader .scene-sky { border-radius: 26px 0 0 26px; }
 
+.constellation-story-scroll {
+  max-height: clamp(170px, 28vh, 270px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 10px;
+  scrollbar-color: rgba(75, 141, 130, .48) transparent;
+  scrollbar-width: thin;
+}
+
 .constellation-memory-reader {
   flex: 0 0 340px;
   box-sizing: border-box;
@@ -338,6 +347,10 @@
   .public-sky-memory-reader { flex-basis: auto; width: 100%; height: auto; max-height: 500px; border-top: 0; border-left: 1px solid #dce9db; border-radius: 0 0 26px 26px; }
   .constellation-sky-map .scene-sky { border-radius: 26px 26px 0 0; }
   .constellation-memory-reader { flex-basis: auto; width: 100%; height: auto; max-height: 500px; border-top: 0; border-left: 1px solid #dce9db; border-radius: 0 0 26px 26px; }
+}
+
+@media (max-width: 600px) {
+  .constellation-story-scroll { max-height: min(30vh, 220px); }
 }
 
 .personal-sky-viewport::before,
