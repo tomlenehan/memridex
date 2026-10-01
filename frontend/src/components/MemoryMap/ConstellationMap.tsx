@@ -340,6 +340,8 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
       <IconButton aria-label="Close memory" icon={<FiX />} variant="ghost" onClick={() => setSelectedId(null)} />
     </Flex>
     <Heading className="sky-story-title" fontFamily={'"Iowan Old Style", Georgia, serif'} size="md" mt={4}>{selected.title || "A remembered moment"}</Heading>
+    <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(selected.id) }}
+      variant="secondary" leftIcon={<FiEdit3 />} w="full" mt={4}>Open Memory</Button>
     {selected.image_url && <Image src={selected.image_url} alt="" maxH="180px" w="full" objectFit="contain" mt={5} />}
     <Box mt={4}><NarrationControl path={`memories/${selected.id}`} displayText={selected.summary_text}
       spokenTitle={selected.title || "A remembered moment"} /></Box>
@@ -349,7 +351,7 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
         <Text fontSize="sm" color="#61777A">{selectedIndex + 1} / {visibleStories.length}</Text>
         <IconButton aria-label="Next memory" icon={<FiChevronRight />} variant="outline" onClick={() => stepSelection(1)} isDisabled={visibleStories.length < 2} />
       </HStack>
-      <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(selected.id) }} variant="accent" leftIcon={<FiEdit3 />} w="full">Open memory</Button>
+      <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(selected.id) }} variant="accent" leftIcon={<FiEdit3 />} w="full">Open Memory</Button>
     </Box>
   </Box>
   const unfinishedPanel = selectedUnfinished && !crafting && <Box as="aside" className="sky-story-panel sky-unfinished-panel" aria-label="Unfinished story" aria-live="polite">

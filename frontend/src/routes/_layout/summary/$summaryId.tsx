@@ -14,22 +14,19 @@ import {
   SimpleGrid,
   VStack,
 } from "@chakra-ui/react"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { IoChevronBackCircleOutline } from "react-icons/io5"
 import { useEffect, useState } from "react"
 import { FaRegSave } from "react-icons/fa"
-import { CiShare2 } from "react-icons/ci"
 import { useForm, SubmitHandler } from "react-hook-form"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { useDropzone } from "react-dropzone"
 import {
   SummariesService,
-  ContactsService,
-  ContactRead,
   Body_summaries_update_story_summary,
   type StorySummaryPublic,
 } from "../../../client"
-import { FiCheck, FiGitBranch, FiImage } from "react-icons/fi"
+import { FiCheck, FiGitBranch, FiImage, FiLink, FiShare2 } from "react-icons/fi"
 import ConstellationStar from "../../../components/Common/ConstellationStar"
 import NarrationControl from "../../../components/Common/NarrationControl"
 import useCustomToast from "../../../hooks/useCustomToast"
@@ -74,8 +71,10 @@ function SummaryPage() {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [conversationId, setConversationId] = useState<number | undefined>(undefined)
   const [currentStory, setCurrentStory] = useState<StorySummaryPublic | undefined>()
+  const [shareFeedback, setShareFeedback] = useState("")
   const showToast = useCustomToast()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const { getRootProps, getInputProps, acceptedFiles } = useDropzone({
     accept: { "image/*": [".jpeg", ".jpg", ".png"] },
@@ -160,6 +159,7 @@ function SummaryPage() {
       setGeneratedImageFile(undefined)
       setGeneratedImageOptions([])
       setSelectedGeneratedImageId(undefined)
+      await navigate({ to: "/conversations" })
     } catch (error) {
       console.error(error)
       setIsSaving(false)
@@ -228,24 +228,45 @@ function SummaryPage() {
     setImageLoadFailed(false)
   }
 
-  const fetchContacts = async (): Promise<ContactRead[]> => {
-    const response = await ContactsService.readContacts()
-    return response
+  const copyLink = async () => {
+    try {
+      const url = window.location.href
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+      } else {
+        const field = document.createElement("textarea")
+        field.value = url
+        field.style.position = "fixed"
+        field.style.opacity = "0"
+        document.body.appendChild(field)
+        field.select()
+        const copied = document.execCommand("copy")
+        document.body.removeChild(field)
+        if (!copied) throw new Error("Clipboard unavailable")
+      }
+      setShareFeedback("Link copied. Share this memory with someone you care about.")
+    } catch {
+      setShareFeedback("Couldn’t copy the link. You can copy it from your browser’s address bar.")
+    }
   }
 
-  const { data: contacts } = useQuery<ContactRead[]>({
-    queryKey: ["contacts"],
-    queryFn: fetchContacts,
-  })
-
-  const handleEmail = () => {
-    const formData = watch()
-    const emailSubject = formData.title || "Story Summary"
-    const emailBody = `
-      ${formData.summary}\n
-    `
-    const emailRecipients = contacts?.map((contact) => contact.email).join(",") || ""
-    window.location.href = `mailto:${emailRecipients}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
+  const shareMemory = async () => {
+    setShareFeedback("")
+    if (!navigator.share) {
+      await copyLink()
+      return
+    }
+    try {
+      await navigator.share({
+        title: watch("title") || "A memory from MemriPlace",
+        text: "A memory from MemriPlace",
+        url: window.location.href,
+      })
+      setShareFeedback("Thanks for sharing this memory.")
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return
+      await copyLink()
+    }
   }
 
   if (!summaryId) {
@@ -438,9 +459,13 @@ function SummaryPage() {
                 <Button mt={4} rightIcon={<FaRegSave />} variant="primary" type="submit" isLoading={isSaving}>
                   Save
                 </Button>
-                <Button mt={4} marginLeft={2} rightIcon={<CiShare2 />} variant="accent" onClick={handleEmail}>
+                <Button mt={4} marginLeft={2} rightIcon={<FiShare2 />} variant="accent" type="button" onClick={shareMemory}>
                   Share
                 </Button>
+                <Button mt={4} marginLeft={2} rightIcon={<FiLink />} variant="ghost" type="button" onClick={copyLink}>
+                  Copy link
+                </Button>
+                {shareFeedback && <Text role="status" fontSize="sm" color="ui.muted" mt={3}>{shareFeedback}</Text>}
               </form>
             </>
           )}

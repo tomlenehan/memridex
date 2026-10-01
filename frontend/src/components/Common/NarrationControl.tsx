@@ -7,6 +7,7 @@ let stopOtherNarration: (() => void) | null = null
 const PCM_SAMPLE_RATE = 24_000
 const MIN_INITIAL_BUFFER_BYTES = Math.round(PCM_SAMPLE_RATE * 2 * 0.35)
 const WORDS_PER_MINUTE = 150
+const SENTENCE_HIGHLIGHT_DELAY_SECONDS = .9
 
 type SentenceTiming = { index: number; start: number; end: number }
 type NarrationPacket = { type: number; payload: Uint8Array }
@@ -161,7 +162,11 @@ export default function NarrationControl({ path, publicStory = false, displayTex
       const entries = activeSegment.sentences.map((_, sentenceIndex) => {
         const start = cursor
         cursor += duration * (weights[sentenceIndex] / totalWeight)
-        return { index: activeSegment.startIndex + sentenceIndex, start, end: cursor }
+        return {
+          index: activeSegment.startIndex + sentenceIndex,
+          start: start + SENTENCE_HIGHLIGHT_DELAY_SECONDS,
+          end: cursor + SENTENCE_HIGHLIGHT_DELAY_SECONDS,
+        }
       })
       sentenceTimings.current = [...sentenceTimings.current.filter(({ index }) =>
         index < activeSegment.startIndex || index >= activeSegment.startIndex + activeSegment.sentences.length

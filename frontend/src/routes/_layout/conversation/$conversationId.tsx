@@ -169,7 +169,7 @@ function ConversationPage() {
                 borderRadius="full"
                 _hover={{ bg: "#3D786F" }}
               >
-                Open memory map
+                Open My Night Sky
               </Button>
             </HStack>
           </Flex>
