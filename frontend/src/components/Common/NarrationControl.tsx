@@ -7,7 +7,7 @@ let stopOtherNarration: (() => void) | null = null
 const PCM_SAMPLE_RATE = 24_000
 const MIN_INITIAL_BUFFER_BYTES = Math.round(PCM_SAMPLE_RATE * 2 * 0.35)
 const WORDS_PER_MINUTE = 150
-const SENTENCE_HIGHLIGHT_DELAY_SECONDS = .1
+const SENTENCE_HIGHLIGHT_DELAY_SECONDS = .2
 
 type SentenceTiming = { index: number; start: number; end: number }
 type NarrationPacket = { type: number; payload: Uint8Array }

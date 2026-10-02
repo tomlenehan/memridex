@@ -349,13 +349,35 @@ export function LandingPage({
               position="relative"
               zIndex={6}
             >
-              <Image
-                alt="MemriPlace"
-                boxSize={{ base: "44px", md: "54px" }}
-                display="block"
-                objectFit="contain"
-                src={memriPlaceLogo}
-              />
+              <HStack
+                as={Link}
+                to="/landing"
+                aria-label="MemriPlace home"
+                spacing={{ base: 2, md: 3 }}
+                flexShrink={0}
+                borderRadius="full"
+                color="#FFF8E8"
+                textDecoration="none"
+                transition="transform 180ms ease, color 180ms ease"
+                _hover={{ color: "#F7D581", textDecoration: "none", transform: "translateY(-1px)" }}
+                _focusVisible={{ outline: "3px solid #F7D581", outlineOffset: "4px" }}
+              >
+                <Image
+                  alt=""
+                  boxSize={{ base: "44px", md: "54px" }}
+                  display="block"
+                  objectFit="contain"
+                  src={memriPlaceLogo}
+                />
+                <Text
+                  fontSize={{ base: "md", md: "lg" }}
+                  fontWeight="800"
+                  letterSpacing="-.025em"
+                  whiteSpace="nowrap"
+                >
+                  MemriPlace
+                </Text>
+              </HStack>
               <HStack spacing={{ base: 1, md: 3 }}>
                 {PUBLIC_SKY_ENABLED && (
                   <Button
