@@ -70,7 +70,7 @@ const storySteps = [
   {
     icon: FiMic,
     index: "02",
-    text: "Your AI companion asks thoughtful questions to help bring the little details back.",
+    text: "Your AI companion asks thoughtful questions to help you remember the details.",
     title: "Follow the memory",
     color: "#DDEDE1",
   },
@@ -439,7 +439,7 @@ export function LandingPage({
                 }}
               >
                 <Text color="#F4D98D" fontSize="sm" fontWeight="bold">
-                  A little memory becomes a constellation.
+                  Beta
                 </Text>
                 <Heading
                   as="h1"
@@ -449,7 +449,7 @@ export function LandingPage({
                   maxW="760px"
                   sx={storybookHeading}
                 >
-                  A lifetime of moments. Your story in the stars
+                  A lifetime of memories.<br />Your story in the stars.
                 </Heading>
                 <Text
                   color="rgba(255, 248, 232, 0.92)"
@@ -458,7 +458,7 @@ export function LandingPage({
                   maxW="590px"
                 >
                   Capture the memories that matter, connect the ones that belong
-                  together, and build a night sky that’s uniquely yours.
+                  together to build a night sky that’s uniquely yours.
                 </Text>
                 <HStack flexWrap="wrap" pt={2} spacing={3}>
                   <Button
