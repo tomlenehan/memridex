@@ -39,6 +39,14 @@ interface UseRealtimeStoryOptions {
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Voice conversation could not start."
 
+const explicitPauseRequestPatterns = [
+  /\b(?:can|could|would)\s+we\s+(?:please\s+)?(?:pause|stop)\b/i,
+  /\b(?:let['’]s|we should|i(?:'d like| want) to)\s+(?:pause|stop)\b/i,
+  /\b(?:pause|stop)\s+(?:for now|here|this conversation)\b/i,
+  /\b(?:take|call)\s+a break\b/i,
+  /\b(?:i['’]?m|i am)\s+done\s+for now\b/i,
+]
+
 const waitForIceGathering = (connection: RTCPeerConnection) => {
   if (connection.iceGatheringState === "complete") return Promise.resolve()
 
@@ -94,6 +102,7 @@ export function useRealtimeStory({
   const assistantTranscriptsRef = useRef(new Map<string, string>())
   const assistantStreamingRef = useRef(false)
   const userSpeechActiveRef = useRef(false)
+  const pauseRequestedRef = useRef(false)
   const suppressFirstAssistantTranscriptRef = useRef(false)
   const suppressedAssistantItemRef = useRef<string | null>(null)
   const userTranscriptsRef = useRef(new Map<string, string>())
@@ -282,9 +291,10 @@ export function useRealtimeStory({
               failVoiceSession("We couldn't transcribe that answer. Please say it again or type it.")
               return
             }
+            const transcript = event.transcript.trim()
             if (
               callbacksRef.current.canWrapUp &&
-              /^(let['’]s\s+)?(wrap\s+this\s+up|end(\s+the)?\s+conversation|save(\s+this)?\s+memory)[.!?]?$/i.test(event.transcript.trim())
+              /^(let['’]s\s+)?(wrap\s+this\s+up|end(\s+the)?\s+conversation|save(\s+this)?\s+memory)[.!?]?$/i.test(transcript)
             ) {
               callbacksRef.current.onUserTranscriptFailed(event.item_id)
               const assistantWasStreaming = assistantStreamingRef.current
@@ -295,8 +305,11 @@ export function useRealtimeStory({
               callbacksRef.current.onWrapRequested()
               return
             }
+            if (explicitPauseRequestPatterns.some((pattern) => pattern.test(transcript))) {
+              pauseRequestedRef.current = true
+            }
             setStatus("thinking")
-            await persistUserTranscript(event.item_id, event.transcript)
+            await persistUserTranscript(event.item_id, transcript)
             pendingUserItemsRef.current.delete(event.item_id)
             await saveDeferredAssistantTranscripts()
             return
@@ -342,6 +355,13 @@ export function useRealtimeStory({
             await saveAssistantTranscript(event)
             return
           case "response.done":
+            if (pauseRequestedRef.current) {
+              pauseRequestedRef.current = false
+              clearConnection()
+              setError(null)
+              setStatus("idle")
+              callbacksRef.current.onConversationChanged(true)
+            }
             return
           case "response.cancelled":
             assistantTranscriptsRef.current.clear()
@@ -390,6 +410,7 @@ export function useRealtimeStory({
     }
 
     setError(null)
+    pauseRequestedRef.current = false
     setStatus("connecting")
 
     try {

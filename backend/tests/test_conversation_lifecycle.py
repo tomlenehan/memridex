@@ -1,10 +1,15 @@
 import asyncio
 from types import SimpleNamespace
 
-from app.api.routes.conversations import (
+from fastapi import BackgroundTasks
+
+from app.api.routes.chat_messages import create_chat_message
+from app.api.routes.conversations import activate_story_node
+from app.llm.conversation_intents import (
+    STORY_EXPLICIT_PAUSE_MESSAGE,
     STORY_PAUSE_MESSAGE,
     STORY_RESUME_QUESTION,
-    activate_story_node,
+    is_explicit_pause_request,
 )
 from app.llm.conversation_lifecycle import (
     choose_post_reply_action,
@@ -12,14 +17,21 @@ from app.llm.conversation_lifecycle import (
 )
 from app.llm.evaluations import LIFECYCLE_EVALUATION_CASES, evaluate_lifecycle_case
 from app.llm.utils import MIN_READY_USER_TURNS
-from app.models import ChatMessage, ChatMessageSender, Conversation, ConversationStatus
+from app.models import (
+    ChatMessage,
+    ChatMessageCreate,
+    ChatMessageSender,
+    Conversation,
+    ConversationStatus,
+)
 
 
 def test_lifecycle_evaluation_cases_match_the_workflow_contract() -> None:
     for case in LIFECYCLE_EVALUATION_CASES:
-        assert evaluate_lifecycle_case(case["inputs"])["action"] == case["outputs"][
-            "expected_action"
-        ]
+        assert (
+            evaluate_lifecycle_case(case["inputs"])["action"]
+            == case["outputs"]["expected_action"]
+        )
 
 
 def test_finished_story_skips_readiness_workflow() -> None:
@@ -46,6 +58,74 @@ def test_readiness_starts_only_after_the_minimum_number_of_replies() -> None:
             )
             == expected
         )
+
+
+def test_pause_request_is_detected_without_mistaking_uncertain_answers_for_pauses() -> (
+    None
+):
+    assert is_explicit_pause_request("I don't know. Can we stop for now?")
+    assert is_explicit_pause_request("Let's pause here.")
+    assert is_explicit_pause_request("I think we should take a break")
+    assert not is_explicit_pause_request("I don't know what happened next.")
+    assert not is_explicit_pause_request("I stopped by the old house yesterday.")
+
+
+def test_explicit_pause_saves_the_reply_and_skips_the_readiness_threshold(
+    monkeypatch,
+) -> None:
+    conversation = Conversation(
+        id=42,
+        user_id=7,
+        status=ConversationStatus.ACTIVE,
+        user_turn_count=0,
+    )
+
+    class FakeSession:
+        def __init__(self) -> None:
+            self.added: list[object] = []
+
+        def get(self, model, _id):
+            return conversation if model is Conversation else None
+
+        def add(self, item) -> None:
+            self.added.append(item)
+
+        def commit(self) -> None:
+            pass
+
+        def refresh(self, _item) -> None:
+            pass
+
+    monkeypatch.setattr(
+        "app.api.routes.chat_messages.refresh_story_status", lambda *_args: None
+    )
+    session = FakeSession()
+    response = asyncio.run(
+        create_chat_message(
+            conversation_id=42,
+            chat_message_in=ChatMessageCreate(
+                sender_type=ChatMessageSender.USER,
+                content="I don't know. Can we stop for now?",
+            ),
+            background_tasks=BackgroundTasks(),
+            current_user=SimpleNamespace(id=7),
+            db_session=session,
+        )
+    )
+
+    async def read_response() -> str:
+        return "".join([chunk async for chunk in response.body_iterator])
+
+    assert asyncio.run(read_response()) == STORY_EXPLICIT_PAUSE_MESSAGE
+    assert conversation.user_turn_count == 1
+    assert conversation.status == ConversationStatus.READY_FOR_SUMMARY
+    assert conversation.ready_to_save is True
+    assert [
+        item.content for item in session.added if isinstance(item, ChatMessage)
+    ] == [
+        "I don't know. Can we stop for now?",
+        STORY_EXPLICIT_PAUSE_MESSAGE,
+    ]
 
 
 def test_resuming_ready_active_story_adds_one_question_after_pause_message() -> None:

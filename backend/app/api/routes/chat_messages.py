@@ -6,6 +6,10 @@ from sqlmodel import Session, func, select
 
 from app.api.deps import get_current_user, get_db
 from app.llm.conversation_agent import send_message
+from app.llm.conversation_intents import (
+    STORY_EXPLICIT_PAUSE_MESSAGE,
+    is_explicit_pause_request,
+)
 from app.llm.conversation_lifecycle import run_post_reply_workflow
 from app.llm.story_nodes import get_conversation_prompt
 from app.llm.utils import (
@@ -57,7 +61,11 @@ async def create_chat_message(
         )
 
     conversation.user_turn_count += 1
-    if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
+    pause_requested = is_explicit_pause_request(chat_message_in.content)
+    if pause_requested:
+        conversation.status = ConversationStatus.READY_FOR_SUMMARY
+        conversation.ready_to_save = True
+    elif conversation.user_turn_count >= MAX_NODE_USER_TURNS:
         conversation.status = ConversationStatus.READY_FOR_SUMMARY
         conversation.ready_to_save = True
     chat_message = ChatMessage(
@@ -71,46 +79,47 @@ async def create_chat_message(
     db_session.refresh(chat_message)
 
     async def message_generator(db_session: Session, current_user_id: int):
-        response_content = ""
-
         conversation = db_session.get(Conversation, conversation_id)
-        story_prompt = get_conversation_prompt(conversation)
-        chat_history, _ = get_formatted_history(conversation_id, db_session)
-        if chat_history:
-            chat_history = chat_history[:-1]
-
-        if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
-            pacing = (
-                "This is the final exchange in this story node. Reflect two specific details "
-                "the storyteller shared, close warmly in two or three sentences, and do not "
-                "ask another question. Let them know that new story paths are opening from "
-                "the details they shared."
-            )
-        elif conversation.ready_to_save:
-            pacing = (
-                "The storyteller already has enough detail to save this memory. "
-                "They chose to continue, so ask one fresh, optional follow-up about "
-                "a specific detail. Do not pressure them to end."
-            )
+        if pause_requested:
+            response_content = STORY_EXPLICIT_PAUSE_MESSAGE
+            yield response_content
         else:
-            pacing = (
-                "Ask one thoughtful, open-ended follow-up about a detail they shared."
+            response_content = ""
+            story_prompt = get_conversation_prompt(conversation)
+            chat_history, _ = get_formatted_history(conversation_id, db_session)
+            if chat_history:
+                chat_history = chat_history[:-1]
+
+            if conversation.user_turn_count >= MAX_NODE_USER_TURNS:
+                pacing = (
+                    "This is the final exchange in this story node. Reflect two specific details "
+                    "the storyteller shared, close warmly in two or three sentences, and do not "
+                    "ask another question. Let them know that new story paths are opening from "
+                    "the details they shared."
+                )
+            elif conversation.ready_to_save:
+                pacing = (
+                    "The storyteller already has enough detail to save this memory. "
+                    "They chose to continue, so ask one fresh, optional follow-up about "
+                    "a specific detail. Do not pressure them to end."
+                )
+            else:
+                pacing = "Ask one thoughtful, open-ended follow-up about a detail they shared."
+
+            system_message = (
+                "You are MemriPlace, a warm oral-history guide. Help the storyteller preserve "
+                f"a meaningful memory around this question: {story_prompt}\n\n"
+                f"The storyteller has answered {conversation.user_turn_count} questions in "
+                f"this node. {pacing}\n"
+                "Use only facts the storyteller gave you. Keep responses concise, personal, "
+                "and natural."
             )
 
-        system_message = (
-            "You are MemriPlace, a warm oral-history guide. Help the storyteller preserve "
-            f"a meaningful memory around this question: {story_prompt}\n\n"
-            f"The storyteller has answered {conversation.user_turn_count} questions in "
-            f"this node. {pacing}\n"
-            "Use only facts the storyteller gave you. Keep responses concise, personal, "
-            "and natural."
-        )
-
-        async for token in send_message(
-            chat_message_in.content, system_message, chat_history
-        ):
-            response_content += token
-            yield token
+            async for token in send_message(
+                chat_message_in.content, system_message, chat_history
+            ):
+                response_content += token
+                yield token
 
         # Save the AI message after streaming is complete
         ai_message = ChatMessage(
@@ -124,11 +133,12 @@ async def create_chat_message(
         db_session.refresh(ai_message)
         refresh_story_status(conversation, db_session)
         db_session.commit()
-        background_tasks.add_task(
-            run_post_reply_workflow,
-            conversation_id,
-            conversation.user_turn_count,
-        )
+        if not pause_requested:
+            background_tasks.add_task(
+                run_post_reply_workflow,
+                conversation_id,
+                conversation.user_turn_count,
+            )
 
     current_user_id = current_user.id
 
@@ -178,6 +188,9 @@ async def persist_realtime_message(
 
     if chat_message_in.sender_type == ChatMessageSender.USER:
         conversation.user_turn_count += 1
+        if is_explicit_pause_request(chat_message_in.content):
+            conversation.status = ConversationStatus.READY_FOR_SUMMARY
+            conversation.ready_to_save = True
     chat_message = ChatMessage(
         conversation_id=conversation_id,
         sender_id=current_user.id,

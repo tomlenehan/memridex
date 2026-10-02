@@ -39,7 +39,7 @@ function ConversationPage() {
     queryFn: async () => {
       const conversation = await ConversationsService.readConversation({ id })
       if (
-        (conversation.status === "ready_for_summary" || conversation.status === "active") &&
+        conversation.status === "active" &&
         (conversation.user_turn_count ?? 0) < MAX_NODE_USER_TURNS &&
         resumeCheckCompletedFor.current !== id
       ) {
@@ -79,9 +79,11 @@ function ConversationPage() {
 
   const conversation = conversationQuery.data
   const turns = conversation.user_turn_count ?? 0
-  const isFinished = conversation.status === "complete" || turns >= MAX_NODE_USER_TURNS
-  const isReadyToSave = turns >= MIN_NODE_USER_TURNS_BEFORE_SAVE && (
-    conversation.ready_to_save || conversation.status === "ready_for_summary" || isFinished
+  const isPaused = conversation.status === "ready_for_summary" && turns < MAX_NODE_USER_TURNS
+  const isFinished = conversation.status === "complete" || turns >= MAX_NODE_USER_TURNS || isPaused
+  const isReadyToSave = isPaused || conversation.ready_to_save || (
+    turns >= MIN_NODE_USER_TURNS_BEFORE_SAVE &&
+    (conversation.status === "ready_for_summary" || isFinished)
   )
 
   return (
@@ -141,7 +143,9 @@ function ConversationPage() {
                 {conversation.node_title || "A remembered moment"}
               </Heading>
               <Text mt={2} color="#66807E" fontSize="sm" lineHeight="1.6">
-                {isFinished
+                {isPaused
+                  ? "We can pick this memory up whenever you’re ready, or save what you’ve shared now."
+                  : isFinished
                   ? "This memory is complete. You can save it or revisit your night sky."
                   : isReadyToSave
                     ? "This memory is ready to save. You can keep talking if there’s more to tell."
@@ -162,7 +166,7 @@ function ConversationPage() {
           <HStack mt={5} spacing={2} color={isReadyToSave ? "#477B70" : "#B57B3E"}>
             <Icon as={isReadyToSave ? FiCheck : FiCompass} boxSize={3.5} />
             <Text fontSize="xs" fontWeight="800" textTransform="uppercase" letterSpacing="0.12em">
-              {isFinished ? "Path complete" : isReadyToSave ? "Ready to save · keep exploring if you like" : turns ? `${turns} ${turns === 1 ? "moment" : "moments"} shared · follow the story` : "Your story starts here"}
+              {isPaused ? "Paused · ready to save" : isFinished ? "Path complete" : isReadyToSave ? "Ready to save · keep exploring if you like" : turns ? `${turns} ${turns === 1 ? "moment" : "moments"} shared · follow the story` : "Your story starts here"}
             </Text>
           </HStack>
         </Box>

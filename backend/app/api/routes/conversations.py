@@ -5,9 +5,10 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlmodel import Session, func, select
 
 from app.api.deps import get_current_user, get_db
+from app.llm.conversation_intents import STORY_PAUSE_MESSAGE, STORY_RESUME_QUESTION
 from app.llm.conversation_lifecycle import run_post_reply_workflow
 from app.llm.story_nodes import create_story_branches
-from app.llm.utils import MAX_NODE_USER_TURNS, MIN_READY_USER_TURNS
+from app.llm.utils import MAX_NODE_USER_TURNS
 from app.models import (
     ChatMessage,
     ChatMessageSender,
@@ -18,8 +19,8 @@ from app.models import (
     ConversationStart,
     ConversationStatus,
     Message,
-    StorySummary,
     StoryStarterTopic,
+    StorySummary,
     User,
     UserStoryPrompt,
 )
@@ -27,15 +28,6 @@ from app.models import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-STORY_PAUSE_MESSAGE = (
-    "We can pause here. Thank you for sharing this memory with me. "
-    "It's ready to keep whenever you are."
-)
-STORY_RESUME_QUESTION = (
-    "Let's keep exploring this memory. What else do you remember about this moment, "
-    "or is there a small detail you haven't shared yet?"
-)
 
 ROOT_NODE_TITLE = "Childhood beginnings"
 ROOT_NODE_PROMPT = (
@@ -221,9 +213,10 @@ def activate_story_node(
         if saved_summary or conversation.user_turn_count >= MAX_NODE_USER_TURNS:
             return conversation
         # A ready-to-save path is still resumable until it reaches the turn cap
-        # or a memory has actually been saved.
+        # or a memory has actually been saved. Keep its save eligibility while
+        # the storyteller continues, so they can save without another turn.
         conversation.status = ConversationStatus.ACTIVE
-        conversation.ready_to_save = False
+        conversation.ready_to_save = True
         session.add(conversation)
         session.add(
             ChatMessage(
@@ -360,16 +353,15 @@ def wrap_up_story_node(
         raise HTTPException(status_code=404, detail="Story node not found")
     if conversation.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    if conversation.user_turn_count < MIN_READY_USER_TURNS:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Answer at least {MIN_READY_USER_TURNS} questions before saving this memory.",
-        )
     if conversation.status == ConversationStatus.READY_FOR_SUMMARY:
         return conversation
     if conversation.status != ConversationStatus.ACTIVE:
         raise HTTPException(
             status_code=409, detail="This story path cannot be wrapped up"
+        )
+    if conversation.user_turn_count < 1:
+        raise HTTPException(
+            status_code=409, detail="Share a memory before saving this story."
         )
     conversation.status = ConversationStatus.READY_FOR_SUMMARY
     conversation.ready_to_save = True

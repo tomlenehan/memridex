@@ -158,7 +158,15 @@ async def create_story_summary(
             raise HTTPException(status_code=404, detail="Conversation not found")
         if conversation.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not enough permissions")
-        if conversation.user_turn_count < MIN_READY_USER_TURNS:
+        if conversation.user_turn_count < 1:
+            raise HTTPException(
+                status_code=409, detail="Share a memory before saving this story."
+            )
+        if (
+            conversation.user_turn_count < MIN_READY_USER_TURNS
+            and conversation.status != ConversationStatus.READY_FOR_SUMMARY
+            and not conversation.ready_to_save
+        ):
             raise HTTPException(
                 status_code=409,
                 detail=f"Answer at least {MIN_READY_USER_TURNS} questions before saving this memory.",

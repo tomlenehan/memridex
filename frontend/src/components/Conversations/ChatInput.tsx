@@ -261,7 +261,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, memoryAlreadySa
     onAssistantComplete: handleVoiceAssistantComplete,
     onAssistantCancelled: handleVoiceAssistantCancelled,
     onConversationChanged: refreshConversation,
-    canWrapUp: userTurnCount >= MIN_STORY_TURNS_BEFORE_SAVE,
+    canWrapUp: readyToSave || userTurnCount >= MIN_STORY_TURNS_BEFORE_SAVE,
     onWrapRequested: () => setVoiceWrapRequested(true),
     onError: handleVoiceError,
   })
@@ -273,7 +273,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, memoryAlreadySa
       sendingMessage.current ||
       memoryAlreadySaved ||
       (!readyToSave && !endConversation) ||
-      userTurnCount < MIN_STORY_TURNS_BEFORE_SAVE ||
+      (userTurnCount < MIN_STORY_TURNS_BEFORE_SAVE && !readyToSave) ||
       (isVoiceActive && voiceStatus !== "connected")
     ) return
     savingMemory.current = true
@@ -324,7 +324,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, memoryAlreadySa
     if (!content || sendingMessage.current) return
     if (/^(let['’]s\s+)?(wrap\s+this\s+up|end(\s+the)?\s+conversation|save(\s+this)?\s+memory)[.!?]?$/i.test(content)) {
       reset()
-      if (userTurnCount < MIN_STORY_TURNS_BEFORE_SAVE) {
+      if (userTurnCount < MIN_STORY_TURNS_BEFORE_SAVE && !readyToSave) {
         showToast(
           "Let’s keep the story going",
           `Answer ${MIN_STORY_TURNS_BEFORE_SAVE - userTurnCount} more ${MIN_STORY_TURNS_BEFORE_SAVE - userTurnCount === 1 ? "question" : "questions"} before saving this memory.`,
@@ -403,7 +403,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, memoryAlreadySa
 
   const contentField = register("content", { required: true })
 
-  const voiceStatusLabel = readyToSave && userTurnCount >= MIN_STORY_TURNS_BEFORE_SAVE && voiceStatus === "connected"
+  const voiceStatusLabel = readyToSave && voiceStatus === "connected"
     ? "Your conversation is ready to save."
     : voiceStatus in statusLabels
       ? statusLabels[voiceStatus as keyof typeof statusLabels]
@@ -420,7 +420,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, memoryAlreadySa
       width="100%"
     >
       <VStack align="stretch" spacing={3}>
-        {readyToSave && userTurnCount >= MIN_STORY_TURNS_BEFORE_SAVE && !memoryAlreadySaved && !showWelcomeChoice && (
+        {readyToSave && !memoryAlreadySaved && !showWelcomeChoice && (
           <Flex
             align={{ base: "stretch", sm: "center" }}
             justify="space-between"
