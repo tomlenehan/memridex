@@ -69,12 +69,12 @@ export default function NightSkyJourney({ publicSkyEnabled }: { publicSkyEnabled
     <div className="journey-layout">
       <div className="journey-copy">
         <p className="journey-eyebrow">IT STARTS WITH A MEMORY</p>
-        <h2>See how your memories become a story.</h2>
+        <h2>Memories are stars that fill your Night Sky.</h2>
         <p className="journey-intro">
-          Save each moment as a private star, then connect related stars into a
-          constellation. {publicSkyEnabled
-            ? "If you choose to share it, you decide which stories and images readers can open."
-            : "Your stories stay private while the Global Night Sky takes shape."}
+          Connect memories to create a constellation that you can
+          choose to share to the Global Night Sky. {publicSkyEnabled
+            ? "Keep it private, or share it in the Global Night Sky."
+            : "Your constellation stays private while your Night Sky takes shape."}
         </p>
         <div className="journey-steps" role="group" aria-label="Explore how MemriPlace works">
           {journeySteps.map((item, index) => (
@@ -101,7 +101,7 @@ export default function NightSkyJourney({ publicSkyEnabled }: { publicSkyEnabled
         )}
       </div>
 
-      <div className="journey-preview" role="region" aria-label="How memories become a constellation">
+      <div className="journey-preview" role="region" aria-label="How a memory becomes a constellation">
         <Swiper
           a11y={{ enabled: true, prevSlideMessage: "Previous step", nextSlideMessage: "Next step" }}
           className="journey-carousel"
