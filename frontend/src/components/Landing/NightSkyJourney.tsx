@@ -22,7 +22,7 @@ const steps = [
     note: "One story, one new star.",
   },
   {
-    title: "Make a constellation",
+    title: "Create a constellation",
     detail: "Connect two or more stars and tell the story they share.",
     sky: "YOUR NIGHT SKY",
     status: "PRIVATE",
@@ -30,7 +30,7 @@ const steps = [
     note: "Three connected memories, one editable story.",
   },
   {
-    title: "Share if you choose",
+    title: "Share your story",
     detail: "Preview it, then publish your constellation to the global sky.",
     sky: "GLOBAL NIGHT SKY",
     status: "SHARED BY CHOICE",

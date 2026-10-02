@@ -78,7 +78,7 @@ const storySteps = [
     icon: FiStar,
     index: "03",
     text: "Save the story to your own Night Sky or choose to share it.",
-    title: "Light your constellation",
+    title: "Bring light to your story.",
     color: "#E9DFF1",
   },
 ]
