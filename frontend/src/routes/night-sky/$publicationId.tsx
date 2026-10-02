@@ -143,9 +143,6 @@ function PublicConstellationPage() {
           </Flex>
           {vote.isError && <Text color="red.600" role="alert" mt={2}>{String(vote.error)}</Text>}
           {shareFeedback && <Text color="#39725C" fontSize="sm" role="status" mt={2}>{shareFeedback}</Text>}
-          {!storyCollapsed && <Box className="constellation-story-scroll" mt={4}>
-            <Text whiteSpace="pre-wrap" lineHeight="1.9" fontSize={{ base: "md", md: "lg" }}>{constellation.overview}</Text>
-          </Box>}
           <HStack mt={4} align="start" color="#55716A" bg="#F3F7EF" borderRadius="xl" px={4} py={3}>
             <FiLock aria-hidden="true" style={{ flex: "0 0 auto", marginTop: 3 }} />
             <Text fontSize="sm">Shared by choice. The constellation story, star titles, and map are visible; memory stories and images appear only if selected for sharing.</Text>
