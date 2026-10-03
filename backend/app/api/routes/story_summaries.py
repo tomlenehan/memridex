@@ -29,7 +29,7 @@ from app.llm.story_embeddings import (
     ensure_user_story_embeddings,
 )
 from app.llm.story_nodes import get_conversation_prompt
-from app.llm.utils import MIN_READY_USER_TURNS, get_formatted_history
+from app.llm.utils import MIN_USER_TURNS_BEFORE_SAVE, get_formatted_history
 from app.models import (
     ChatMessage,
     ChatMessageSender,
@@ -163,13 +163,13 @@ async def create_story_summary(
                 status_code=409, detail="Share a memory before saving this story."
             )
         if (
-            conversation.user_turn_count < MIN_READY_USER_TURNS
+            conversation.user_turn_count < MIN_USER_TURNS_BEFORE_SAVE
             and conversation.status != ConversationStatus.READY_FOR_SUMMARY
             and not conversation.ready_to_save
         ):
             raise HTTPException(
                 status_code=409,
-                detail=f"Answer at least {MIN_READY_USER_TURNS} questions before saving this memory.",
+                detail=f"Answer at least {MIN_USER_TURNS_BEFORE_SAVE} questions before saving this memory.",
             )
         saved_while_active = conversation.status == ConversationStatus.ACTIVE
 

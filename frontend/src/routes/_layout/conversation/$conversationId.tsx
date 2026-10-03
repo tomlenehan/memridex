@@ -23,7 +23,8 @@ import ChatInput from "../../../components/Conversations/ChatInput"
 import ChatMessages from "../../../components/Conversations/ChatMessages"
 
 const MAX_NODE_USER_TURNS = 8
-const MIN_NODE_USER_TURNS_BEFORE_SAVE = 6
+const MIN_NODE_USER_TURNS_BEFORE_SAVE = 4
+const MIN_NODE_USER_TURNS_BEFORE_READINESS = 6
 
 export const Route = createFileRoute("/_layout/conversation/$conversationId")({
   component: ConversationPage,
@@ -53,7 +54,7 @@ function ConversationPage() {
     refetchInterval: (query) => {
       const conversation = query.state.data
       const turns = conversation?.user_turn_count ?? 0
-      if (!conversation || conversation.status !== "active" || conversation.ready_to_save || turns < MIN_NODE_USER_TURNS_BEFORE_SAVE) return false
+      if (!conversation || conversation.status !== "active" || conversation.ready_to_save || turns < MIN_NODE_USER_TURNS_BEFORE_READINESS) return false
       if (!readinessPollDeadline.current || readinessPollDeadline.current.id !== id || readinessPollDeadline.current.turns !== turns) {
         readinessPollDeadline.current = { id, turns, until: Date.now() + 30_000 }
       }

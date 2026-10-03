@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 MODEL_NAME = "gpt-4-turbo"
 # MODEL_NAME = "gpt-3.5-turbo"
 MIN_READY_USER_TURNS = 6
+MIN_USER_TURNS_BEFORE_SAVE = 4
 MAX_NODE_USER_TURNS = 8
 
 
