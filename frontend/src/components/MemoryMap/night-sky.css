@@ -52,6 +52,39 @@
   color: #17353b;
 }
 
+.sky-story-panel,
+.public-sky-memory-reader,
+.constellation-memory-reader,
+.constellation-story-scroll {
+  overscroll-behavior-y: contain;
+  scrollbar-color: rgba(75, 141, 130, .52) transparent;
+  scrollbar-width: thin;
+}
+
+.sky-story-panel::-webkit-scrollbar,
+.public-sky-memory-reader::-webkit-scrollbar,
+.constellation-memory-reader::-webkit-scrollbar,
+.constellation-story-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sky-story-panel::-webkit-scrollbar-thumb,
+.public-sky-memory-reader::-webkit-scrollbar-thumb,
+.constellation-memory-reader::-webkit-scrollbar-thumb,
+.constellation-story-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: rgba(75, 141, 130, .48);
+  background-clip: padding-box;
+}
+
+.sky-story-panel::-webkit-scrollbar-track,
+.public-sky-memory-reader::-webkit-scrollbar-track,
+.constellation-memory-reader::-webkit-scrollbar-track,
+.constellation-story-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .constellation-memory-options,
 .constellation-connections {
   color: #315a54;
