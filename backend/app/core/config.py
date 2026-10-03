@@ -57,10 +57,14 @@ class Settings(BaseSettings):
     SENTRY_DSN: HttpUrl | None = None
     OPENAI_API_KEY: str | None = None
     GOOGLE_CLIENT_ID: str | None = None
+    OPENAI_CONVERSATION_MODEL: str = "gpt-6.1-sol"
+    OPENAI_CONVERSATION_REASONING_EFFORT: Literal[
+        "low", "medium", "high", "xhigh", "max"
+    ] = "medium"
     STORY_READINESS_MODEL: str = "gpt-4o-mini"
     OPENAI_REALTIME_MODEL: str = "gpt-realtime-2.1"
     OPENAI_REALTIME_VOICE: str = "marin"
-    OPENAI_NARRATION_MODEL: str = "gpt-4o-mini-tts"
+    OPENAI_NARRATION_REALTIME_MODEL: str = "gpt-realtime-2.1-mini"
     OPENAI_NARRATION_VOICE: str = "marin"
     OPENAI_TRANSCRIPTION_MODEL: str = "gpt-transcribe"
     PUBLIC_SKY_ENABLED: bool = False

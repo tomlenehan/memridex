@@ -1,5 +1,5 @@
 import { Button, HStack, IconButton, Text, Tooltip } from "@chakra-ui/react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useId, useRef, useState } from "react"
 import { FiInfo, FiPause, FiPlay, FiSquare } from "react-icons/fi"
 import { API_BASE_URL } from "../../config"
 
@@ -24,6 +24,28 @@ function splitSentences(text: string) {
   return text.match(/[^.!?]+[.!?]+(?:["'”’)]*)\s*|[^.!?]+$/g) ?? [text]
 }
 
+function scrollIntoViewIfNeeded(element: HTMLElement | null) {
+  if (!element) return
+
+  let scrollContainer = element.parentElement
+  while (scrollContainer && scrollContainer !== document.body) {
+    const overflowY = window.getComputedStyle(scrollContainer).overflowY
+    if ((overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
+      scrollContainer.scrollHeight > scrollContainer.clientHeight) break
+    scrollContainer = scrollContainer.parentElement
+  }
+
+  const bounds = element.getBoundingClientRect()
+  const containerBounds = scrollContainer && scrollContainer !== document.body
+    ? scrollContainer.getBoundingClientRect()
+    : { top: 0, bottom: window.innerHeight }
+  const margin = 28
+  if (bounds.top >= containerBounds.top + margin && bounds.bottom <= containerBounds.bottom - margin) return
+
+  const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
+  element.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "nearest", inline: "nearest" })
+}
+
 export default function NarrationControl({ path, publicStory = false, displayText, spokenTitle, displaySentenceOffset = 0, displayTextLines }: {
   path: string
   publicStory?: boolean
@@ -34,12 +56,16 @@ export default function NarrationControl({ path, publicStory = false, displayTex
 }) {
   const [phase, setPhase] = useState<"idle" | "loading" | "playing" | "paused">("idle")
   const [error, setError] = useState("")
+  const [isExpanded, setIsExpanded] = useState(false)
+  const storyTextId = useId()
   const audio = useRef<HTMLAudioElement | null>(null)
   const controller = useRef<AbortController | null>(null)
   const objectUrl = useRef<string | null>(null)
   const context = useRef<AudioContext | null>(null)
   const sources = useRef(new Set<AudioBufferSourceNode>())
   const sentenceTimings = useRef<SentenceTiming[]>([])
+  const activeSentenceElement = useRef<HTMLSpanElement | null>(null)
+  const firstSentenceElement = useRef<HTMLSpanElement | null>(null)
   const [activeSentence, setActiveSentence] = useState<number | null>(null)
   const titleSentenceOffset = spokenTitle === undefined
     ? displaySentenceOffset
@@ -55,6 +81,16 @@ export default function NarrationControl({ path, publicStory = false, displayTex
     }, 80)
     return () => window.clearInterval(timer)
   }, [phase])
+
+  useEffect(() => {
+    if (phase === "playing" && activeSentence !== null) {
+      scrollIntoViewIfNeeded(activeSentenceElement.current)
+    }
+  }, [activeSentence, phase])
+
+  useEffect(() => {
+    setIsExpanded(false)
+  }, [path, displayText, displayTextLines])
 
   const stop = useCallback(() => {
     controller.current?.abort()
@@ -289,11 +325,20 @@ export default function NarrationControl({ path, publicStory = false, displayTex
     }
   }
 
+  const handleListen = () => {
+    const startingOrResuming = phase === "idle" || phase === "paused"
+    if (displayTextLines && !isExpanded && startingOrResuming) setIsExpanded(true)
+    if (startingOrResuming) {
+      window.requestAnimationFrame(() => scrollIntoViewIfNeeded(activeSentenceElement.current ?? firstSentenceElement.current))
+    }
+    void toggle()
+  }
+
   return <div>
     <HStack spacing={2} flexWrap="wrap">
       <HStack spacing={2} flexWrap="nowrap" flexShrink={0}>
         <Button type="button" size="md" variant="secondary" leftIcon={phase === "playing" ? <FiPause /> : <FiPlay />}
-          onClick={toggle} isLoading={phase === "loading"} loadingText="Preparing voice" minH="48px" fontWeight="750">
+          onClick={handleListen} isLoading={phase === "loading"} loadingText="Preparing voice" minH="48px" fontWeight="750">
           {phase === "playing" ? "Pause" : phase === "paused" ? "Resume" : "Listen"}
         </Button>
         <Tooltip label="AI-generated voice" hasArrow>
@@ -305,14 +350,22 @@ export default function NarrationControl({ path, publicStory = false, displayTex
         onClick={stop} minH="44px">Stop</Button>}
     </HStack>
     {error && <Text role="alert" color="red.600" fontSize="sm" mt={2}>{error}</Text>}
-    {displayText && <Text mt={4} whiteSpace="pre-wrap" lineHeight="1.8" noOfLines={displayTextLines} aria-live="off">
-      {splitSentences(displayText).map((sentence, index, sentences) => {
-        const isActive = activeSentence === index + titleSentenceOffset
-        return <Text as="span" key={`${index}-${sentence}`} fontWeight={isActive ? "700" : "inherit"}
-          transition="font-weight 120ms ease">
-          {sentence}{index < sentences.length - 1 ? " " : ""}
-        </Text>
-      })}
-    </Text>}
+    {displayText && <>
+      <Text id={storyTextId} mt={4} whiteSpace="pre-wrap" lineHeight="1.8"
+        noOfLines={displayTextLines && !isExpanded ? displayTextLines : undefined} aria-live="off">
+        {splitSentences(displayText).map((sentence, index, sentences) => {
+          const isActive = activeSentence === index + titleSentenceOffset
+          return <span key={`${index}-${sentence}`} ref={isActive ? activeSentenceElement : index === 0 ? firstSentenceElement : undefined}
+            style={{ fontWeight: isActive ? 700 : "inherit", transition: "font-weight 120ms ease" }}>
+            {sentence}{index < sentences.length - 1 ? " " : ""}
+          </span>
+        })}
+      </Text>
+      {displayTextLines && (isExpanded ? phase === "idle" : true) && <Button type="button" variant="ghost" size="sm"
+        mt={1} px={0} minH="44px" color="#286B69" fontWeight="750" aria-expanded={isExpanded}
+        aria-controls={storyTextId} onClick={() => setIsExpanded((expanded) => !expanded)}>
+        {isExpanded ? "Show less" : "Read full story"}
+      </Button>}
+    </>}
   </div>
 }
