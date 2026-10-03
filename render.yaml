@@ -63,8 +63,14 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
+      - key: OPENAI_CONVERSATION_MODEL
+        value: gpt-6.1-sol
+      - key: OPENAI_CONVERSATION_REASONING_EFFORT
+        value: medium
       - key: OPENAI_REALTIME_MODEL
         value: gpt-realtime-2.1
+      - key: OPENAI_NARRATION_REALTIME_MODEL
+        value: gpt-realtime-2.1-mini
       - key: OPENAI_REALTIME_VOICE
         value: marin
       - key: OPENAI_TRANSCRIPTION_MODEL

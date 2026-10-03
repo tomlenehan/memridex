@@ -1,15 +1,27 @@
 import logging
 from collections.abc import AsyncIterable
+from typing import Any
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 
+from app.core.config import settings
 from app.llm.tracing import llm_trace_config
-from app.llm.utils import MODEL_NAME
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class _ConversationChatOpenAI(ChatOpenAI):
+    """Omit ChatOpenAI's default temperature for GPT-6 reasoning requests."""
+
+    @property
+    def _default_params(self) -> dict[str, Any]:
+        params = super()._default_params
+        # The pinned LangChain version adds temperature=0.7 to every request.
+        params.pop("temperature", None)
+        return params
 
 
 class Message(BaseModel):
@@ -19,10 +31,14 @@ class Message(BaseModel):
 async def send_message(
     content: str, system_prompt: str, chat_history: list
 ) -> AsyncIterable[str]:
-    model = ChatOpenAI(
-        model=MODEL_NAME,
+    model = _ConversationChatOpenAI(
+        model=settings.OPENAI_CONVERSATION_MODEL,
         streaming=True,
-        verbose=True,
+        model_kwargs={
+            "extra_body": {
+                "reasoning_effort": settings.OPENAI_CONVERSATION_REASONING_EFFORT
+            }
+        },
     )
 
     prompt = ChatPromptTemplate.from_messages(
@@ -35,11 +51,24 @@ async def send_message(
 
     chain = prompt | model
 
+    emitted_text = False
     try:
         async for chunk in chain.astream(
             {"system": system_prompt, "history": chat_history, "question": content},
-            config=llm_trace_config("conversation.reply"),
+            config=llm_trace_config(
+                "conversation.reply",
+                metadata={
+                    "model": settings.OPENAI_CONVERSATION_MODEL,
+                    "reasoning_effort": settings.OPENAI_CONVERSATION_REASONING_EFFORT,
+                },
+            ),
         ):
-            yield chunk.content
-    except Exception as e:
-        logger.error(f"Caught exception: {e}")
+            if isinstance(chunk.content, str) and chunk.content:
+                emitted_text = True
+                yield chunk.content
+        if not emitted_text:
+            raise RuntimeError("Conversation model returned no text")
+    except Exception as error:
+        # Do not save an empty assistant turn or log private conversation content.
+        logger.error("Conversation response failed (%s)", type(error).__name__)
+        raise
