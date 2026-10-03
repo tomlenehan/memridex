@@ -420,9 +420,6 @@ function MemoryCard({
             </Text>
           </Box>
         )}
-        <Button as={Link} to="/summary/$summaryId" params={{ summaryId: String(story.id) }} variant="secondary" size="sm" mt="auto">
-          Open memory
-        </Button>
       </Stack>
     </Box>
   )

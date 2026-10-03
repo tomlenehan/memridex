@@ -55,7 +55,6 @@
 .public-sky-viewport .react-flow__controls-button + .react-flow__controls-button { border-top: 1px solid rgba(242,239,212,.25); }
 .public-sky-viewport .react-flow__controls-button:hover { background: rgba(249,223,162,.17); }
 .public-sky-viewport .react-flow__controls-button svg { width: 18px; height: 18px; fill: currentColor; }
-.public-sky-hint { position: absolute; left: 18px; bottom: 18px; z-index: 2; padding: 8px 12px; border: 1px solid rgba(210,235,224,.24); border-radius: 999px; background: rgba(13,45,55,.82); color: #e4f0e5; font-size: 12px; pointer-events: none; }
 .public-cluster:hover, .public-cluster:focus-visible {
   transform: translateY(-4px);
   border-color: #f7d987;
@@ -78,5 +77,4 @@
   .public-sky-viewport { height: 560px; min-height: 0; }
   .public-sky-viewport .react-flow__controls { left: 12px; top: 12px; right: auto; bottom: auto; }
   .public-cluster { width: 285px; }
-  .public-sky-hint { left: 12px; bottom: 12px; max-width: calc(100% - 92px); font-size: 10px; }
 }

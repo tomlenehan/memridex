@@ -449,6 +449,22 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
           </Button>)}
         </Flex>
       </Box>}
+      {!listContent && <Flex className="sky-canvas-tools" align="center" justify="space-between" gap={3}>
+        {mode === "memories" && !crafting && <Box className="sky-map-key-tools">
+          {mapKeyOpen && <Box as="aside" id="night-sky-map-key" className="sky-map-key-panel" aria-label="Night sky key">
+            <Text className="sky-map-key-title">Map key</Text>
+            <span><i className="sky-key-dot sky-key-dot--complete" />Complete</span>
+            <span><i className="sky-key-dot sky-key-dot--progress" />In progress</span>
+            <span><i className="sky-key-dot sky-key-dot--starter" />Starter</span>
+            <span><i className="sky-connection-line sky-connection-line--saved" />Saved constellation</span>
+          </Box>}
+          <button type="button" className="sky-map-key-toggle" aria-expanded={mapKeyOpen}
+            aria-controls="night-sky-map-key" onClick={() => setMapKeyOpen((open) => !open)}>
+            <FiMap aria-hidden="true" /> Map key
+          </button>
+        </Box>}
+        <Text className="sky-hint" role="status">{crafting ? "Select stars to choose them" : selectedUnfinished ? "Choose another star to explore more" : selected ? "Choose another star to read more" : "Select a star to explore its story"}</Text>
+      </Flex>}
       <Flex className="personal-sky-body">
         <Box className="personal-sky-viewport" aria-label="Your personal night sky. Bright stars are complete memories, softer stars are in progress, and the starter begins a new memory. Drag to move and use the zoom controls to explore."
           style={compact ? { height: Math.max(600, 180 + Math.ceil(skyItems.length / (narrow ? 1 : 2)) * (narrow ? 175 : 135)) } : undefined}>
@@ -462,30 +478,6 @@ export default function ConstellationMap({ stories, unfinishedStories = [], conv
             preventScrolling={false} proOptions={{ hideAttribution: true }}>
             <Controls position={compact ? "top-left" : "bottom-right"} showInteractive={false} />
           </ReactFlow>
-          {mode === "memories" && !crafting && (
-            <Box className="sky-map-key-overlay">
-              {mapKeyOpen && (
-                <Box as="aside" id="night-sky-map-key" className="sky-map-key-panel" aria-label="Night sky key">
-                  <Text className="sky-map-key-title">Map key</Text>
-                  <span><i className="sky-key-dot sky-key-dot--complete" />Complete</span>
-                  <span><i className="sky-key-dot sky-key-dot--progress" />In progress</span>
-                  <span><i className="sky-key-dot sky-key-dot--starter" />Starter</span>
-                  <span><i className="sky-connection-line sky-connection-line--saved" />Saved constellation</span>
-                </Box>
-              )}
-              <button
-                type="button"
-                className="sky-map-key-toggle"
-                aria-expanded={mapKeyOpen}
-                aria-controls="night-sky-map-key"
-                onClick={() => setMapKeyOpen((open) => !open)}
-              >
-                <FiMap aria-hidden="true" />
-                Map key
-              </button>
-            </Box>
-          )}
-          <Text className="sky-hint">{crafting ? "Select stars to choose them" : selectedUnfinished ? "Choose another star to explore more" : selected ? "Choose another star to read more" : "Select a star to explore its story"}</Text>
         </Box>
         {wideReader && memoryPanel}
         {wideReader && unfinishedPanel}

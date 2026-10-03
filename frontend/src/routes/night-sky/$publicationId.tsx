@@ -5,7 +5,7 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { FiArrowLeft, FiChevronDown, FiChevronUp, FiFlag, FiLink, FiLock, FiShare2, FiStar, FiX } from "react-icons/fi"
 import memriPlaceMark from "../../assets/images/MemriPlaceLighterLogo.png"
 import AppHeader from "../../components/Common/AppHeader"
@@ -22,9 +22,15 @@ function PublicConstellationPage() {
   const queryClient = useQueryClient()
   const [selected, setSelected] = useState<number | null>(null)
   const [storyCollapsed, setStoryCollapsed] = useState(false)
+  const [storyExpanded, setStoryExpanded] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [reason, setReason] = useState("")
   const [shareFeedback, setShareFeedback] = useState("")
+  useEffect(() => {
+    setSelected(null)
+    setStoryCollapsed(false)
+    setStoryExpanded(false)
+  }, [id])
   const signedIn = !!localStorage.getItem("access_token")
   const [wideReader] = useMediaQuery("(min-width: 900px)")
   const query = useQuery({ queryKey: ["publicConstellation", id], queryFn: () => nightSkyApi.publicDetail(id), enabled: Number.isInteger(id) && id > 0 })
@@ -123,8 +129,17 @@ function PublicConstellationPage() {
               onClick={() => setStoryCollapsed((collapsed) => !collapsed)}
             />
           </Flex>
-          {!storyCollapsed && constellation.overview && <Box mt={4}><NarrationControl path={`public/${id}`} publicStory
-            displayText={constellation.overview} spokenTitle={constellation.title} /></Box>}
+          {!storyCollapsed && constellation.overview && <Box mt={4}>
+            <Box id="public-constellation-overview">
+              <NarrationControl path={`public/${id}`} publicStory displayText={constellation.overview}
+                spokenTitle={constellation.title} displayTextLines={storyExpanded ? undefined : 5} />
+            </Box>
+            <Button variant="ghost" size="sm" mt={2} px={0} color="#286B69" fontWeight="750"
+              aria-expanded={storyExpanded} aria-controls="public-constellation-overview"
+              onClick={() => setStoryExpanded((expanded) => !expanded)}>
+              {storyExpanded ? "Show less" : "Read full story"}
+            </Button>
+          </Box>}
           <Flex mt={4} align={{ base: "stretch", sm: "center" }} justify="space-between" gap={4} direction={{ base: "column", sm: "row" }}>
             <HStack spacing={{ base: 2, sm: 3 }} flexWrap="wrap">
               <Tooltip label="Sign in to add a glow to this constellation." hasArrow shouldWrapChildren isDisabled={signedIn}>

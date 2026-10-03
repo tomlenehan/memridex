@@ -244,12 +244,8 @@
   letter-spacing: .07em;
 }
 
-.sky-map-key-overlay {
-  position: absolute;
-  z-index: 4;
-  right: 35px;
-  bottom: 200px;
-}
+.sky-canvas-tools { min-height: 58px; padding: 8px 18px; background: #123442; }
+.sky-map-key-tools { position: relative; flex: 0 0 auto; }
 
 .sky-map-key-toggle {
   display: inline-flex;
@@ -671,11 +667,8 @@
 .sky-flow-node-selected { z-index: 10 !important; }
 
 .sky-hint {
-  position: absolute;
-  z-index: 2;
-  bottom: 20px;
-  left: 22px;
-  max-width: calc(100% - 180px);
+  margin: 0;
+  max-width: 70%;
   padding: 7px 11px;
   border: 1px solid rgba(210, 235, 224, .18);
   border-radius: 8px;
@@ -714,9 +707,9 @@
   .scene-viewport { height: 390px; }
   .public-constellation-sky-row--story-collapsed .scene-viewport { height: min(64vh, 560px); }
   .personal-sky-viewport .react-flow__controls { left: 13px; top: 13px; right: auto; bottom: auto; }
-  .sky-map-key-overlay { top: 13px; right: auto; bottom: auto; left: 72px; }
-  .sky-map-key-panel { top: calc(100% + 9px); right: auto; bottom: auto; left: -58px; grid-template-columns: 1fr; width: min(270px, calc(100vw - 28px)); }
-  .sky-hint { bottom: 14px; left: 14px; max-width: calc(100% - 28px); }
+  .sky-canvas-tools { min-height: 0; align-items: flex-start !important; padding: 10px 14px; }
+  .sky-map-key-panel { right: auto; left: 0; grid-template-columns: 1fr; width: min(270px, calc(100vw - 56px)); }
+  .sky-hint { max-width: none; text-align: right; font-size: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

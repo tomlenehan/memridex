@@ -92,7 +92,7 @@ function PublicSky() {
                   <Text color="#D0E2D9" fontSize="md" mt={2}>
                     {query.isSuccess && !hasSharedStories
                       ? "Shared constellations will appear here."
-                      : "Select a constellation to explore its memories."}
+                      : "Drag to explore, or select a constellation to read its story."}
                   </Text>
                 </Box>
                 <HStack className="public-sky-header-actions" spacing={2}>
@@ -283,9 +283,6 @@ function PublicSkyCanvas({ data }: { data: SkyCluster[] }) {
           showInteractive={false}
         />
       </ReactFlow>
-      <Text className="public-sky-hint">
-        Drag to explore · Tap a constellation to open it
-      </Text>
     </Box>
   )
 }
@@ -312,6 +309,7 @@ function Cluster({ item }: { item: SkyCluster }) {
       params={{ publicationId: String(item.id) }}
       className="public-cluster nodrag nopan"
       direction="column"
+      aria-label={`Open ${item.title} by ${authorName}; ${item.star_count} ${item.star_count === 1 ? "story" : "stories"}, level ${item.author_level}`}
       style={{ boxShadow: `0 0 ${glow}px rgba(247, 217, 135, .28)` }}
     >
       <HStack className="public-cluster-author" spacing={2}>
