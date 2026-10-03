@@ -55,7 +55,7 @@ const statusLabels = {
   thinking: "MemriPlace is gathering its next question…",
 } as const
 
-const MIN_STORY_TURNS_BEFORE_SAVE = 6
+const MIN_STORY_TURNS_BEFORE_SAVE = 4
 
 const ChatInput = ({ conversationId, storyFinished, readyToSave, memoryAlreadySaved, userTurnCount }: ChatInputProps) => {
   const {
@@ -408,6 +408,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, memoryAlreadySa
     : voiceStatus in statusLabels
       ? statusLabels[voiceStatus as keyof typeof statusLabels]
       : voiceError
+  const showSaveMemory = readyToSave || userTurnCount >= MIN_STORY_TURNS_BEFORE_SAVE
 
   return (
     <Box
@@ -420,7 +421,7 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, memoryAlreadySa
       width="100%"
     >
       <VStack align="stretch" spacing={3}>
-        {readyToSave && !memoryAlreadySaved && !showWelcomeChoice && (
+        {showSaveMemory && !memoryAlreadySaved && !showWelcomeChoice && (
           <Flex
             align={{ base: "stretch", sm: "center" }}
             justify="space-between"
@@ -434,9 +435,13 @@ const ChatInput = ({ conversationId, storyFinished, readyToSave, memoryAlreadySa
             <HStack align="start" spacing={3}>
               <Icon as={FiCheck} mt={1} color="#477B70" />
               <Box>
-                <Text fontWeight="800" color="#244D4C">This memory is ready to save</Text>
+                <Text fontWeight="800" color="#244D4C">
+                  {readyToSave ? "This memory is ready to save" : "Ready when you are"}
+                </Text>
                 <Text fontSize="sm" color="#58746C">
-                  Save it now and review it on the next page.
+                  {readyToSave
+                    ? "Save it now and review it on the next page."
+                    : "Save what you’ve shared so far, or keep going to add more."}
                 </Text>
               </Box>
             </HStack>
